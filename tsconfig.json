@@ -2,13 +2,15 @@
   "compilerOptions": {
     "target": "es2020",
     "module": "commonjs",
-    "types": [],
     "allowJs": true,
     "noEmit": true,
     "strict": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "removeComments": true
+  
+
   },
-  "exclude": ["_agent.js", "node_modules", "dist", "lib"]
+  "exclude": ["example-compiled.js", "node_modules", "dist", "lib"]
 }

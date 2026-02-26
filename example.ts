@@ -1,85 +1,92 @@
 // TypeScript example for FloatMenu library
 // This shows the recommended way to use the library in TypeScript projects
 
-import { FloatMenu, FloatMenuOptions, Button, Switch, Text, Selector } from './src/index.ts';
+import { iconBase64 } from "./icon";
+import {
+  Button,
+  FloatMenu,
+  FloatMenuOptions,
+  Selector,
+  Switch,
+  Text,
+} from "./src/index";
 
 // Optional: attach to global for easier access in Frida REPL
 // import { attachToGlobal } from './src/index';
 // attachToGlobal(globalThis);
-
 Java.perform(() => {
-    console.log('Java runtime ready, creating floating menu...');
+  console.log("Java runtime ready, creating floating menu...");
 
-    // Create menu configuration
-    const options: FloatMenuOptions = {
-        width: 350,
-        height: 500,
-        x: 50,
-        y: 50,
-        showLogs: true,
-        logMaxLines: 50,
-        // iconBase64: '...' // optional
-    };
+  // Create menu configuration
+  const options: FloatMenuOptions = {
+    width: 350,
+    height: 500,
+    x: 50,
+    y: 50,
+    showLogs: true,
+    logMaxLines: 50,
+    iconBase64: iconBase64,
+    activityName: "com.r2games.myhero.aligames.MainActivity", // optional: specify activity class name
+    // iconBase64: '...' // optional
+  };
 
-    const menu = new FloatMenu(options);
-    menu.show();
+  const menu = new FloatMenu(options);
 
-    // Add a button with click handler
-    const button = new Button('exampleButton', 'Click Me!');
-    button.setOnClick(() => {
-        console.log('Button was clicked!');
-        // Toggle the switch when button is clicked
-        const switchComp = menu.getComponent<Switch>('exampleSwitch');
-        if (switchComp) {
-            const currentValue = switchComp.getValue();
-            switchComp.setValue(!currentValue);
-        }
-    });
-    menu.addComponent('exampleButton', button);
+  menu.show();
+  //   // Add a button with click handler
+  const button = new Button("exampleButton", "Click Me!");
+  button.setOnClick(() => {
+    console.log("Button was clicked!");
+    // Toggle the switch when button is clicked
+    const switchComp = menu.getComponent<Switch>("exampleSwitch");
+    if (switchComp) {
+      const currentValue = switchComp.getValue();
+      switchComp.setValue(!currentValue);
+    }
+  });
+  menu.addComponent("exampleButton", button);
 
-    // Add a switch with value change listener
-    const switchComp = new Switch('exampleSwitch', 'Auto-update', false);
-    switchComp.on('valueChanged', (value: boolean) => {
-        console.log('Switch value changed to:', value);
-        const textComp = menu.getComponent<Text>('exampleText');
-        if (textComp) {
-            textComp.setText(`Auto-update: ${value ? 'ON' : 'OFF'}`);
-        }
-    });
-    menu.addComponent('exampleSwitch', switchComp);
+  // Add a switch with value change listener
+  const switchComp = new Switch("exampleSwitch", "Auto-update", false);
 
-    // Add text display
-    const text = new Text('exampleText', 'Welcome to FloatMenu!');
-    menu.addComponent('exampleText', text);
+  menu.addComponent("exampleSwitch", switchComp);
 
-    // Add selector with options
-    const selector = new Selector('exampleSelector', ['Easy', 'Medium', 'Hard'], 0);
-    selector.on('valueChanged', (value: string) => {
-        console.log('Difficulty selected:', value);
-        menu.setComponentValue('exampleText', `Difficulty: ${value}`);
-    });
-    menu.addComponent('exampleSelector', selector);
+  // Add text display
+  const text = new Text("exampleText", "<h1>hello</h1>");
+  menu.addComponent("exampleText", text);
 
-    // Demonstrate menu-level event listening
-    menu.on('component:exampleSwitch:valueChanged', (value: boolean) => {
-        console.log('[Menu] Switch changed via menu event:', value);
-    });
+  // Add selector with options
+  const selector = new Selector(
+    "exampleSelector",
+    ["Easy", "Medium", "Hard"],
+    0,
+  );
+  selector.on("valueChanged", (value: string) => {
+    console.log("Difficulty selected:", value);
+    menu.setComponentValue("exampleText", `Difficulty: ${value}`);
+  });
+  menu.addComponent("exampleSelector", selector);
 
-    // Update UI programmatically after 3 seconds
-    setTimeout(() => {
-        console.log('Programmatically updating UI...');
-        menu.setComponentValue('exampleSwitch', true);
-        text.setText('Updated programmatically!');
-        selector.setItems(['Level 1', 'Level 2', 'Level 3', 'Level 4']);
-    }, 3000);
+  // Demonstrate menu-level event listening
+  menu.on("component:exampleSwitch:valueChanged", (value: boolean) => {
+    console.log("[Menu] Switch changed via menu event:", value);
+  });
 
-    // Hide menu after 20 seconds
-    setTimeout(() => {
-        menu.hide();
-        console.log('Menu hidden after timeout');
-    }, 20000);
+//   // Update UI programmatically after 3 seconds
+//   setTimeout(() => {
+//     console.log("Programmatically updating UI...");
+//     menu.setComponentValue("exampleSwitch", true);
+//     text.setText("Updated programmatically!");
+//     selector.setItems(["Level 1", "Level 2", "Level 3", "Level 4"]);
+//   }, 3000);
 
-    console.log('FloatMenu example initialized. UI should be visible.');
+  // Hide menu after 20 seconds
+//   setTimeout(() => {
+//     menu.hide();
+//     console.log("Menu hidden after timeout");
+//   }, 20000);
+
+  console.log("FloatMenu example initialized. UI should be visible.");
 });
 
 // Compilation instructions:

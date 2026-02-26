@@ -544,8 +544,8 @@ class FloatMenu {
         const LinearLayoutParams = Java.use('android.widget.LinearLayout$LayoutParams');
         this.logView.setLayoutParams(LinearLayoutParams.$new(this.options.width, 200));
         this.logView.setTextSize(10);
-        this.logView.setBackgroundColor(0x80000000); // semi-transparent black
-        this.logView.setTextColor(0xFFFFFFFF);
+        // this.logView.setBackgroundColor(0x80000000); // semi-transparent black
+        // this.logView.setTextColor(0xFFFFFFFF);
         this.logView.setMaxLines(this.options.logMaxLines || 100);
         this.logView.setVerticalScrollBarEnabled(true);
         this.containerView.addView(this.logView);

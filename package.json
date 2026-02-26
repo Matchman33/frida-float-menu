@@ -13,7 +13,9 @@
     "example.js"
   ],
   "scripts": {
-    "build-example": "frida-compile example.js -o example-compiled.js -c",
+    "dev": "frida-compile example.ts -o example-compiled.js -w",
+    "frida": "frida -UF -l example-compiled.js",
+    "build": "frida-compile example.ts -o example-compiled.js",
     "check": "tsc --noEmit",
     "clean": "rm -f _agent.js example-compiled.js"
   },
@@ -25,12 +27,10 @@
     "overlay",
     "hooking"
   ],
-  "dependencies": {},
   "devDependencies": {
     "@types/frida-gum": "^18.3.1",
     "@types/node": "^18.14.0",
-    "frida-compile": "^16.1.8",
+    "frida-compile": "^19.0.4",
     "typescript": "^5.0.0"
   }
-
 }
