@@ -19,11 +19,11 @@ Java.perform(() => {
 
   // Create menu configuration
   const options: FloatMenuOptions = {
-    width: 350,
+    width: 600,
     height: 500,
     x: 50,
     y: 50,
-    showLogs: true,
+    showLogs: false,
     logMaxLines: 50,
     iconBase64: iconBase64,
     activityName: "com.r2games.myhero.aligames.MainActivity", // optional: specify activity class name
@@ -31,7 +31,7 @@ Java.perform(() => {
   };
 
   const menu = new FloatMenu(options);
-
+  
   menu.show();
   //   // Add a button with click handler
   const button = new Button("exampleButton", "Click Me!");
