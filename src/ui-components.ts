@@ -99,11 +99,17 @@ export class Button extends UIComponent {
     const Button = Java.use("android.widget.Button");
     this.view = Button.$new(context);
     const String = Java.use("java.lang.String");
+    const Color = Java.use("android.graphics.Color");
+
     this.view.setText(String.$new(this.label));
+    this.view.setTextColor(Color.WHITE.value);
+    this.view.setBackgroundColor(0xFF555555); // gray background
+    this.view.setPadding(16, 8, 16, 8);
+
     const OnClickListener = Java.use("android.view.View$OnClickListener");
     const self = this;
     const clickListener = Java.registerClass({
-      name: "com.frida.MyClickListener",
+      name: "com.frida.MyClickListener" + Math.random().toString(36).substring(7),
       implements: [OnClickListener],
       methods: {
         onClick: function (v) {
@@ -114,14 +120,6 @@ export class Button extends UIComponent {
         },
       },
     });
-    // const clickListener = OnClickListener.implement({
-    //   onClick: function (view: any) {
-    //     self.emit("click");
-    //     if (self.onClick) {
-    //       self.onClick();
-    //     }
-    //   },
-    // });
     this.view.setOnClickListener(clickListener.$new());
   }
 
@@ -165,9 +163,12 @@ export class Switch extends UIComponent {
 
   protected createView(context: any): void {
     const Switch = Java.use("android.widget.Switch");
-    this.view = Switch.$new(context);
     const String = Java.use("java.lang.String");
+    const Color = Java.use("android.graphics.Color");
+
+    this.view = Switch.$new(context);
     this.view.setText(String.$new(this.label));
+    this.view.setTextColor(Color.WHITE.value);
     this.view.setChecked(this.value);
     const CompoundButtonOnCheckedChangeListener = Java.use(
       "android.widget.CompoundButton$OnCheckedChangeListener",
@@ -228,7 +229,11 @@ export class Text extends UIComponent {
 
   protected createView(context: any): void {
     const TextView = Java.use("android.widget.TextView");
+    const Color = Java.use("android.graphics.Color");
+
     this.view = TextView.$new(context);
+    this.view.setTextColor(Color.WHITE.value);
+    this.view.setTextSize(14);
     // const String = Java.use("java.lang.String");
     // this.view.setText(String.$new(this.content));
     const Html = Java.use("android.text.Html");
@@ -271,7 +276,11 @@ export class Selector extends UIComponent {
 
   protected createView(context: any): void {
     const Spinner = Java.use("android.widget.Spinner");
+    const Color = Java.use("android.graphics.Color");
+
     this.view = Spinner.$new(context);
+    this.view.setBackgroundColor(0xFF555555); // gray background
+
     const ArrayAdapter = Java.use("android.widget.ArrayAdapter");
     const String = Java.use("java.lang.String");
     // Convert JavaScript strings to Java strings
@@ -288,6 +297,13 @@ export class Selector extends UIComponent {
     );
     this.view.setAdapter(adapter);
     this.view.setSelection(this.selectedIndex);
+
+    // Try to set text color (may not work on all Android versions)
+    try {
+      this.view.setPopupBackgroundResource(0xFF333333);
+    } catch (e) {
+      // ignore
+    }
     const AdapterViewOnItemSelectedListener = Java.use(
       "android.widget.AdapterView$OnItemSelectedListener",
     );

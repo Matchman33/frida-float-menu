@@ -27,12 +27,10 @@ Java.perform(() => {
     logMaxLines: 50,
     iconBase64: iconBase64,
     activityName: "com.r2games.myhero.aligames.MainActivity", // optional: specify activity class name
-    // iconBase64: '...' // optional
   };
 
   const menu = new FloatMenu(options);
 
-  menu.show();
   //   // Add a button with click handler
   const button = new Button("exampleButton", "Click Me!");
   button.setOnClick(() => {
@@ -85,6 +83,7 @@ Java.perform(() => {
 //     menu.hide();
 //     console.log("Menu hidden after timeout");
 //   }, 20000);
+  menu.show();
 
   console.log("FloatMenu example initialized. UI should be visible.");
 });
