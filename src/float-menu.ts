@@ -11,16 +11,10 @@ export interface FloatMenuOptions {
   showLogs?: boolean; // whether to show log panel
   logMaxLines?: number;
   activityName?: string; // optional activity class name to attach to
-  backgroundColor?: number; // background color (ARGB format, e.g., 0xFF202020)
-  title?: string; // main title text
-  subtitle?: string; // subtitle text
-  iconMode?: boolean; // start as icon, expand on click
-  defaultExpanded?: boolean; // if iconMode is true, start expanded?
 }
 
 export class FloatMenu {
   private options: FloatMenuOptions;
-  private windowManager: any; // Android WindowManager
   private windowParams: any; // WindowManager.LayoutParams
   private containerView: any; // LinearLayout or RelativeLayout
   private uiComponents: Map<string, UIComponent> = new Map();
@@ -29,28 +23,37 @@ export class FloatMenu {
   private eventEmitter: EventEmitter = new EventEmitter();
   private logger: Logger;
   private isShown: boolean = false;
-  private wmGlobal: any; // WindowManagerGlobal instance
-  private titleView: any; // TextView for title
-  private subtitleView: any; // TextView for subtitle
-  private iconView: any; // ImageView for icon mode
-  private titleBarLayout: any; // Layout for title bar
-  private buttonBarLayout: any; // Layout for minimize/hide buttons
-  private contentLayout: any; // Layout for menu content
-  private isExpanded: boolean = true; // Whether menu is expanded (vs icon mode)
+
+  private _context: any = null;
+  public get context(): any {
+    if (this._context === null) {
+      this._context = Java.use("android.app.ActivityThread")
+        .currentApplication()
+        .getApplicationContext();
+    }
+    return this._context;
+  }
+  private _windowManager: any = null;
+
+  public get windowManager(): any {
+    if (this._windowManager === null) {
+      const Context = Java.use("android.content.Context");
+      this._windowManager = Java.cast(
+        this.context.getSystemService(Context.WINDOW_SERVICE.value),
+        Java.use("android.view.ViewManager"),
+      );
+    }
+    return this._windowManager;
+  }
 
   constructor(options: FloatMenuOptions = {}) {
     this.options = {
-      width: 300,
-      height: 400,
+      width: 600,
+      height: 500,
       x: 100,
       y: 100,
       showLogs: false,
       logMaxLines: 100,
-      backgroundColor: 0xff202020, // dark gray background
-      title: "Float Menu",
-      subtitle: "",
-      iconMode: false,
-      defaultExpanded: true,
       ...options,
     };
     this.logger = new Logger(this.options.showLogs ? "debug" : "none");
@@ -62,373 +65,6 @@ export class FloatMenu {
     this.logger.info("FloatMenu initialized");
   }
 
-  private findActivity(name: string): Promise<any | null> {
-    return new Promise((resolve) => {
-      let result: any = null;
-      Java.choose(name, {
-        onMatch(instance) {
-          result = instance;
-          return "stop";
-        },
-        onComplete() {
-          resolve(result);
-        },
-      });
-    });
-  }
-
-  /**
-   * Create title bar with main title and subtitle
-   */
-  private createTitleBar(context: any): void {
-    const LinearLayout = Java.use("android.widget.LinearLayout");
-    const TextView = Java.use("android.widget.TextView");
-    const String = Java.use("java.lang.String");
-    const Color = Java.use("android.graphics.Color");
-
-    // Title bar layout (vertical)
-    this.titleBarLayout = LinearLayout.$new(context);
-    this.titleBarLayout.setOrientation(1); // VERTICAL
-    const titleBarParams = Java.use("android.view.ViewGroup$LayoutParams").$new(
-      Java.use("android.view.ViewGroup$LayoutParams").MATCH_PARENT,
-      80, // height in pixels
-    );
-    this.titleBarLayout.setLayoutParams(titleBarParams);
-    this.titleBarLayout.setBackgroundColor(0xff303030); // dark gray
-    this.titleBarLayout.setPadding(16, 8, 16, 8);
-
-    // Main title
-    this.titleView = TextView.$new(context);
-    this.titleView.setText(String.$new(this.options.title || "Float Menu"));
-    this.titleView.setTextSize(18);
-    this.titleView.setTextColor(Color.WHITE.value);
-    this.titleView.setTypeface(null, 1); // Typeface.BOLD
-    const titleParams = Java.use("android.view.ViewGroup$LayoutParams").$new(
-      Java.use("android.view.ViewGroup$LayoutParams").MATCH_PARENT,
-      Java.use("android.view.ViewGroup$LayoutParams").WRAP_CONTENT,
-    );
-    this.titleView.setLayoutParams(titleParams);
-
-    // Subtitle
-    this.subtitleView = TextView.$new(context);
-    this.subtitleView.setText(String.$new(this.options.subtitle || ""));
-    this.subtitleView.setTextSize(12);
-    this.subtitleView.setTextColor(0xffaaaaaa);
-    const subtitleParams = Java.use("android.view.ViewGroup$LayoutParams").$new(
-      Java.use("android.view.ViewGroup$LayoutParams").MATCH_PARENT,
-      Java.use("android.view.ViewGroup$LayoutParams").WRAP_CONTENT,
-    );
-    this.subtitleView.setLayoutParams(subtitleParams);
-    this.subtitleView.setPadding(0, 4, 0, 0);
-
-    // Add views to title bar
-    this.titleBarLayout.addView(this.titleView);
-    this.titleBarLayout.addView(this.subtitleView);
-
-    // Add title bar to container
-    this.containerView.addView(this.titleBarLayout);
-  }
-
-  /**
-   * Create content layout for UI components
-   */
-  private createContentLayout(context: any): void {
-    const LinearLayout = Java.use("android.widget.LinearLayout");
-
-    this.contentLayout = LinearLayout.$new(context);
-    this.contentLayout.setOrientation(1); // VERTICAL
-    const contentParams = Java.use("android.view.ViewGroup$LayoutParams").$new(
-      Java.use("android.view.ViewGroup$LayoutParams").MATCH_PARENT,
-      Java.use("android.view.ViewGroup$LayoutParams").WRAP_CONTENT,
-    );
-    this.contentLayout.setLayoutParams(contentParams);
-    this.contentLayout.setPadding(16, 16, 16, 16);
-
-    // Add content layout to container
-    this.containerView.addView(this.contentLayout);
-  }
-
-  /**
-   * Create button bar with minimize and hide buttons
-   */
-  private createButtonBar(context: any): void {
-    const LinearLayout = Java.use("android.widget.LinearLayout");
-    const Button = Java.use("android.widget.Button");
-    const String = Java.use("java.lang.String");
-    const Color = Java.use("android.graphics.Color");
-
-    // Button bar layout (horizontal)
-    this.buttonBarLayout = LinearLayout.$new(context);
-    this.buttonBarLayout.setOrientation(0); // HORIZONTAL
-    const buttonBarParams = Java.use(
-      "android.view.ViewGroup$LayoutParams",
-    ).$new(
-      Java.use("android.view.ViewGroup$LayoutParams").MATCH_PARENT,
-      60, // height in pixels
-    );
-    this.buttonBarLayout.setLayoutParams(buttonBarParams);
-    this.buttonBarLayout.setBackgroundColor(0xff252525);
-    this.buttonBarLayout.setPadding(16, 8, 16, 8);
-    this.buttonBarLayout.setGravity(17); // Gravity.CENTER
-
-    // Minimize button
-    const minimizeButton = Button.$new(context);
-    minimizeButton.setText(String.$new("最小化"));
-    minimizeButton.setTextColor(Color.WHITE.value);
-    minimizeButton.setBackgroundColor(0xff555555);
-    const minimizeParams = Java.use(
-      "android.widget.LinearLayout$LayoutParams",
-    ).$new(
-      0, // width
-      Java.use("android.view.ViewGroup$LayoutParams").WRAP_CONTENT,
-    );
-    minimizeParams.weight = 1;
-    minimizeParams.setMargins(0, 0, 8, 0);
-    minimizeButton.setLayoutParams(minimizeParams);
-
-    // Hide button
-    const hideButton = Button.$new(context);
-    hideButton.setText(String.$new("隐藏"));
-    hideButton.setTextColor(Color.WHITE.value);
-    hideButton.setBackgroundColor(0xffaa3333);
-    const hideParams = Java.use(
-      "android.widget.LinearLayout$LayoutParams",
-    ).$new(
-      0, // width
-      Java.use("android.view.ViewGroup$LayoutParams").WRAP_CONTENT,
-    );
-    hideParams.weight = 1;
-    hideParams.setMargins(8, 0, 0, 0);
-    hideButton.setLayoutParams(hideParams);
-
-    // Add click listeners
-    const OnClickListener = Java.use("android.view.View$OnClickListener");
-    const self = this;
-
-    const minimizeListener = OnClickListener.implement({
-      onClick: function (view: any) {
-        self.minimize();
-      },
-    });
-    minimizeButton.setOnClickListener(minimizeListener);
-
-    const hideListener = OnClickListener.implement({
-      onClick: function (view: any) {
-        self.hide();
-      },
-    });
-    hideButton.setOnClickListener(hideListener);
-
-    // Add buttons to button bar
-    this.buttonBarLayout.addView(minimizeButton);
-    this.buttonBarLayout.addView(hideButton);
-
-    // Add button bar to container
-    this.containerView.addView(this.buttonBarLayout);
-  }
-
-  /**
-   * Create icon view for icon mode
-   */
-  private createIconView(context: any): void {
-    const ImageView = Java.use("android.widget.ImageView");
-    const Bitmap = Java.use("android.graphics.Bitmap");
-    const BitmapFactory = Java.use("android.graphics.BitmapFactory");
-    const Base64 = Java.use("android.util.Base64");
-    const Canvas = Java.use("android.graphics.Canvas");
-    const Paint = Java.use("android.graphics.Paint");
-    const Rect = Java.use("android.graphics.Rect");
-    const RectF = Java.use("android.graphics.RectF");
-
-    this.iconView = ImageView.$new(context);
-
-    // icon size (px)
-    const size = 60;
-
-    // LayoutParams
-    const ViewGroupLayoutParams = Java.use(
-      "android.view.ViewGroup$LayoutParams",
-    );
-    this.iconView.setLayoutParams(ViewGroupLayoutParams.$new(size, size));
-
-    this.iconView.setScaleType(ImageView.ScaleType.CENTER_CROP.value);
-
-    let bitmap = null;
-
-    /* ===============================
-     * 1️⃣ Base64 → Bitmap
-     * =============================== */
-    if (this.options.iconBase64) {
-      try {
-        const bytes = Base64.decode(
-          this.options.iconBase64,
-          Base64.DEFAULT.value,
-        );
-
-        bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-      } catch (e: any) {
-        console.trace("Failed to decode iconBase64:", e);
-      }
-    }
-
-    /* ===============================
-     * 2️⃣ fallback：生成纯色圆形 icon
-     * =============================== */
-    if (!bitmap) {
-      bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888.value);
-
-      const canvas = Canvas.$new(bitmap);
-      const paint = Paint.$new();
-      paint.setAntiAlias(true);
-      paint.setColor(0xff4285f4); // Blue
-
-      canvas.drawCircle(size / 2, size / 2, size / 2, paint);
-    }
-
-    /* ===============================
-     * 3️⃣ 裁剪成圆形（通用）
-     * =============================== */
-    const output = Bitmap.createBitmap(
-      size,
-      size,
-      Bitmap.Config.ARGB_8888.value,
-    );
-
-    const canvas = Canvas.$new(output);
-    const paint = Paint.$new();
-    paint.setAntiAlias(true);
-
-    const rect = Rect.$new(0, 0, size, size);
-    const rectF = RectF.$new(rect);
-
-    canvas.drawOval(rectF, paint);
-    paint.setXfermode(
-      Java.use("android.graphics.PorterDuffXfermode").$new(
-        Java.use("android.graphics.PorterDuff$Mode").SRC_IN.value,
-      ),
-    );
-
-    canvas.drawBitmap(bitmap, rect, rect, paint);
-
-    // 设置到 ImageView
-    this.iconView.setImageBitmap(output);
-
-    /* ===============================
-     * 4️⃣ FrameLayout 居中
-     * =============================== */
-    const FrameLayoutParams = Java.use(
-      "android.widget.FrameLayout$LayoutParams",
-    );
-
-    const Gravity = Java.use("android.view.Gravity");
-
-    this.iconView.setLayoutParams(
-      FrameLayoutParams.$new(size, size, Gravity.CENTER.value),
-    );
-
-    // Add click listener to toggle expand/collapse
-    const OnClickListener = Java.use("android.view.View$OnClickListener");
-    const self = this;
-    // const iconClickListener = OnClickListener.implement({
-    //   onClick: function (view: any) {
-    //     self.toggleExpand();
-    //   },
-    // });
-
-    const clickListener = Java.registerClass({
-      // 动态生成类名，避免重复注册导致 ART 报错
-      name:
-        "com.frida.ImageViewClick_" + Math.random().toString(36).substring(7),
-      implements: [OnClickListener],
-      methods: {
-        onClick: function (view) {
-          // 调用你的方法
-          self.toggleExpand();
-
-          // 可选：打印日志
-          console.log("Icon clicked!");
-        },
-      },
-    });
-
-    // 绑定到 ImageView
-    this.iconView.setOnClickListener(clickListener.$new());
-  }
-
-  /**
-   * Toggle between expanded and icon mode
-   */
-  public toggleExpand(): void {
-    if (!this.isShown) return;
-
-    Java.scheduleOnMainThread(() => {
-      this.isExpanded = !this.isExpanded;
-      this.updateLayoutVisibility();
-    });
-  }
-
-  /**
-   * Minimize to icon mode
-   */
-  public minimize(): void {
-    if (!this.isShown) return;
-
-    Java.scheduleOnMainThread(() => {
-      this.isExpanded = false;
-      this.updateLayoutVisibility();
-    });
-  }
-
-  /**
-   * Update visibility of layout components based on expansion state
-   */
-  private updateLayoutVisibility(): void {
-    if (!this.containerView) return;
-
-    const View = Java.use("android.view.View");
-
-    if (this.isExpanded) {
-      // Show full menu
-      if (this.titleBarLayout)
-        this.titleBarLayout.setVisibility(View.VISIBLE.value);
-      if (this.contentLayout)
-        this.contentLayout.setVisibility(View.VISIBLE.value);
-      if (this.buttonBarLayout)
-        this.buttonBarLayout.setVisibility(View.VISIBLE.value);
-      if (this.iconView) this.iconView.setVisibility(View.GONE.value);
-
-      // Update window size to expanded size
-      this.windowParams.width = this.options.width || 300;
-      this.windowParams.height = this.options.height || 400;
-    } else {
-      // Show only icon
-      if (this.titleBarLayout)
-        this.titleBarLayout.setVisibility(View.GONE.value);
-      if (this.contentLayout) this.contentLayout.setVisibility(View.GONE.value);
-      if (this.buttonBarLayout)
-        this.buttonBarLayout.setVisibility(View.GONE.value);
-      if (this.iconView) this.iconView.setVisibility(View.VISIBLE.value);
-
-      // Update window size to icon size
-      this.windowParams.width = 80;
-      this.windowParams.height = 80;
-    }
-
-    // Update container view layout params
-    const layoutParams = this.containerView.getLayoutParams();
-    layoutParams.width = this.windowParams.width;
-    layoutParams.height = this.windowParams.height;
-    this.containerView.setLayoutParams(layoutParams);
-
-    // Update window layout
-    if (this.windowManager) {
-      this.windowManager.updateViewLayout(
-        this.containerView,
-        this.windowParams,
-      );
-    }
-  }
-
   /**
    * Create and show the floating window
    */
@@ -437,68 +73,6 @@ export class FloatMenu {
       try {
         this.logger.debug("Starting show() on main thread");
         // Get context, WindowManager and Window
-        let context,
-          windowManager,
-          window = null;
-
-        if (this.options.activityName) {
-          // Try to find activity by name
-          this.logger.debug(
-            `Looking for activity: ${this.options.activityName}`,
-          );
-          try {
-            // Java.choose to find activity instances
-            const foundActivity = await this.findActivity(
-              this.options.activityName,
-            );
-
-            if (foundActivity) {
-              context = foundActivity;
-              windowManager = foundActivity.getWindowManager();
-              window = foundActivity.getWindow();
-              this.logger.debug(
-                `Got windowManager and window from activity: ${this.options.activityName}`,
-              );
-            } else {
-              this.logger.debug(
-                `Activity ${this.options.activityName} not found, using application context`,
-              );
-              // Fallback to application context
-              const ActivityThread = Java.use("android.app.ActivityThread");
-              context =
-                ActivityThread.currentApplication().getApplicationContext();
-              const windowService = context.getSystemService("window");
-              const WindowManagerInterface = Java.use(
-                "android.view.WindowManager",
-              );
-              windowManager = Java.cast(windowService, WindowManagerInterface);
-              // window remains null
-            }
-          } catch (activityError) {
-            this.logger.debug(
-              `Failed to get activity ${this.options.activityName}: ${activityError}, using application context`,
-            );
-            const ActivityThread = Java.use("android.app.ActivityThread");
-            context =
-              ActivityThread.currentApplication().getApplicationContext();
-            const windowService = context.getSystemService("window");
-            const WindowManagerInterface = Java.use(
-              "android.view.WindowManager",
-            );
-            windowManager = Java.cast(windowService, WindowManagerInterface);
-            // window remains null
-          }
-        } else {
-          // No activity name specified, use application context
-          const ActivityThread = Java.use("android.app.ActivityThread");
-          context = ActivityThread.currentApplication().getApplicationContext();
-          const windowService = context.getSystemService("window");
-          const WindowManagerInterface = Java.use("android.view.WindowManager");
-          windowManager = Java.cast(windowService, WindowManagerInterface);
-          this.logger.debug("Got windowManager from application context");
-          // window remains null
-        }
-        this.windowManager = windowManager;
 
         // Create LayoutParams
         const LayoutParams = Java.use(
@@ -517,7 +91,7 @@ export class FloatMenu {
 
         // Create container layout
         const LinearLayout = Java.use("android.widget.LinearLayout");
-        this.containerView = LinearLayout.$new(context);
+        this.containerView = LinearLayout.$new(this.context);
         this.containerView.setOrientation(1); // LinearLayout.VERTICAL
         const LayoutParamsClass = Java.use(
           "android.view.ViewGroup$LayoutParams",
@@ -525,108 +99,27 @@ export class FloatMenu {
         this.containerView.setLayoutParams(
           LayoutParamsClass.$new(this.options.width, this.options.height),
         );
-
-        // Set background color
-        if (this.options.backgroundColor !== undefined) {
-          const Color = Java.use("android.graphics.Color");
-          this.containerView.setBackgroundColor(this.options.backgroundColor);
-        }
-
         this.logger.debug("Created containerView with layout params");
-
-        // Create title bar
-        this.createTitleBar(context);
-
-        // Create content layout for UI components
-        this.createContentLayout(context);
-
-        // Create button bar with minimize and hide buttons
-        this.createButtonBar(context);
-
-        // Create icon view for icon mode
-        this.createIconView(context);
-        if (this.iconView) {
-          this.containerView.addView(this.iconView);
-        }
-
-        // Set initial expansion state
-        this.isExpanded =
-          !this.options.iconMode! || this.options.defaultExpanded!;
-        this.updateLayoutVisibility();
 
         // Set icon if provided
         // Temporarily disabled due to errors
         if (this.options.iconBase64) {
-            this.setIcon(this.options.iconBase64);
+          this.setIcon(this.options.iconBase64);
         }
 
         // Add log view if enabled
         // Temporarily disabled due to errors
         if (this.options.showLogs) {
-            this.createLogView(context);
+          this.createLogView(this.context);
         }
 
-        // Add container to window using WindowManagerGlobal
-        this.logger.debug("Using WindowManagerGlobal for overlay window");
+        this.windowManager.addView(this.containerView, this.windowParams);
 
-        const WindowManagerGlobal = Java.use(
-          "android.view.WindowManagerGlobal",
-        );
-        const wmGlobal = WindowManagerGlobal.getInstance();
-        this.wmGlobal = wmGlobal; // Store WindowManagerGlobal instance
-
-        // Get display
-        const display = windowManager.getDefaultDisplay();
-        this.logger.debug("Got display: " + display.$className);
-
-        // Use window obtained earlier, or try to get from context if still null
-        if (window === null && context.getWindow) {
-          try {
-            window = context.getWindow();
-            this.logger.debug(
-              "Got window from context: " +
-                (window ? window.$className : "null"),
-            );
-          } catch (e) {
-            this.logger.debug("Cannot get window from context: " + e);
-          }
-        }
-
-        // User ID (0 for current user)
-        const userId = 0;
-
-        if (window !== null) {
-          this.logger.debug(
-            "Calling WindowManagerGlobal.addView with 5 parameters",
-          );
-          this.logger.debug(
-            `display: ${display ? display.$className : "null"}, window: ${window.$className}, userId: ${userId}`,
-          );
-          wmGlobal.addView(
-            this.containerView,
-            this.windowParams,
-            display,
-            window,
-            userId,
-          );
-        } else {
-          this.logger.debug(
-            "Window is null, falling back to windowManager.addView with 2 parameters",
-          );
-          try {
-            windowManager.addView(this.containerView, this.windowParams);
-            this.logger.debug("windowManager.addView succeeded");
-          } catch (e) {
-            this.logger.error("windowManager.addView failed: " + e);
-            // Re-throw to be caught by outer try-catch
-            throw e;
-          }
-        }
         this.isShown = true;
         this.logger.info("Floating window shown");
 
         // Add any pending components that were added before window was shown
-        this.processPendingComponents(context);
+        this.processPendingComponents(this.context);
       } catch (error) {
         console.trace("Failed to show floating window: " + error);
       }
@@ -646,12 +139,7 @@ export class FloatMenu {
       try {
         component.init(context);
         const view = component.getView();
-        // Add to content layout instead of container
-        if (this.contentLayout) {
-          this.contentLayout.addView(view);
-        } else {
-          this.containerView.addView(view);
-        }
+        this.containerView.addView(view);
         // Bind events (same as in addComponent)
         component.on("valueChanged", (value: any) => {
           this.eventEmitter.emit("component:" + id + ":valueChanged", value);
@@ -678,13 +166,7 @@ export class FloatMenu {
     if (!this.isShown) return;
     Java.scheduleOnMainThread(() => {
       try {
-        // Use WindowManagerGlobal to remove view
-        if (this.wmGlobal) {
-          this.wmGlobal.removeView(this.containerView, false); // false = not immediate
-        } else {
-          // Fallback to original windowManager
-          this.windowManager.removeView(this.containerView);
-        }
+        this.windowManager.removeView(this.containerView);
         this.isShown = false;
         this.logger.info("Floating window hidden");
       } catch (error) {
@@ -713,12 +195,7 @@ export class FloatMenu {
       const context = this.containerView.getContext();
       component.init(context);
       const view = component.getView();
-      // Add to content layout instead of container
-      if (this.contentLayout) {
-        this.contentLayout.addView(view);
-      } else {
-        this.containerView.addView(view);
-      }
+      this.containerView.addView(view);
       // Bind events
       component.on("valueChanged", (value: any) => {
         this.eventEmitter.emit("component:" + id + ":valueChanged", value);

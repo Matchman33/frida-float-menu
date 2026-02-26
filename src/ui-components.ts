@@ -109,7 +109,7 @@ export class Button extends UIComponent {
     const OnClickListener = Java.use("android.view.View$OnClickListener");
     const self = this;
     const clickListener = Java.registerClass({
-      name: "com.frida.MyClickListener" + Math.random().toString(36).substring(7),
+      name: "com.frida.MyClickListener" + Date.now() + Math.random().toString(36).substring(6),
       implements: [OnClickListener],
       methods: {
         onClick: function (v) {
@@ -176,7 +176,7 @@ export class Switch extends UIComponent {
     const self = this;
 
     const changeListener = Java.registerClass({
-      name: "com.frida.MyCheckedChangeListener",
+      name: "com.frida.MyCheckedChangeListener" + Date.now() + Math.random().toString(36).substring(6),
       implements: [CompoundButtonOnCheckedChangeListener],
       methods: {
         onCheckedChanged: function (buttonView: any, isChecked: boolean) {
@@ -310,7 +310,7 @@ export class Selector extends UIComponent {
     const self = this;
 
     const itemSelectedListener = Java.registerClass({
-      name: "com.frida.MyItemSelectedListener",
+      name: "com.frida.MyItemSelectedListener" + Date.now() + Math.random().toString(36).substring(6),
       implements: [AdapterViewOnItemSelectedListener],
       methods: {
         onItemSelected: function (

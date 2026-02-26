@@ -395,7 +395,9 @@ class FloatMenu {
         Java.scheduleOnMainThread(() => {
             try {
                 const context = Java.use('android.app.ActivityThread').currentApplication().getApplicationContext();
-                this.windowManager = context.getSystemService('window');
+                const Context = Java.use('android.content.Context');
+                const ViewManager = Java.use('android.view.ViewManager');
+                this.windowManager = Java.cast(context.getSystemService(Context.WINDOW_SERVICE.value), ViewManager);
 
                 const LayoutParams = Java.use('android.view.WindowManager$LayoutParams');
                 this.windowParams = LayoutParams.$new();
