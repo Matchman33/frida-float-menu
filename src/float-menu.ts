@@ -7,6 +7,9 @@ export interface FloatMenuOptions {
   height?: number;
   x?: number;
   y?: number;
+  iconVisible?: boolean;
+  iconWidth?: number;
+  iconHeight?: number;
   iconBase64?: string; // base64 encoded icon for floating window
   showLogs?: boolean; // whether to show log panel
   logMaxLines?: number;
@@ -52,6 +55,9 @@ export class FloatMenu {
       height: 500,
       x: 100,
       y: 100,
+      iconVisible: true,
+      iconWidth: 50,
+      iconHeight: 50,
       showLogs: false,
       logMaxLines: 100,
       ...options,
@@ -64,30 +70,62 @@ export class FloatMenu {
     }
     this.logger.info("FloatMenu initialized");
   }
+  private showIcon() {
+    // Set icon if provided
+    // Temporarily disabled due to errors
+    if (this.options.iconBase64) {
+      Java.scheduleOnMainThread(() => {
+        try {
+          const BitmapFactory = Java.use("android.graphics.BitmapFactory");
+          const Base64 = Java.use("android.util.Base64");
 
-  /**
-   * Create and show the floating window
-   */
-  public show(): void {
+          // 解码 Base64
+          const decoded = Base64.decode(
+            this.options.iconBase64,
+            Base64.DEFAULT.value,
+          );
+          const bitmap = BitmapFactory.decodeByteArray(
+            decoded,
+            0,
+            decoded.length,
+          );
+
+          // 创建 ImageView
+          const ImageView = Java.use("android.widget.ImageView");
+          const iconView = ImageView.$new(this.context);
+          iconView.setImageBitmap(bitmap);
+
+          // 设置 WindowManager.LayoutParams
+          const LayoutParams = Java.use(
+            "android.view.WindowManager$LayoutParams",
+          );
+          const PixelFormat = Java.use("android.graphics.PixelFormat");
+          const params = LayoutParams.$new(
+            this.options.width,
+            this.options.height,
+            this.options.x,
+            this.options.y,
+            LayoutParams.FLAG_NOT_FOCUSABLE.value | // 不抢焦点
+              LayoutParams.FLAG_NOT_TOUCH_MODAL.value, // TYPE_APPLICATION_OVERLAY
+            LayoutParams.TYPE_APPLICATION_OVERLAY.value, // FLAG_NOT_TOUCH_MODAL
+            PixelFormat.TRANSLUCENT.value, // PixelFormat.TRANSLUCENT
+          );
+          // params.flags =
+          //   LayoutParams.FLAG_NOT_FOCUSABLE.value | // 不抢焦点
+          //   LayoutParams.FLAG_NOT_TOUCH_MODAL.value; // 可点击穿透
+
+          // this.containerView.addView(iconView, 0);
+          this.windowManager.addView(iconView, this.windowParams);
+        } catch (error) {
+          this.logger.error("Failed to set icon: " + error);
+        }
+      });
+    }
+  }
+  private showMenu() {
     Java.scheduleOnMainThread(async () => {
       try {
-        this.logger.debug("Starting show() on main thread");
-        // Get context, WindowManager and Window
-
         // Create LayoutParams
-        const LayoutParams = Java.use(
-          "android.view.WindowManager$LayoutParams",
-        );
-        // Use 7-parameter constructor: (width, height, x, y, type, flags, format)
-        this.windowParams = LayoutParams.$new(
-          this.options.width,
-          this.options.height,
-          this.options.x,
-          this.options.y,
-          2038, // TYPE_APPLICATION_OVERLAY
-          LayoutParams.FLAG_NOT_TOUCH_MODAL.value, // FLAG_NOT_TOUCH_MODAL
-          1, // PixelFormat.TRANSLUCENT
-        );
 
         // Create container layout
         const LinearLayout = Java.use("android.widget.LinearLayout");
@@ -101,12 +139,6 @@ export class FloatMenu {
         );
         this.logger.debug("Created containerView with layout params");
 
-        // Set icon if provided
-        // Temporarily disabled due to errors
-        if (this.options.iconBase64) {
-          this.setIcon(this.options.iconBase64);
-        }
-
         // Add log view if enabled
         // Temporarily disabled due to errors
         if (this.options.showLogs) {
@@ -119,11 +151,32 @@ export class FloatMenu {
         this.logger.info("Floating window shown");
 
         // Add any pending components that were added before window was shown
-        this.processPendingComponents(this.context);
       } catch (error) {
         console.trace("Failed to show floating window: " + error);
       }
     });
+  }
+  /**
+   * Create and show the floating window
+   */
+  public show(): void {
+    const LayoutParams = Java.use("android.view.WindowManager$LayoutParams");
+    // Use 7-parameter constructor: (width, height, x, y, type, flags, format)
+    this.windowParams = LayoutParams.$new(
+      this.options.width,
+      this.options.height,
+      this.options.x,
+      this.options.y,
+      2038, // TYPE_APPLICATION_OVERLAY
+      LayoutParams.FLAG_NOT_TOUCH_MODAL.value, // FLAG_NOT_TOUCH_MODAL
+      1, // PixelFormat.TRANSLUCENT
+    );
+    if (this.options.iconVisible) {
+      this.showIcon();
+    } else {
+      this.showMenu();
+    }
+    this.processPendingComponents(this.context);
   }
 
   /**
@@ -286,36 +339,6 @@ export class FloatMenu {
       layoutParams.width = width;
       layoutParams.height = height;
       this.containerView.setLayoutParams(layoutParams);
-    });
-  }
-
-  /**
-   * Set icon from base64 string
-   */
-  private setIcon(base64: string): void {
-    Java.scheduleOnMainThread(() => {
-      try {
-        const context = this.containerView.getContext();
-        const BitmapFactory = Java.use("android.graphics.BitmapFactory");
-        const Base64 = Java.use("android.util.Base64");
-        const decoded = Base64.decode(base64, Base64.DEFAULT);
-        const bitmap = BitmapFactory.decodeByteArray(
-          decoded,
-          0,
-          decoded.length,
-        );
-        // Create ImageView and set bitmap
-        const ImageView = Java.use("android.widget.ImageView");
-        const iconView = ImageView.$new(context);
-        iconView.setImageBitmap(bitmap);
-        const LinearLayoutParams = Java.use(
-          "android.widget.LinearLayout$LayoutParams",
-        );
-        iconView.setLayoutParams(LinearLayoutParams.$new(50, 50));
-        this.containerView.addView(iconView, 0);
-      } catch (error) {
-        this.logger.error("Failed to set icon: " + error);
-      }
     });
   }
 

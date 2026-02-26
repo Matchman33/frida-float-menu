@@ -21,12 +21,12 @@ Java.perform(() => {
   const options: FloatMenuOptions = {
     width: 600,
     height: 500,
-    x: 50,
-    y: 50,
+    x: 0,
+    y: 0,
     showLogs: false,
     logMaxLines: 50,
+    
     iconBase64: iconBase64,
-    activityName: "com.r2games.myhero.aligames.MainActivity", // optional: specify activity class name
   };
 
   const menu = new FloatMenu(options);
