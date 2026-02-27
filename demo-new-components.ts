@@ -12,8 +12,9 @@ import {
   Slider,
   Collapsible,
   Category,
+  TextInput,
+  NumberInput,
 } from "./src/index";
-import { NumberInput, TextInput } from "./src/input";
 
 // Optional: attach to global for easier access in Frida REPL
 // import { attachToGlobal } from './src/index';
@@ -56,7 +57,6 @@ Java.perform(() => {
   menu.addComponent("inputs_cat", catInputs, "inputs");
 
   // TextInput component (single line)
-  // const textInput = new TextInput("name_input", "John Doe", "Enter your name");
   const textInput = new TextInput("name_input", "John Doe", "Enter your name");
   textInput.on("valueChanged", (value: string) => {
     console.log(`TextInput changed: "${value}"`);
@@ -77,7 +77,7 @@ Java.perform(() => {
   menu.addComponent("clear_text_button", clearTextButton, "inputs");
 
   // TextInput component (multiline)
-  const multiInput = new TextInput("notes_input", "", "Enter notes here...", "");
+  const multiInput = new TextInput("notes_input", "", "Enter notes here...", true);
   multiInput.on("valueChanged", (value: string) => {
     console.log(`Notes changed (${value.length} characters)`);
 
@@ -93,9 +93,7 @@ Java.perform(() => {
   const numberInput = new NumberInput(
     "age_input",
     25,
-    "",
     "Enter your age",
-    
     0,  // min
     120, // max
     1   // step

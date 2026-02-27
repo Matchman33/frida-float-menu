@@ -490,6 +490,7 @@ export class FloatMenu {
         }
 
         component.init(context);
+
         const view = component.getView();
 
         // Add to the appropriate tab container
@@ -518,7 +519,7 @@ export class FloatMenu {
         });
         console.debug(`Pending component ${id} added to tab ${tabId}`);
       } catch (error) {
-        console.error(`Failed to add pending component ${id}: ` + error);
+        console.trace(`Failed to add pending component ${id}: ` + error);
       }
     }
     // Clear pending components
@@ -879,7 +880,10 @@ export class FloatMenu {
           const childCount = this.tabView.getChildCount();
           for (let i = 0; i < childCount; i++) {
             // const button = this.tabView.getChildAt(i);
-            const button = Java.cast(this.tabView.getChildAt(i), Java.use("android.widget.Button"));
+            const button = Java.cast(
+              this.tabView.getChildAt(i),
+              Java.use("android.widget.Button"),
+            );
             // We need to identify which button corresponds to which tab
             // This is simplified - in a real implementation we might want to store button references
             // For now, we'll rely on the order matching the creation order
@@ -887,7 +891,6 @@ export class FloatMenu {
             if (i < tabIds.length) {
               const buttonTabId = tabIds[i];
               if (buttonTabId === tabId) {
-
                 // Active tab style
                 button.setTextColor(Color.WHITE.value);
                 button.setBackgroundColor(0xff4285f4 | 0); // Blue

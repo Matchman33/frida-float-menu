@@ -5,7 +5,7 @@ A TypeScript library for creating interactive floating windows on Android device
 ## Features
 
 - Create floating overlay windows using Android's `WindowManager`
-- Add interactive UI components: Button, Switch, Text label, Selector (dropdown)
+- Add interactive UI components: Button, Switch, Text label, Selector (dropdown), Slider, Collapsible panel, Category header, TextInput, NumberInput
 - Two-way data binding: JavaScript variables ↔ UI state synchronization
 - Event system for UI interactions (clicks, value changes)
 - Update UI components programmatically from JavaScript
@@ -175,6 +175,63 @@ class Selector extends UIComponent {
 }
 ```
 
+#### Slider (SeekBar)
+```typescript
+class Slider extends UIComponent {
+    constructor(id: string, label: string, min: number, max: number, initialValue?: number, step?: number);
+    setLabel(label: string): void;
+    setRange(min: number, max: number, step?: number): void;
+    // Emits 'valueChanged' event with numeric value
+}
+```
+
+#### Collapsible (Expandable Panel)
+```typescript
+class Collapsible extends UIComponent {
+    constructor(id: string, title: string, expanded?: boolean);
+    setTitle(title: string): void;
+    toggle(): void;                    // Toggle expanded/collapsed state
+    expand(): void;                    // Expand panel
+    collapse(): void;                  // Collapse panel
+    addChildView(view: any): void;     // Add child component view
+    removeChildView(view: any): void;  // Remove child component view
+    clearChildren(): void;             // Remove all child views
+    // Emits 'toggle', 'expand', 'collapse' events
+}
+```
+
+#### Category (Section Header)
+```typescript
+class Category extends UIComponent {
+    constructor(id: string, label: string);
+    setLabel(label: string): void;
+}
+```
+
+#### TextInput (EditText)
+```typescript
+class TextInput extends UIComponent {
+    constructor(id: string, initialValue?: string, hint?: string, multiline?: boolean);
+    setHint(hint: string): void;
+    setMultiline(multiline: boolean): void;
+    getText(): string;
+    setText(text: string): void;
+    // Emits 'valueChanged' event with string value
+}
+```
+
+#### NumberInput (Numeric EditText)
+```typescript
+class NumberInput extends UIComponent {
+    constructor(id: string, initialValue?: number, hint?: string, min?: number, max?: number, step?: number);
+    setHint(hint: string): void;
+    setConstraints(min: number | null, max: number | null, step: number | null): void;
+    getNumber(): number;
+    setNumber(value: number): void;
+    // Emits 'valueChanged' event with numeric value
+}
+```
+
 ### Event System
 
 Components emit events that can be listened to:
@@ -278,6 +335,30 @@ setTimeout(() => {
 }, 5000);
 ```
 
+### New Components Demo
+
+A comprehensive demo showcasing all new UI components is available in `demo-new-components.ts`:
+
+```bash
+# Build the demo
+npm run build:demo
+
+# Run the demo with Frida
+npm run frida:demo
+
+# Or compile manually
+frida-compile demo-new-components.ts -o demo-new-components-compiled.js -c
+frida -U -f com.example.app -l demo-new-components-compiled.js
+```
+
+The demo demonstrates:
+- **Slider**: Range control with min/max/step constraints
+- **Collapsible**: Expandable/collapsible panels with child components
+- **Category**: Section headers for organizing UI
+- **TextInput**: Single and multi-line text entry
+- **NumberInput**: Numeric input with validation and constraints
+- **Interaction**: Components communicating with each other
+
 ## Project Structure
 
 ```
@@ -286,9 +367,10 @@ frida-float-menu/
 │   ├── index.ts           # Main entry point (re-exports everything)
 │   ├── event-emitter.ts   # Event system
 │   ├── logger.ts          # Logging utilities
-│   ├── ui-components.ts   # UI component definitions
+│   ├── ui-components.ts   # UI component definitions (all components)
 │   └── float-menu.ts      # FloatMenu main class
-├── example.ts             # TypeScript usage example
+├── example.ts             # TypeScript usage example (basic components)
+├── demo-new-components.ts # TypeScript demo for new components
 ├── example.js             # JavaScript usage example
 ├── package.json           # Package configuration
 └── README.md              # This file
