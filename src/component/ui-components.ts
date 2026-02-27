@@ -24,6 +24,10 @@ export abstract class UIComponent {
     return this.value;
   }
 
+  public getId(): string {
+    return this.id;
+  }
+
   /**
    * Set value and update UI
    */
@@ -84,14 +88,3 @@ export abstract class UIComponent {
     // Override if needed
   }
 }
-
-
-
-
-
-
-
-
-
-
-

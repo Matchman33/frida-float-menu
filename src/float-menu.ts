@@ -490,8 +490,7 @@ export class FloatMenu {
         component.init(context);
 
         const view = component.getView();
-
-        // Add to the appropriate tab container
+        // // Add to the appropriate tab container
         if (tabInfo.container) {
           tabInfo.container.addView(view);
         } else {
@@ -542,15 +541,11 @@ export class FloatMenu {
    * @param id Unique identifier for the component
    * @param component UI component instance
    */
-  public addComponent(
-    id: string,
-    component: UIComponent,
-    tabId?: string,
-  ): void {
+  public addComponent(component: UIComponent, tabId?: string): void {
+    const id = component.getId();
     // Determine which tab this component belongs to
     const targetTabId = tabId || this.activeTabId;
     const tabInfo = this.tabs.get(targetTabId);
-
     if (!tabInfo) {
       console.error(
         `Cannot add component ${id} - tab ${targetTabId} not found`,
@@ -566,14 +561,14 @@ export class FloatMenu {
 
     if (!this.parentContainerView) {
       // Window not shown yet, queue component with tab info
-      this.pendingComponents.push({ id, component, tabId: targetTabId });
+      this.pendingComponents.push({ id, component, tabId: "inputs" });
       console.debug(
         `Component ${id} queued for tab ${targetTabId} (window not shown)`,
       );
       return;
     }
 
-    // Window is shown, add component immediately
+    // // Window is shown, add component immediately
     Java.scheduleOnMainThread(() => {
       const context = this.menuContainerView.getContext();
       component.init(context);
@@ -601,7 +596,7 @@ export class FloatMenu {
         this.eventEmitter.emit("component:" + id + ":click", data);
       });
     });
-    console.debug(`Component ${id} added to tab ${targetTabId}`);
+    // console.debug(`Component ${id} added to tab ${targetTabId}`);
   }
 
   /**
