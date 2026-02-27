@@ -103,13 +103,16 @@ export class Button extends UIComponent {
 
     this.view.setText(String.$new(this.label));
     this.view.setTextColor(Color.WHITE.value);
-    this.view.setBackgroundColor(0xFF555555); // gray background
+    this.view.setBackgroundColor(0xff555555 | 0); // gray background
     this.view.setPadding(16, 8, 16, 8);
 
     const OnClickListener = Java.use("android.view.View$OnClickListener");
     const self = this;
     const clickListener = Java.registerClass({
-      name: "com.frida.MyClickListener" + Date.now() + Math.random().toString(36).substring(6),
+      name:
+        "com.frida.MyClickListener" +
+        Date.now() +
+        Math.random().toString(36).substring(6),
       implements: [OnClickListener],
       methods: {
         onClick: function (v) {
@@ -176,7 +179,10 @@ export class Switch extends UIComponent {
     const self = this;
 
     const changeListener = Java.registerClass({
-      name: "com.frida.MyCheckedChangeListener" + Date.now() + Math.random().toString(36).substring(6),
+      name:
+        "com.frida.MyCheckedChangeListener" +
+        Date.now() +
+        Math.random().toString(36).substring(6),
       implements: [CompoundButtonOnCheckedChangeListener],
       methods: {
         onCheckedChanged: function (buttonView: any, isChecked: boolean) {
@@ -279,7 +285,7 @@ export class Selector extends UIComponent {
     const Color = Java.use("android.graphics.Color");
 
     this.view = Spinner.$new(context);
-    this.view.setBackgroundColor(0xFF555555); // gray background
+    this.view.setBackgroundColor(0xff555555 | 0); // gray background
 
     const ArrayAdapter = Java.use("android.widget.ArrayAdapter");
     const String = Java.use("java.lang.String");
@@ -300,7 +306,7 @@ export class Selector extends UIComponent {
 
     // Try to set text color (may not work on all Android versions)
     try {
-      this.view.setPopupBackgroundResource(0xFF333333);
+      this.view.setPopupBackgroundResource(0xff333333);
     } catch (e) {
       // ignore
     }
@@ -310,7 +316,10 @@ export class Selector extends UIComponent {
     const self = this;
 
     const itemSelectedListener = Java.registerClass({
-      name: "com.frida.MyItemSelectedListener" + Date.now() + Math.random().toString(36).substring(6),
+      name:
+        "com.frida.MyItemSelectedListener" +
+        Date.now() +
+        Math.random().toString(36).substring(6),
       implements: [AdapterViewOnItemSelectedListener],
       methods: {
         onItemSelected: function (

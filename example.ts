@@ -23,6 +23,8 @@ Java.perform(() => {
     height: 500,
     x: 0,
     y: 0,
+    iconWidth: 150,
+    iconHeight: 150,
     showLogs: false,
     logMaxLines: 50,
     
@@ -84,7 +86,6 @@ Java.perform(() => {
 //     menu.hide();
 //     console.log("Menu hidden after timeout");
 //   }, 20000);
-  menu.show();
 
   console.log("FloatMenu example initialized. UI should be visible.");
 });
