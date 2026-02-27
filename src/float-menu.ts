@@ -2,6 +2,11 @@ import { EventEmitter } from "./event-emitter";
 import { UIComponent } from "./ui-components";
 import { Logger, LogLevel } from "./logger";
 
+export interface TabDefinition {
+  id: string;
+  label: string;
+}
+
 export interface FloatMenuOptions {
   width?: number;
   height?: number;
@@ -18,6 +23,9 @@ export interface FloatMenuOptions {
   subtitle?: string; // Subtitle text (default: "Interactive Debugging Panel")
   showHeader?: boolean; // Whether to show header (default: true)
   showFooter?: boolean; // Whether to show footer (default: true)
+  tabs?: TabDefinition[]; // Tab definitions (optional)
+  activeTab?: string; // Initially active tab ID (default: first tab or "default")
+  showTabs?: boolean; // Whether to show tab bar (default: true if tabs are defined)
 }
 
 export class FloatMenu {
@@ -31,12 +39,28 @@ export class FloatMenu {
   private iconView: any; // ImageView for icon
   private parentContainerView: any; // Backward compatibility alias for parentContainerView
   private uiComponents: Map<string, UIComponent> = new Map();
-  private pendingComponents: Array<{ id: string; component: UIComponent }> = [];
+  private pendingComponents: Array<{
+    id: string;
+    component: UIComponent;
+    tabId: string;
+  }> = [];
   private logView: any; // TextView or ListView for logs
   private eventEmitter: EventEmitter = new EventEmitter();
   private logger: Logger;
   private isShown: boolean = false;
   private isIconMode: boolean = true; // Whether currently showing icon or menu
+
+  // Tab management
+  private tabs: Map<
+    string,
+    {
+      label: string;
+      container: any; // Content container for this tab
+      components: Set<string>; // Component IDs belonging to this tab
+    }
+  > = new Map();
+  private tabView: any; // Tab bar view (LinearLayout with buttons)
+  private activeTabId: string = "default"; // Currently active tab ID
 
   private _context: any = null;
   public get context(): any {
@@ -75,6 +99,9 @@ export class FloatMenu {
       subtitle: "Interactive Debugging Panel",
       showHeader: true,
       showFooter: true,
+      tabs: undefined,
+      activeTab: undefined,
+      showTabs: undefined, // Will be determined based on tabs array
       ...options,
     };
     this.logger = new Logger(this.options.showLogs ? "debug" : "none");
@@ -83,7 +110,52 @@ export class FloatMenu {
         this.addLogToView(level, message);
       });
     }
+
+    // Initialize tabs
+    this.initializeTabs();
+
     console.info("FloatMenu initialized");
+  }
+
+  /**
+   * Initialize tabs from options
+   */
+  private initializeTabs(): void {
+    // Clear existing tabs
+    this.tabs.clear();
+
+    // Determine if we should show tabs
+    if (this.options.tabs && this.options.tabs.length > 0) {
+      // If showTabs is not explicitly set, default to true when tabs are defined
+      if (this.options.showTabs === undefined) {
+        this.options.showTabs = true;
+      }
+
+      // Create tab entries
+      for (const tabDef of this.options.tabs) {
+        this.tabs.set(tabDef.id, {
+          label: tabDef.label,
+          container: null, // Will be created in show()
+          components: new Set<string>(),
+        });
+      }
+
+      // Set active tab
+      if (this.options.activeTab && this.tabs.has(this.options.activeTab)) {
+        this.activeTabId = this.options.activeTab;
+      } else if (this.options.tabs.length > 0) {
+        this.activeTabId = this.options.tabs[0].id;
+      }
+    } else {
+      // No tabs defined, create default tab
+      this.tabs.set("default", {
+        label: "Default",
+        container: null,
+        components: new Set<string>(),
+      });
+      this.activeTabId = "default";
+      this.options.showTabs = false; // Don't show tab bar for single default tab
+    }
   }
 
   /**
@@ -289,6 +361,12 @@ export class FloatMenu {
           this.menuContainerView.addView(this.headerView);
         }
 
+        // Create and add tab bar if enabled
+        if (this.options.showTabs) {
+          this.createTabView(this.context);
+          this.menuContainerView.addView(this.tabView);
+        }
+
         // Create scrollable content area
         this.scrollView = ScrollView.$new(this.context);
         const scrollParams = LinearLayoutParams.$new(
@@ -298,17 +376,48 @@ export class FloatMenu {
         );
         this.scrollView.setLayoutParams(scrollParams);
 
-        // Create content container inside ScrollView
-        this.contentContainer = LinearLayout.$new(this.context);
-        this.contentContainer.setOrientation(1); // LinearLayout.VERTICAL
-        this.contentContainer.setLayoutParams(
+        // Create tab containers inside ScrollView
+        const tabContainersWrapper = FrameLayout.$new(this.context);
+        tabContainersWrapper.setLayoutParams(
           ViewGroupLayoutParams.$new(
             ViewGroupLayoutParams.MATCH_PARENT.value,
             ViewGroupLayoutParams.WRAP_CONTENT.value,
           ),
         );
 
-        this.scrollView.addView(this.contentContainer);
+        // Create a container for each tab
+        const View = Java.use("android.view.View");
+        for (const [tabId, tabInfo] of this.tabs) {
+          const tabContainer = LinearLayout.$new(this.context);
+          tabContainer.setOrientation(1); // LinearLayout.VERTICAL
+          tabContainer.setLayoutParams(
+            ViewGroupLayoutParams.$new(
+              ViewGroupLayoutParams.MATCH_PARENT.value,
+              ViewGroupLayoutParams.WRAP_CONTENT.value,
+            ),
+          );
+
+          // Set visibility: only active tab is visible
+          if (tabId === this.activeTabId) {
+            tabContainer.setVisibility(View.VISIBLE.value);
+            // Set this.contentContainer to active tab's container for backward compatibility
+            this.contentContainer = tabContainer;
+          } else {
+            tabContainer.setVisibility(View.GONE.value);
+          }
+
+          tabInfo.container = tabContainer;
+          tabContainersWrapper.addView(tabContainer);
+        }
+
+        // If no active tab found (shouldn't happen), create a default container
+        if (!this.contentContainer && this.tabs.size > 0) {
+          const firstTab = Array.from(this.tabs.values())[0];
+          this.contentContainer = firstTab.container;
+          firstTab.container.setVisibility(View.VISIBLE.value);
+        }
+
+        this.scrollView.addView(tabContainersWrapper);
         this.menuContainerView.addView(this.scrollView);
 
         // Create and add footer if enabled
@@ -325,7 +434,6 @@ export class FloatMenu {
         this.parentContainerView.addView(this.menuContainerView);
 
         // Set initial visibility based on iconVisible option
-        const View = Java.use("android.view.View");
         if (this.options.iconVisible) {
           // Show icon, hide menu
           this.iconView.setVisibility(View.VISIBLE.value);
@@ -371,13 +479,32 @@ export class FloatMenu {
     console.debug(
       `Processing ${this.pendingComponents.length} pending components`,
     );
-    for (const { id, component } of this.pendingComponents) {
+    for (const { id, component, tabId } of this.pendingComponents) {
       try {
+        const tabInfo = this.tabs.get(tabId);
+        if (!tabInfo) {
+          console.error(
+            `Cannot add pending component ${id} - tab ${tabId} not found`,
+          );
+          continue;
+        }
+
         component.init(context);
         const view = component.getView();
-        // Add to content container (scrollable area)
 
-        this.contentContainer.addView(view);
+        // Add to the appropriate tab container
+        if (tabInfo.container) {
+          tabInfo.container.addView(view);
+        } else {
+          // Fallback to contentContainer (should not happen if tab container was created)
+          console.warn(
+            `Tab container for ${tabId} not found, using contentContainer`,
+          );
+          this.contentContainer.addView(view);
+        }
+
+        // Record component ID in tab's component set
+        tabInfo.components.add(id);
 
         // Bind events (same as in addComponent)
         component.on("valueChanged", (value: any) => {
@@ -389,7 +516,7 @@ export class FloatMenu {
         component.on("click", (data: any) => {
           this.eventEmitter.emit("component:" + id + ":click", data);
         });
-        console.debug(`Pending component ${id} added`);
+        console.debug(`Pending component ${id} added to tab ${tabId}`);
       } catch (error) {
         console.error(`Failed to add pending component ${id}: ` + error);
       }
@@ -419,13 +546,34 @@ export class FloatMenu {
    * @param id Unique identifier for the component
    * @param component UI component instance
    */
-  public addComponent(id: string, component: UIComponent): void {
+  public addComponent(
+    id: string,
+    component: UIComponent,
+    tabId?: string,
+  ): void {
+    // Determine which tab this component belongs to
+    const targetTabId = tabId || this.activeTabId;
+    const tabInfo = this.tabs.get(targetTabId);
+
+    if (!tabInfo) {
+      console.error(
+        `Cannot add component ${id} - tab ${targetTabId} not found`,
+      );
+      return;
+    }
+
+    // Store component with tab information
     this.uiComponents.set(id, component);
 
+    // Record component ID in tab's component set
+    tabInfo.components.add(id);
+
     if (!this.parentContainerView) {
-      // Window not shown yet, queue component
-      this.pendingComponents.push({ id, component });
-      console.debug(`Component ${id} queued (window not shown)`);
+      // Window not shown yet, queue component with tab info
+      this.pendingComponents.push({ id, component, tabId: targetTabId });
+      console.debug(
+        `Component ${id} queued for tab ${targetTabId} (window not shown)`,
+      );
       return;
     }
 
@@ -434,8 +582,17 @@ export class FloatMenu {
       const context = this.menuContainerView.getContext();
       component.init(context);
       const view = component.getView();
-      // Add to content container (scrollable area)
-      this.contentContainer.addView(view);
+
+      // Add to the appropriate tab container
+      if (tabInfo.container) {
+        tabInfo.container.addView(view);
+      } else {
+        // Fallback to contentContainer (should not happen if tab container was created)
+        console.warn(
+          `Tab container for ${targetTabId} not found, using contentContainer`,
+        );
+        this.contentContainer.addView(view);
+      }
 
       // Bind events
       component.on("valueChanged", (value: any) => {
@@ -448,7 +605,7 @@ export class FloatMenu {
         this.eventEmitter.emit("component:" + id + ":click", data);
       });
     });
-    console.debug(`Component ${id} added`);
+    console.debug(`Component ${id} added to tab ${targetTabId}`);
   }
 
   /**
@@ -457,37 +614,87 @@ export class FloatMenu {
   public removeComponent(id: string): void {
     const component = this.uiComponents.get(id);
     if (!component) return;
+
+    // Find which tab this component belongs to
+    let targetTabId: string | null = null;
+    for (const [tabId, tabInfo] of this.tabs) {
+      if (tabInfo.components.has(id)) {
+        targetTabId = tabId;
+        break;
+      }
+    }
+
+    // Remove from pending components if window not shown yet
+    this.pendingComponents = this.pendingComponents.filter((p) => p.id !== id);
+
     Java.scheduleOnMainThread(() => {
       const view = component.getView();
-      // Remove from content container if it exists, otherwise try menu container, then parent container
-      if (this.contentContainer) {
-        try {
-          this.contentContainer.removeView(view);
-        } catch (e) {
-          // If not found in content container, try menu container
-          if (this.menuContainerView) {
-            try {
-              this.menuContainerView.removeView(view);
-            } catch (e2) {
-              // If not found in menu container, try parent container
-              this.parentContainerView.removeView(view);
+
+      if (targetTabId) {
+        // Remove from the specific tab container
+        const tabInfo = this.tabs.get(targetTabId);
+        if (tabInfo && tabInfo.container) {
+          try {
+            tabInfo.container.removeView(view);
+          } catch (e) {
+            // Fallback to contentContainer
+            if (this.contentContainer) {
+              try {
+                this.contentContainer.removeView(view);
+              } catch (e2) {
+                // Continue to other fallbacks
+              }
             }
-          } else {
-            this.parentContainerView.removeView(view);
+          }
+        } else if (this.contentContainer) {
+          // Tab container not found, try contentContainer
+          try {
+            this.contentContainer.removeView(view);
+          } catch (e) {
+            // Continue to other fallbacks
           }
         }
-      } else if (this.menuContainerView) {
-        try {
-          this.menuContainerView.removeView(view);
-        } catch (e) {
+      } else {
+        // Component not associated with any tab (should not happen)
+        // Use original fallback logic
+        if (this.contentContainer) {
+          try {
+            this.contentContainer.removeView(view);
+          } catch (e) {
+            if (this.menuContainerView) {
+              try {
+                this.menuContainerView.removeView(view);
+              } catch (e2) {
+                this.parentContainerView.removeView(view);
+              }
+            } else {
+              this.parentContainerView.removeView(view);
+            }
+          }
+        } else if (this.menuContainerView) {
+          try {
+            this.menuContainerView.removeView(view);
+          } catch (e) {
+            this.parentContainerView.removeView(view);
+          }
+        } else {
           this.parentContainerView.removeView(view);
         }
-      } else {
-        this.parentContainerView.removeView(view);
       }
     });
+
+    // Remove component from tab's component set
+    if (targetTabId) {
+      const tabInfo = this.tabs.get(targetTabId);
+      if (tabInfo) {
+        tabInfo.components.delete(id);
+      }
+    }
+
     this.uiComponents.delete(id);
-    console.debug(`Component ${id} removed`);
+    console.debug(
+      `Component ${id} removed${targetTabId ? ` from tab ${targetTabId}` : ""}`,
+    );
   }
 
   /**
@@ -553,6 +760,152 @@ export class FloatMenu {
       layoutParams.width = width;
       layoutParams.height = height;
       this.parentContainerView.setLayoutParams(layoutParams);
+    });
+  }
+
+  /**
+   * Create tab bar view with buttons for each tab
+   */
+  private createTabView(context: any): void {
+    try {
+      const LinearLayout = Java.use("android.widget.LinearLayout");
+      const LinearLayoutParams = Java.use(
+        "android.widget.LinearLayout$LayoutParams",
+      );
+      const Button = Java.use("android.widget.Button");
+      const Color = Java.use("android.graphics.Color");
+      const OnClickListener = Java.use("android.view.View$OnClickListener");
+
+      // Create tab bar container (horizontal LinearLayout)
+      this.tabView = LinearLayout.$new(context);
+      this.tabView.setOrientation(0); // HORIZONTAL
+      this.tabView.setLayoutParams(
+        LinearLayoutParams.$new(
+          LinearLayoutParams.MATCH_PARENT.value,
+          LinearLayoutParams.WRAP_CONTENT.value,
+        ),
+      );
+      this.tabView.setPadding(8, 8, 8, 8);
+      this.tabView.setBackgroundColor(0xff555555 | 0); // Medium dark gray
+
+      const JString = Java.use("java.lang.String");
+      const self = this;
+
+      // Create a button for each tab
+      for (const [tabId, tabInfo] of this.tabs) {
+        const tabButton = Button.$new(context);
+        tabButton.setText(JString.$new(tabInfo.label));
+
+        // Style active tab differently
+        if (tabId === this.activeTabId) {
+          tabButton.setTextColor(Color.WHITE.value);
+          tabButton.setBackgroundColor(0xff4285f4 | 0); // Blue for active tab
+          tabButton.setTypeface(null, 1); // Typeface.BOLD
+        } else {
+          tabButton.setTextColor(0xffcccccc | 0); // Light gray for inactive
+          tabButton.setBackgroundColor(0xff666666 | 0); // Darker gray
+        }
+
+        tabButton.setPadding(16, 8, 16, 8);
+        tabButton.setAllCaps(false);
+
+        // Create click listener for tab button
+        const tabClickListener = Java.registerClass({
+          name:
+            "com.example.TabClickListener" +
+            Date.now() +
+            Math.random().toString(36).substring(6) +
+            "_" +
+            tabId,
+          implements: [OnClickListener],
+          methods: {
+            onClick: function (view: any) {
+              self.switchTab(tabId);
+            },
+          },
+        });
+        tabButton.setOnClickListener(tabClickListener.$new());
+
+        // Layout params for tab buttons (equal weight)
+        const btnParams = LinearLayoutParams.$new(
+          0, // width will be set by weight
+          LinearLayoutParams.WRAP_CONTENT.value,
+          1.0, // weight = 1, buttons share space equally
+        );
+        btnParams.setMargins(2, 0, 2, 0);
+        tabButton.setLayoutParams(btnParams);
+
+        this.tabView.addView(tabButton);
+      }
+    } catch (error) {
+      console.trace("Failed to create tab view: " + error);
+    }
+  }
+
+  /**
+   * Switch to a different tab
+   * @param tabId ID of the tab to switch to
+   */
+  public switchTab(tabId: string): void {
+    if (!this.tabs.has(tabId) || tabId === this.activeTabId) {
+      return;
+    }
+
+    const oldTabId = this.activeTabId;
+    this.activeTabId = tabId;
+
+    Java.scheduleOnMainThread(() => {
+      try {
+        const View = Java.use("android.view.View");
+        const Color = Java.use("android.graphics.Color");
+        const JString = Java.use("java.lang.String");
+        // Update tab containers visibility
+        for (const [id, tabInfo] of this.tabs) {
+          if (tabInfo.container) {
+            if (id === tabId) {
+              tabInfo.container.setVisibility(View.VISIBLE.value);
+              // Update this.contentContainer reference for backward compatibility
+              this.contentContainer = tabInfo.container;
+            } else {
+              tabInfo.container.setVisibility(View.GONE.value);
+            }
+          }
+        }
+
+        // Update tab button styles if tabView exists
+        if (this.tabView) {
+          // Get all child buttons in tabView
+
+          const childCount = this.tabView.getChildCount();
+          for (let i = 0; i < childCount; i++) {
+            // const button = this.tabView.getChildAt(i);
+            const button = Java.cast(this.tabView.getChildAt(i), Java.use("android.widget.Button"));
+            // We need to identify which button corresponds to which tab
+            // This is simplified - in a real implementation we might want to store button references
+            // For now, we'll rely on the order matching the creation order
+            const tabIds = Array.from(this.tabs.keys());
+            if (i < tabIds.length) {
+              const buttonTabId = tabIds[i];
+              if (buttonTabId === tabId) {
+
+                // Active tab style
+                button.setTextColor(Color.WHITE.value);
+                button.setBackgroundColor(0xff4285f4 | 0); // Blue
+                // button.setTypeface(null, 1); // Bold
+              } else if (buttonTabId === oldTabId) {
+                // Previously active tab style
+                button.setTextColor(0xffcccccc | 0); // Light gray
+                button.setBackgroundColor(0xff666666 | 0); // Darker gray
+              }
+            }
+          }
+        }
+
+        this.eventEmitter.emit("tabChanged", tabId, oldTabId);
+        console.debug(`Switched to tab: ${tabId}`);
+      } catch (error) {
+        console.trace(`Failed to switch to tab ${tabId}:`, error);
+      }
     });
   }
 
@@ -758,5 +1111,12 @@ export class FloatMenu {
       const String = Java.use("java.lang.String");
       this.logView.setText(String.$new(""));
     });
+  }
+
+  /**
+   * Get the ID of the currently active tab
+   */
+  public getActiveTabId(): string {
+    return this.activeTabId;
   }
 }

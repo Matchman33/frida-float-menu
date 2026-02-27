@@ -10,7 +10,7 @@ export { Logger, LogLevel, log } from './logger';
 export { UIComponent, Button, Switch, Text, Selector } from './ui-components';
 
 // FloatMenu main class
-export { FloatMenu, FloatMenuOptions } from './float-menu';
+export { FloatMenu, FloatMenuOptions, TabDefinition } from './float-menu';
 
 // Import the classes for use in attachToGlobal function
 import { FloatMenu as FM } from './float-menu';

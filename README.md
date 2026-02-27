@@ -88,29 +88,49 @@ frida -U -f com.example.app -l my-script.js
 Main class for creating and managing floating windows.
 
 ```typescript
+interface TabDefinition {
+    id: string;              // Unique tab identifier
+    label: string;           // Display label for tab button
+}
+
 interface FloatMenuOptions {
-    width?: number;           // Window width (default: 300)
-    height?: number;          // Window height (default: 400)
+    width?: number;           // Window width (default: 1000)
+    height?: number;          // Window height (default: 900)
     x?: number;              // X position (default: 100)
     y?: number;              // Y position (default: 100)
-    iconBase64?: string;     // Base64-encoded icon image (optional)
-    showLogs?: boolean;      // Show log panel (default: false)
-    logMaxLines?: number;    // Max lines in log panel (default: 100)
+    iconVisible?: boolean;    // Show icon initially (default: true)
+    iconWidth?: number;       // Icon width (default: 200)
+    iconHeight?: number;      // Icon height (default: 200)
+    iconBase64?: string;      // Base64-encoded icon image (optional)
+    showLogs?: boolean;       // Show log panel (default: false)
+    logMaxLines?: number;     // Max lines in log panel (default: 100)
+    title?: string;           // Main title text (default: "Frida Float Menu")
+    subtitle?: string;        // Subtitle text (default: "Interactive Debugging Panel")
+    showHeader?: boolean;     // Whether to show header (default: true)
+    showFooter?: boolean;     // Whether to show footer (default: true)
+    tabs?: TabDefinition[];   // Tab definitions (optional)
+    activeTab?: string;       // Initially active tab ID (default: first tab or "default")
+    showTabs?: boolean;       // Whether to show tab bar (default: true if tabs are defined)
 }
 
 class FloatMenu {
     constructor(options?: FloatMenuOptions);
     show(): void;                    // Display window
     hide(): void;                    // Hide and destroy window
-    addComponent(id: string, component: UIComponent): void;
+    addComponent(id: string, component: UIComponent, tabId?: string): void;
     removeComponent(id: string): void;
     getComponent<T extends UIComponent>(id: string): T | undefined;
     setComponentValue(id: string, value: any): void;
+    switchTab(tabId: string): void;  // Switch to a different tab
+    getActiveTabId(): string;        // Get currently active tab ID
     on(event: string, callback: (...args: any[]) => void): void;
     off(event: string, callback: (...args: any[]) => void): void;
     setPosition(x: number, y: number): void;
     setSize(width: number, height: number): void;
     clearLogs(): void;
+    showIcon(): void;                // Minimize to icon
+    showMenu(): void;                // Expand to menu
+    toggleView(): void;              // Toggle between icon and menu
 }
 ```
 
@@ -168,6 +188,11 @@ component.on('click', () => { /* Button clicked */ });
 menu.on('component:mySwitch:valueChanged', (value) => {
     console.log('Switch with ID "mySwitch" changed to:', value);
 });
+
+// Tab change events
+menu.on('tabChanged', (newTabId: string, oldTabId: string) => {
+    console.log(`Tab changed from ${oldTabId} to ${newTabId}`);
+});
 ```
 
 ### Logger
@@ -187,6 +212,43 @@ logger.debug('Debug info');
 ### Basic Example
 
 See `example.ts` for a complete TypeScript example with all components.
+
+### Tabbed Interface Example
+
+Create a floating menu with multiple tabs:
+
+```typescript
+const menu = new FloatMenu({
+    width: 1000,
+    height: 900,
+    tabs: [
+        { id: "controls", label: "Controls" },
+        { id: "settings", label: "Settings" },
+        { id: "info", label: "Info" }
+    ],
+    activeTab: "controls",
+    showTabs: true,
+    title: "Multi-tab Menu",
+    subtitle: "Organize your UI in tabs"
+});
+
+menu.show();
+
+// Add components to specific tabs
+const button = new Button("btn1", "Click Me");
+menu.addComponent("btn1", button, "controls");
+
+const switchComp = new Switch("switch1", "Enable", false);
+menu.addComponent("switch1", switchComp, "settings");
+
+// Listen for tab changes
+menu.on("tabChanged", (newTabId, oldTabId) => {
+    console.log(`Tab changed: ${oldTabId} -> ${newTabId}`);
+});
+
+// Switch tabs programmatically
+menu.switchTab("settings");
+```
 
 ### Global Attachment (for simple scripts)
 
