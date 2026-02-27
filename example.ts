@@ -19,12 +19,12 @@ Java.perform(() => {
 
   // Create menu configuration
   const options: FloatMenuOptions = {
-    width: 600,
-    height: 700,
-    x: 0,
+    width: 1000,
+    height: 900,
+    x: -100,
     y: 0,
-    iconWidth: 150,
-    iconHeight: 150,
+    iconWidth: 200,
+    iconHeight: 200,
     showLogs: false,
     logMaxLines: 50,
 

@@ -14,12 +14,20 @@ export interface FloatMenuOptions {
   showLogs?: boolean; // whether to show log panel
   logMaxLines?: number;
   activityName?: string; // optional activity class name to attach to
+  title?: string; // Main title text (default: "Frida Float Menu")
+  subtitle?: string; // Subtitle text (default: "Interactive Debugging Panel")
+  showHeader?: boolean; // Whether to show header (default: true)
+  showFooter?: boolean; // Whether to show footer (default: true)
 }
 
 export class FloatMenu {
   private options: FloatMenuOptions;
   private windowParams: any; // WindowManager.LayoutParams
-  private menuContainerView: any; // LinearLayout for menu content
+  private menuContainerView: any; // Outer layout containing header, scrollable content and footer
+  private contentContainer: any; // Scrollable content area (LinearLayout inside ScrollView)
+  private scrollView: any; // ScrollView wrapping contentContainer
+  private headerView: any; // Header area with title and subtitle
+  private footerView: any; // Footer area with buttons
   private iconView: any; // ImageView for icon
   private parentContainerView: any; // Backward compatibility alias for parentContainerView
   private uiComponents: Map<string, UIComponent> = new Map();
@@ -54,15 +62,19 @@ export class FloatMenu {
 
   constructor(options: FloatMenuOptions = {}) {
     this.options = {
-      width: 600,
-      height: 500,
+      width: 1000,
+      height: 900,
       x: 100,
       y: 100,
       iconVisible: true,
-      iconWidth: 50,
-      iconHeight: 50,
+      iconWidth: 200,
+      iconHeight: 200,
       showLogs: false,
       logMaxLines: 100,
+      title: "Frida Float Menu",
+      subtitle: "Interactive Debugging Panel",
+      showHeader: true,
+      showFooter: true,
       ...options,
     };
     this.logger = new Logger(this.options.showLogs ? "debug" : "none");
@@ -199,6 +211,30 @@ export class FloatMenu {
   }
 
   /**
+   * Show as icon (minimize)
+   */
+  public showIcon(): void {
+    if (!this.isShown) return;
+    Java.scheduleOnMainThread(() => {
+      if (!this.isIconMode) {
+        this.toggleView();
+      }
+    });
+  }
+
+  /**
+   * Show as menu (expand)
+   */
+  public showMenu(): void {
+    if (!this.isShown) return;
+    Java.scheduleOnMainThread(() => {
+      if (this.isIconMode) {
+        this.toggleView();
+      }
+    });
+  }
+
+  /**
    * Create and show the floating window
    */
   public show(): void {
@@ -230,8 +266,14 @@ export class FloatMenu {
           ViewGroupLayoutParams.$new(this.options.width, this.options.height),
         );
 
-        // Create menu container (LinearLayout)
+        // Create outer layout for menu (contains header, scrollable content and footer)
         const LinearLayout = Java.use("android.widget.LinearLayout");
+        const LinearLayoutParams = Java.use(
+          "android.widget.LinearLayout$LayoutParams",
+        );
+        const ScrollView = Java.use("android.widget.ScrollView");
+
+        // Create outer menu container (vertical LinearLayout)
         this.menuContainerView = LinearLayout.$new(this.context);
         this.menuContainerView.setOrientation(1); // LinearLayout.VERTICAL
         this.menuContainerView.setLayoutParams(
@@ -240,8 +282,43 @@ export class FloatMenu {
             ViewGroupLayoutParams.MATCH_PARENT.value,
           ),
         );
+        // Create and add header if enabled
+        if (this.options.showHeader) {
+          this.createHeaderView(this.context);
+
+          this.menuContainerView.addView(this.headerView);
+        }
+
+        // Create scrollable content area
+        this.scrollView = ScrollView.$new(this.context);
+        const scrollParams = LinearLayoutParams.$new(
+          ViewGroupLayoutParams.MATCH_PARENT.value,
+          0, // height will be set by weight
+          1.0, // weight = 1, takes remaining space
+        );
+        this.scrollView.setLayoutParams(scrollParams);
+
+        // Create content container inside ScrollView
+        this.contentContainer = LinearLayout.$new(this.context);
+        this.contentContainer.setOrientation(1); // LinearLayout.VERTICAL
+        this.contentContainer.setLayoutParams(
+          ViewGroupLayoutParams.$new(
+            ViewGroupLayoutParams.MATCH_PARENT.value,
+            ViewGroupLayoutParams.WRAP_CONTENT.value,
+          ),
+        );
+
+        this.scrollView.addView(this.contentContainer);
+        this.menuContainerView.addView(this.scrollView);
+
+        // Create and add footer if enabled
+        if (this.options.showFooter) {
+          this.createFooterView(this.context);
+          this.menuContainerView.addView(this.footerView);
+        }
         // Create icon view
         this.createIconView();
+        console.log(123, this.options.showHeader);
 
         // Add both views to parent container
         this.parentContainerView.addView(this.iconView);
@@ -271,11 +348,11 @@ export class FloatMenu {
         if (this.options.showLogs) {
           this.createLogView(this.context);
         }
+
         // Add parent container to window manager
         this.windowManager.addView(this.parentContainerView, this.windowParams);
         this.isShown = true;
         console.info("Floating window shown");
-
 
         // Add any pending components that were added before window was shown
         this.processPendingComponents(this.context);
@@ -298,9 +375,9 @@ export class FloatMenu {
       try {
         component.init(context);
         const view = component.getView();
-        // Add to menu container view
+        // Add to content container (scrollable area)
 
-        this.menuContainerView!.addView(view);
+        this.contentContainer.addView(view);
 
         // Bind events (same as in addComponent)
         component.on("valueChanged", (value: any) => {
@@ -357,8 +434,8 @@ export class FloatMenu {
       const context = this.menuContainerView.getContext();
       component.init(context);
       const view = component.getView();
-      // Add to menu container view
-      this.menuContainerView!.addView(view);
+      // Add to content container (scrollable area)
+      this.contentContainer.addView(view);
 
       // Bind events
       component.on("valueChanged", (value: any) => {
@@ -382,12 +459,27 @@ export class FloatMenu {
     if (!component) return;
     Java.scheduleOnMainThread(() => {
       const view = component.getView();
-      // Remove from menu container if it exists, otherwise from parent container
-      if (this.menuContainerView) {
+      // Remove from content container if it exists, otherwise try menu container, then parent container
+      if (this.contentContainer) {
+        try {
+          this.contentContainer.removeView(view);
+        } catch (e) {
+          // If not found in content container, try menu container
+          if (this.menuContainerView) {
+            try {
+              this.menuContainerView.removeView(view);
+            } catch (e2) {
+              // If not found in menu container, try parent container
+              this.parentContainerView.removeView(view);
+            }
+          } else {
+            this.parentContainerView.removeView(view);
+          }
+        }
+      } else if (this.menuContainerView) {
         try {
           this.menuContainerView.removeView(view);
         } catch (e) {
-          // If not found in menu container, try parent container
           this.parentContainerView.removeView(view);
         }
       } else {
@@ -465,6 +557,151 @@ export class FloatMenu {
   }
 
   /**
+   * Create header view with title and subtitle
+   */
+  private createHeaderView(context: any): void {
+    try {
+      const LinearLayout = Java.use("android.widget.LinearLayout");
+      const LinearLayoutParams = Java.use(
+        "android.widget.LinearLayout$LayoutParams",
+      );
+      const TextView = Java.use("android.widget.TextView");
+      const Color = Java.use("android.graphics.Color");
+
+      // Create header container (vertical LinearLayout)
+      this.headerView = LinearLayout.$new(context);
+      this.headerView.setOrientation(1); // VERTICAL
+      this.headerView.setLayoutParams(
+        LinearLayoutParams.$new(
+          LinearLayoutParams.MATCH_PARENT.value,
+          LinearLayoutParams.WRAP_CONTENT.value,
+        ),
+      );
+      this.headerView.setPadding(16, 16, 16, 16);
+      this.headerView.setBackgroundColor(0xff333333 | 0); // Dark gray background
+      const JString = Java.use("java.lang.String");
+      // Main title
+      const titleView = TextView.$new(context);
+      titleView.setText(JString.$new(this.options.title || "Frida Float Menu"));
+      titleView.setTextSize(18);
+      titleView.setTextColor(Color.WHITE.value);
+      titleView.setTypeface(null, 1); // Typeface.BOLD
+      titleView.setLayoutParams(
+        LinearLayoutParams.$new(
+          LinearLayoutParams.MATCH_PARENT.value,
+          LinearLayoutParams.WRAP_CONTENT.value,
+        ),
+      );
+
+      // Subtitle
+      const subtitleView = TextView.$new(context);
+      subtitleView.setText(
+        JString.$new(this.options.subtitle || "Interactive Debugging Panel"),
+      );
+      subtitleView.setTextSize(12);
+      subtitleView.setTextColor(0xffaaaaaa | 0); // Light gray
+      subtitleView.setLayoutParams(
+        LinearLayoutParams.$new(
+          LinearLayoutParams.MATCH_PARENT.value,
+          LinearLayoutParams.WRAP_CONTENT.value,
+        ),
+      );
+
+      this.headerView.addView(titleView);
+      this.headerView.addView(subtitleView);
+    } catch (error) {
+      console.trace("Failed to create header view: " + error);
+    }
+  }
+
+  /**
+   * Create footer view with buttons
+   */
+  private createFooterView(context: any): void {
+    try {
+      const LinearLayout = Java.use("android.widget.LinearLayout");
+      const LinearLayoutParams = Java.use(
+        "android.widget.LinearLayout$LayoutParams",
+      );
+      const Button = Java.use("android.widget.Button");
+      const Color = Java.use("android.graphics.Color");
+      const OnClickListener = Java.use("android.view.View$OnClickListener");
+
+      // Create footer container (horizontal LinearLayout)
+      this.footerView = LinearLayout.$new(context);
+      this.footerView.setOrientation(0); // HORIZONTAL
+      this.footerView.setLayoutParams(
+        LinearLayoutParams.$new(
+          LinearLayoutParams.MATCH_PARENT.value,
+          LinearLayoutParams.WRAP_CONTENT.value,
+        ),
+      );
+      this.footerView.setPadding(8, 8, 8, 8);
+      this.footerView.setBackgroundColor(0xff444444 | 0); // Medium gray background
+
+      const JString = Java.use("java.lang.String");
+      // Minimize button (switch to icon mode)
+      const minimizeBtn = Button.$new(context);
+      minimizeBtn.setText(JString.$new("最小化"));
+      minimizeBtn.setTextColor(Color.WHITE.value);
+      minimizeBtn.setBackgroundColor(0xff555555 | 0);
+      minimizeBtn.setPadding(16, 8, 16, 8);
+
+      const self = this;
+      const minimizeListener = Java.registerClass({
+        name:
+          "com.example.MinimizeClickListener" +
+          Date.now() +
+          Math.random().toString(36).substring(6),
+        implements: [OnClickListener],
+        methods: {
+          onClick: function (view: any) {
+            self.showIcon(); // Switch to icon mode
+          },
+        },
+      });
+      minimizeBtn.setOnClickListener(minimizeListener.$new());
+
+      // Hide button
+      const hideBtn = Button.$new(context);
+      hideBtn.setText(JString.$new("隐藏"));
+      hideBtn.setTextColor(Color.WHITE.value);
+      hideBtn.setBackgroundColor(0xff555555 | 0);
+      hideBtn.setPadding(16, 8, 16, 8);
+
+      const hideListener = Java.registerClass({
+        name:
+          "com.example.HideClickListener" +
+          Date.now() +
+          Math.random().toString(36).substring(6),
+        implements: [OnClickListener],
+        methods: {
+          onClick: function (view: any) {
+            self.hide(); // Hide the floating window
+          },
+        },
+      });
+      hideBtn.setOnClickListener(hideListener.$new());
+
+      // Layout params for buttons
+      const btnParams = LinearLayoutParams.$new(
+        0, // width will be set by weight
+        LinearLayoutParams.WRAP_CONTENT.value,
+        1.0, // weight = 1, buttons share space equally
+      );
+      btnParams.setMargins(4, 0, 4, 0);
+
+      minimizeBtn.setLayoutParams(btnParams);
+      hideBtn.setLayoutParams(btnParams);
+
+      this.footerView.addView(minimizeBtn);
+      this.footerView.addView(hideBtn);
+    } catch (error) {
+      console.trace("Failed to create footer view: " + error);
+    }
+  }
+
+  /**
    * Create log view (TextView) for displaying logs
    */
   private createLogView(context: any): void {
@@ -481,8 +718,11 @@ export class FloatMenu {
     // this.logView.setTextColor(0xFFFFFFFF | 0); // white as 32-bit int
     this.logView.setMaxLines(this.options.logMaxLines);
     this.logView.setVerticalScrollBarEnabled(true);
-    // Add to menu container view
-    if (this.menuContainerView) {
+    // Add to content container (scrollable area with other components)
+    if (this.contentContainer) {
+      this.contentContainer.addView(this.logView);
+    } else if (this.menuContainerView) {
+      // Fallback to menu container if contentContainer not available
       this.menuContainerView.addView(this.logView);
     } else {
       this.parentContainerView.addView(this.logView);
