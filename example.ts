@@ -20,21 +20,21 @@ Java.perform(() => {
   // Create menu configuration
   const options: FloatMenuOptions = {
     width: 600,
-    height: 500,
+    height: 700,
     x: 0,
     y: 0,
     iconWidth: 150,
     iconHeight: 150,
     showLogs: false,
     logMaxLines: 50,
-    
+
     iconBase64: iconBase64,
   };
-
+  console.log("Delayed menu creation after Unity init");
   const menu = new FloatMenu(options);
-  
+
   menu.show();
-  //   // Add a button with click handler
+  // Add a button with click handler
   const button = new Button("exampleButton", "Click Me!");
   button.setOnClick(() => {
     console.log("Button was clicked!");
@@ -45,7 +45,17 @@ Java.perform(() => {
       switchComp.setValue(!currentValue);
     }
   });
+  const button1 = new Button("exampleButton1", "Click Me!111");
+  button1.setOnClick(() => {
+    console.log("Button1 was clicked!");
+    // Toggle the switch when button is clicked
+    const switchComp = menu.getComponent<Switch>("exampleSwitch");
+    if (switchComp) {
+      switchComp.setValue(true);
+    }
+  });
   menu.addComponent("exampleButton", button);
+  menu.addComponent("exampleButton1", button1);
 
   // Add a switch with value change listener
   const switchComp = new Switch("exampleSwitch", "Auto-update", false);
@@ -73,19 +83,19 @@ Java.perform(() => {
     console.log("[Menu] Switch changed via menu event:", value);
   });
 
-//   // Update UI programmatically after 3 seconds
-//   setTimeout(() => {
-//     console.log("Programmatically updating UI...");
-//     menu.setComponentValue("exampleSwitch", true);
-//     text.setText("Updated programmatically!");
-//     selector.setItems(["Level 1", "Level 2", "Level 3", "Level 4"]);
-//   }, 3000);
+  //   // Update UI programmatically after 3 seconds
+  //   setTimeout(() => {
+  //     console.log("Programmatically updating UI...");
+  //     menu.setComponentValue("exampleSwitch", true);
+  //     text.setText("Updated programmatically!");
+  //     selector.setItems(["Level 1", "Level 2", "Level 3", "Level 4"]);
+  //   }, 3000);
 
   // Hide menu after 20 seconds
-//   setTimeout(() => {
-//     menu.hide();
-//     console.log("Menu hidden after timeout");
-//   }, 20000);
+  //   setTimeout(() => {
+  //     menu.hide();
+  //     console.log("Menu hidden after timeout");
+  //   }, 20000);
 
   console.log("FloatMenu example initialized. UI should be visible.");
 });

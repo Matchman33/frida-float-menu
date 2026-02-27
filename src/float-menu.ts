@@ -19,10 +19,9 @@ export interface FloatMenuOptions {
 export class FloatMenu {
   private options: FloatMenuOptions;
   private windowParams: any; // WindowManager.LayoutParams
-  private parentContainerView: any; // Parent container (FrameLayout) holding both icon and menu
   private menuContainerView: any; // LinearLayout for menu content
   private iconView: any; // ImageView for icon
-  private containerView: any; // Backward compatibility alias for parentContainerView
+  private parentContainerView: any; // Backward compatibility alias for parentContainerView
   private uiComponents: Map<string, UIComponent> = new Map();
   private pendingComponents: Array<{ id: string; component: UIComponent }> = [];
   private logView: any; // TextView or ListView for logs
@@ -200,31 +199,6 @@ export class FloatMenu {
   }
 
   /**
-   * Show as icon (minimize)
-   */
-  public showIcon(): void {
-    if (!this.isShown) return;
-
-    Java.scheduleOnMainThread(() => {
-      if (!this.isIconMode) {
-        this.toggleView();
-      }
-    });
-  }
-
-  /**
-   * Show as menu (expand)
-   */
-  public showMenu(): void {
-    if (!this.isShown) return;
-
-    Java.scheduleOnMainThread(() => {
-      if (this.isIconMode) {
-        this.toggleView();
-      }
-    });
-  }
-  /**
    * Create and show the floating window
    */
   public show(): void {
@@ -240,7 +214,9 @@ export class FloatMenu {
           this.options.x,
           this.options.y,
           2038, // TYPE_APPLICATION_OVERLAY
-          LayoutParams.FLAG_NOT_TOUCH_MODAL.value, // FLAG_NOT_TOUCH_MODAL
+          // FLAG_NOT_FOCUSABLE必须添加，防止页面卡死
+          LayoutParams.FLAG_NOT_FOCUSABLE.value |
+            LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
           1, // PixelFormat.TRANSLUCENT
         );
 
@@ -295,14 +271,11 @@ export class FloatMenu {
         if (this.options.showLogs) {
           this.createLogView(this.context);
         }
-
         // Add parent container to window manager
         this.windowManager.addView(this.parentContainerView, this.windowParams);
         this.isShown = true;
         console.info("Floating window shown");
 
-        // Set containerView to parentContainerView for backward compatibility
-        this.containerView = this.parentContainerView;
 
         // Add any pending components that were added before window was shown
         this.processPendingComponents(this.context);
@@ -355,7 +328,7 @@ export class FloatMenu {
     if (!this.isShown) return;
     Java.scheduleOnMainThread(() => {
       try {
-        this.windowManager.removeView(this.containerView);
+        this.windowManager.removeView(this.parentContainerView);
         this.isShown = false;
         console.info("Floating window hidden");
       } catch (error) {
@@ -372,7 +345,7 @@ export class FloatMenu {
   public addComponent(id: string, component: UIComponent): void {
     this.uiComponents.set(id, component);
 
-    if (!this.containerView) {
+    if (!this.parentContainerView) {
       // Window not shown yet, queue component
       this.pendingComponents.push({ id, component });
       console.debug(`Component ${id} queued (window not shown)`);
@@ -381,16 +354,12 @@ export class FloatMenu {
 
     // Window is shown, add component immediately
     Java.scheduleOnMainThread(() => {
-      const context = this.containerView.getContext();
+      const context = this.menuContainerView.getContext();
       component.init(context);
       const view = component.getView();
       // Add to menu container view
-      if (this.menuContainerView) {
-        this.menuContainerView.addView(view);
-      } else {
-        // Fallback to containerView (parent) if menuContainerView not ready
-        this.containerView.addView(view);
-      }
+      this.menuContainerView!.addView(view);
+
       // Bind events
       component.on("valueChanged", (value: any) => {
         this.eventEmitter.emit("component:" + id + ":valueChanged", value);
@@ -419,10 +388,10 @@ export class FloatMenu {
           this.menuContainerView.removeView(view);
         } catch (e) {
           // If not found in menu container, try parent container
-          this.containerView.removeView(view);
+          this.parentContainerView.removeView(view);
         }
       } else {
-        this.containerView.removeView(view);
+        this.parentContainerView.removeView(view);
       }
     });
     this.uiComponents.delete(id);
@@ -469,7 +438,7 @@ export class FloatMenu {
       this.windowParams.x = x;
       this.windowParams.y = y;
       this.windowManager.updateViewLayout(
-        this.containerView,
+        this.parentContainerView,
         this.windowParams,
       );
     });
@@ -484,14 +453,14 @@ export class FloatMenu {
       this.windowParams.width = width;
       this.windowParams.height = height;
       this.windowManager.updateViewLayout(
-        this.containerView,
+        this.parentContainerView,
         this.windowParams,
       );
       // Also update container layout params
-      const layoutParams = this.containerView.getLayoutParams();
+      const layoutParams = this.parentContainerView.getLayoutParams();
       layoutParams.width = width;
       layoutParams.height = height;
-      this.containerView.setLayoutParams(layoutParams);
+      this.parentContainerView.setLayoutParams(layoutParams);
     });
   }
 
@@ -516,8 +485,7 @@ export class FloatMenu {
     if (this.menuContainerView) {
       this.menuContainerView.addView(this.logView);
     } else {
-      // Fallback to containerView (parent) if menuContainerView not ready
-      this.containerView.addView(this.logView);
+      this.parentContainerView.addView(this.logView);
     }
   }
 
