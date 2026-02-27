@@ -190,7 +190,7 @@ export class CheckBoxGroup extends UIComponent {
     for (const id of checkedIds) {
       if (this.optionsMap.has(id)) {
         const opt = this.optionsMap.get(id)!;
-        this.optionsMap.set(id, { ...opt, checked: false });
+        this.optionsMap.set(id, { ...opt, checked: true });
       }
     }
 

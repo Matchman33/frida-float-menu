@@ -40,7 +40,7 @@ Java.perform(() => {
       { id: "inputs", label: "Inputs" },
       { id: "layout", label: "Layout" },
     ],
-    activeTab: "controls",
+    activeTab: "layout",
     showTabs: true,
   };
 
@@ -157,7 +157,7 @@ Java.perform(() => {
   // 批量设置
   genderGroup.setCheckedValues(["other"]); // 只选中 other
 
-  menu.addComponent(genderGroup, "inputs");
+  menu.addComponent(genderGroup);
   // === Global event listeners ===
 
   // Listen for all component value changes

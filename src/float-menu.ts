@@ -561,7 +561,7 @@ export class FloatMenu {
 
     if (!this.parentContainerView) {
       // Window not shown yet, queue component with tab info
-      this.pendingComponents.push({ id, component, tabId: "inputs" });
+      this.pendingComponents.push({ id, component, tabId: targetTabId });
       console.debug(
         `Component ${id} queued for tab ${targetTabId} (window not shown)`,
       );
