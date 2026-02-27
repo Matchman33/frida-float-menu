@@ -458,12 +458,12 @@ class FloatMenu {
 
         this.windowManager.addView(this.containerView, this.windowParams);
         this.isShown = true;
-        this.logger.info("Floating window shown");
       } catch (error) {
         this.logger.error("Failed to show floating window: " + error);
       }
     });
   }
+  
 
   public hide(): void {
     if (!this.isShown) return;

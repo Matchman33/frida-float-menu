@@ -6,21 +6,19 @@ import {
   Button,
   FloatMenu,
   FloatMenuOptions,
-  Switch,
   Text,
-  Selector,
-  Slider,
-  Collapsible,
   Category,
 } from "./src/index";
-import { NumberInput, TextInput } from "./src/input";
+import { NumberInput, TextInput } from "./src/component/input";
 
 // Optional: attach to global for easier access in Frida REPL
 // import { attachToGlobal } from './src/index';
 // attachToGlobal(globalThis);
 
 Java.perform(() => {
-  console.log("Java runtime ready, creating floating menu with new components...");
+  console.log(
+    "Java runtime ready, creating floating menu with new components...",
+  );
 
   const options: FloatMenuOptions = {
     width: 1000,
@@ -33,7 +31,7 @@ Java.perform(() => {
     logMaxLines: 50,
     iconBase64: iconBase64,
     title: "Frida Float Menu - New Components Demo",
-    subtitle: "Slider, Collapsible, Category, TextInput, NumberInput",
+    subtitle: "这是我美好的一天",
     showHeader: true,
     showFooter: true,
     tabs: [
@@ -48,7 +46,6 @@ Java.perform(() => {
   const menu = new FloatMenu(options);
   menu.show();
 
-
   // === Tab 2: Inputs (TextInput, NumberInput) ===
 
   // Category separator
@@ -60,7 +57,10 @@ Java.perform(() => {
   const textInput = new TextInput("name_input", "John Doe", "Enter your name");
   textInput.on("valueChanged", (value: string) => {
     console.log(`TextInput changed: "${value}"`);
-    menu.setComponentValue("name_display", `Hello, <b>${value || "Anonymous"}</b>!`);
+    menu.setComponentValue(
+      "name_display",
+      `Hello, <b>${value || "Anonymous"}</b>!`,
+    );
   });
   menu.addComponent("name_input", textInput, "inputs");
 
@@ -71,34 +71,37 @@ Java.perform(() => {
   const clearTextButton = new Button("clear_text_button", "Clear Name");
   clearTextButton.setOnClick(() => {
     console.log("Clear name button clicked");
-    textInput.setText("");
+    textInput.setText("123");
     menu.setComponentValue("name_display", "Hello, <b>Anonymous</b>!");
   });
   menu.addComponent("clear_text_button", clearTextButton, "inputs");
 
   // TextInput component (multiline)
-  const multiInput = new TextInput("notes_input", "", "Enter notes here...", "");
-  multiInput.on("valueChanged", (value: string) => {
+  const multiInput = new TextInput(
+    "notes_input",
+    "",
+    "Enter notes here...",
+    "notes here",
+  );
+  multiInput.setOnValueChange((value: string) => {
     console.log(`Notes changed (${value.length} characters)`);
 
     // Count lines and characters
-    const lines = value.split('\n').length;
+    const lines = value.split("\n").length;
     const chars = value.length;
-    menu.setComponentValue("notes_stats", `Lines: ${lines}, Characters: ${chars}`);
+    menu.setComponentValue(
+      "notes_stats",
+      `Lines: ${lines}, Characters: ${chars}`,
+    );
   });
   menu.addComponent("notes_input", multiInput, "inputs");
-
 
   // NumberInput component
   const numberInput = new NumberInput(
     "age_input",
     25,
-    "",
-    "Enter your age",
-    
-    0,  // min
+    0, // min
     120, // max
-    1   // step
   );
   numberInput.on("valueChanged", (value: number) => {
     console.log(`Age changed: ${value}`);
@@ -113,7 +116,6 @@ Java.perform(() => {
     menu.setComponentValue("age_category", `Age category: <b>${category}</b>`);
   });
   menu.addComponent("age_input", numberInput, "inputs");
-
 
   // === Global event listeners ===
 

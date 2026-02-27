@@ -1,47 +1,45 @@
 import { UIComponent } from "./ui-components";
 
 export class NumberInput extends UIComponent {
-  private title: string;
+  private text: string;
   private hint: string;
   private min: number | null;
   private max: number | null;
-  private step: number | null;
+  private handler?: (value: number) => void;
 
+  /**
+   * 
+   * @param id 组件唯一id
+   * @param initialValue 初始值
+   * @param min 限定最小值
+   * @param max 限定最大值
+   * @param text 按钮提示文本
+   * @param hint 输入框提示文本
+   */
   constructor(
     id: string,
     initialValue: number = 0,
-    title: string = "Input Number",
-    hint: string = "",
     min: number | null = null,
     max: number | null = null,
-    step: number | null = null,
+    text: string = "单击输入数值",
+    hint: string = "请输入数值",
   ) {
     super(id);
     this.value = initialValue;
-    this.title = title;
+    this.text = text;
     this.hint = hint;
     this.min = min;
     this.max = max;
-    this.step = step;
   }
 
-  protected updateView(): void {
-    if (!this.view) {
-      console.warn(`[NumberInput:${this.id}] Cannot update view - view not initialized`);
-      return;
-    }
-    Java.scheduleOnMainThread(() => {
-      const String = Java.use("java.lang.String");
-      this.view.setText(String.$new(this.value.toString()));
-    });
-  }
+  protected updateView(): void {}
 
   protected createView(context: any): void {
     const Button = Java.use("android.widget.Button");
     const String = Java.use("java.lang.String");
 
     this.view = Button.$new(context);
-    this.view.setText(String.$new(this.value.toString()));
+    this.view.setText(String.$new(this.text));
 
     const self = this;
 
@@ -72,11 +70,14 @@ export class NumberInput extends UIComponent {
       const LayoutParams = Java.use("android.view.WindowManager$LayoutParams");
 
       const builder = AlertDialogBuilder.$new(context);
-      builder.setTitle(String.$new(this.title));
+      builder.setTitle(String.$new("请输入"));
 
       const input = EditText.$new(context);
       input.setHint(String.$new(this.hint));
-      input.setText(String.$new(this.value.toString()), TextViewBufferType.NORMAL.value);
+      input.setText(
+        String.$new(this.value + ""),
+        TextViewBufferType.NORMAL.value,
+      );
       // 设置输入类型为数字（可带小数和符号）
       input.setInputType(
         InputType.TYPE_CLASS_NUMBER.value |
@@ -89,7 +90,7 @@ export class NumberInput extends UIComponent {
       const self = this;
 
       builder.setPositiveButton(
-        String.$new("OK"),
+        String.$new("确认"),
         Java.registerClass({
           name:
             "com.frida.NumberInputOK" +
@@ -101,9 +102,11 @@ export class NumberInput extends UIComponent {
           methods: {
             onClick: function (dialog: any, which: number) {
               // 安全获取输入文本
-              const editable = input.getText();
-              const CharSequence = Java.use("java.lang.CharSequence");
-              const text = Java.cast(editable, CharSequence).toString();
+              const text =
+                Java.cast(
+                  input.getText(),
+                  Java.use("java.lang.CharSequence"),
+                ).toString() + "";
 
               if (text === "") {
                 // 空输入视为 0
@@ -121,15 +124,14 @@ export class NumberInput extends UIComponent {
               // 应用约束
               self.applyConstraints();
 
-              // 更新按钮文本
-              self.updateView();
               self.emit("valueChanged", self.value);
+              if (self.handler) self.handler(self.value);
             },
           },
         }).$new(),
       );
 
-      builder.setNegativeButton(String.$new("Cancel"), null);
+      builder.setNegativeButton(String.$new("取消"), null);
 
       const dialog = builder.create();
       const window = dialog.getWindow();
@@ -141,14 +143,14 @@ export class NumberInput extends UIComponent {
     });
   }
 
+  public setOnValueChange(handler: (value: number) => void) {
+    this.handler = handler;
+  }
   private applyConstraints(): void {
     let constrained = this.value as number;
     if (this.min !== null) constrained = Math.max(this.min, constrained);
     if (this.max !== null) constrained = Math.min(this.max, constrained);
-    if (this.step !== null && this.step > 0) {
-      const steps = Math.round(constrained / this.step);
-      constrained = steps * this.step;
-    }
+
     this.value = constrained;
   }
 
@@ -159,13 +161,11 @@ export class NumberInput extends UIComponent {
     // 提示文本只在对话框中使用，无需实时更新视图
   }
 
-  public setConstraints(min: number | null, max: number | null, step: number | null): void {
+  public setConstraints(min: number | null, max: number | null): void {
     this.min = min;
     this.max = max;
-    this.step = step;
     // 重新验证当前值
     this.applyConstraints();
-    this.updateView();
   }
 
   public getNumber(): number {
@@ -175,33 +175,29 @@ export class NumberInput extends UIComponent {
   public setNumber(value: number): void {
     this.value = value;
     this.applyConstraints();
-    this.updateView();
   }
 }
 export class TextInput extends UIComponent {
-  protected updateView(): void {
-    if (!this.view) {
-      console.warn(
-        `[TextInput:${this.id}] Cannot update view - view not initialized`,
-      );
-      return;
-    }
-    Java.scheduleOnMainThread(() => {
-      const String = Java.use("java.lang.String");
-      this.view.setText(String.$new(this.value));
-    });
-  }
-  private title: string;
+  protected updateView(): void {}
+  private text: string;
   private hint: string;
+  private handler?: (value: string) => void;
 
+  /**
+   *
+   * @param id 组件id，应该唯一
+   * @param initialValue 初始值
+   * @param text 按钮文本
+   * @param hint
+   */
   constructor(
     id: string,
-    title: string = "Input",
-    hint: string = "",
     initialValue: string = "",
+    text: string = "单击输入文本",
+    hint: string = "请输入文本",
   ) {
     super(id);
-    this.title = title;
+    this.text = text;
     this.hint = hint;
     this.value = initialValue;
   }
@@ -211,7 +207,7 @@ export class TextInput extends UIComponent {
     const String = Java.use("java.lang.String");
 
     this.view = Button.$new(context);
-    this.view.setText(String.$new(this.value || this.hint || "Click to input"));
+    this.view.setText(String.$new(this.text));
 
     const self = this;
 
@@ -236,6 +232,10 @@ export class TextInput extends UIComponent {
     this.emit("valueChanged", value);
   }
 
+  public setOnValueChange(handler: (value: string) => void) {
+    this.handler = handler;
+  }
+
   private showDialog(context: any): void {
     Java.scheduleOnMainThread(() => {
       const AlertDialogBuilder = Java.use("android.app.AlertDialog$Builder");
@@ -243,7 +243,7 @@ export class TextInput extends UIComponent {
       const String = Java.use("java.lang.String");
       const TextViewBufferType = Java.use("android.widget.TextView$BufferType");
       const builder = AlertDialogBuilder.$new(context);
-      builder.setTitle(String.$new(this.title));
+      builder.setTitle(String.$new("请输入"));
 
       const input = EditText.$new(context);
       input.setHint(String.$new(this.hint));
@@ -254,7 +254,7 @@ export class TextInput extends UIComponent {
       const self = this;
 
       builder.setPositiveButton(
-        String.$new("OK"),
+        String.$new("确认"),
         Java.registerClass({
           name:
             "com.frida.AlertTextInputOK" +
@@ -265,20 +265,20 @@ export class TextInput extends UIComponent {
           ],
           methods: {
             onClick: function (dialog: any, which: number) {
-              const editable = input.getText();
               const text =
                 Java.cast(
-                  editable,
+                  input.getText(),
                   Java.use("java.lang.CharSequence"),
                 ).toString() + "";
               self.value = text;
               self.emit("valueChanged", text);
+              if (self.handler) self.handler(text);
             },
           },
         }).$new(),
       );
 
-      builder.setNegativeButton(String.$new("Cancel"), null);
+      builder.setNegativeButton(String.$new("取消"), null);
       const LayoutParams = Java.use("android.view.WindowManager$LayoutParams");
       const dialog = builder.create();
       // 关键步骤：修改对话框窗口的类型
@@ -292,12 +292,7 @@ export class TextInput extends UIComponent {
     });
   }
 
-  public getText(): string {
-    return this.value;
-  }
-
   public setText(text: string): void {
-    this.value = text;
     if (this.view) {
       Java.scheduleOnMainThread(() => {
         const String = Java.use("java.lang.String");

@@ -1,0 +1,46 @@
+import { UIComponent } from "./ui-components";
+
+export class Text extends UIComponent {
+  private content: string;
+
+  constructor(id: string, content: string) {
+    super(id);
+    this.content = content;
+    this.value = content;
+  }
+
+  protected createView(context: any): void {
+    const TextView = Java.use("android.widget.TextView");
+    const Color = Java.use("android.graphics.Color");
+
+    this.view = TextView.$new(context);
+    this.view.setTextColor(Color.WHITE.value);
+    this.view.setTextSize(14);
+    // const String = Java.use("java.lang.String");
+    // this.view.setText(String.$new(this.content));
+    const Html = Java.use("android.text.Html");
+    this.view.setText(Html.fromHtml(this.content));
+  }
+
+  protected updateView(): void {
+    if (!this.view) {
+      console.warn(
+        `[Text:${this.id}] Cannot update view - view not initialized`,
+      );
+      return;
+    }
+    Java.scheduleOnMainThread(() => {
+      const Html = Java.use("android.text.Html");
+      this.view.setText(Html.fromHtml(this.value));
+    });
+  }
+
+  /**
+   * Set text content
+   */
+  public setText(content: string): void {
+    this.content = content;
+    this.value = content;
+    this.updateView();
+  }
+}

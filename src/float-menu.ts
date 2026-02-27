@@ -1,5 +1,5 @@
 import { EventEmitter } from "./event-emitter";
-import { UIComponent } from "./ui-components";
+import { UIComponent } from "./component/ui-components";
 import { Logger, LogLevel } from "./logger";
 
 export interface TabDefinition {
@@ -427,7 +427,6 @@ export class FloatMenu {
         }
         // Create icon view
         this.createIconView();
-        console.log(123, this.options.showHeader);
 
         // Add both views to parent container
         this.parentContainerView.addView(this.iconView);
@@ -460,7 +459,6 @@ export class FloatMenu {
         // Add parent container to window manager
         this.windowManager.addView(this.parentContainerView, this.windowParams);
         this.isShown = true;
-        console.info("Floating window shown");
 
         // Add any pending components that were added before window was shown
         this.processPendingComponents(this.context);
@@ -498,9 +496,7 @@ export class FloatMenu {
           tabInfo.container.addView(view);
         } else {
           // Fallback to contentContainer (should not happen if tab container was created)
-          console.warn(
-            `Tab container for ${tabId} not found, using contentContainer`,
-          );
+
           this.contentContainer.addView(view);
         }
 
@@ -517,7 +513,6 @@ export class FloatMenu {
         component.on("click", (data: any) => {
           this.eventEmitter.emit("component:" + id + ":click", data);
         });
-        console.debug(`Pending component ${id} added to tab ${tabId}`);
       } catch (error) {
         console.trace(`Failed to add pending component ${id}: ` + error);
       }
@@ -905,7 +900,6 @@ export class FloatMenu {
         }
 
         this.eventEmitter.emit("tabChanged", tabId, oldTabId);
-        console.debug(`Switched to tab: ${tabId}`);
       } catch (error) {
         console.trace(`Failed to switch to tab ${tabId}:`, error);
       }
