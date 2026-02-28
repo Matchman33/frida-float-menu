@@ -37,7 +37,7 @@ export class Switch extends UIComponent {
         onCheckedChanged: function (buttonView: any, isChecked: boolean) {
           self.value = isChecked;
           self.emit("valueChanged", isChecked);
-          if (self.handler) self.handler(isChecked);
+          if (self.handler) setImmediate(() => self.handler!(isChecked));
         },
       },
     });
@@ -68,7 +68,7 @@ export class Switch extends UIComponent {
       return;
     }
     Java.scheduleOnMainThread(() => {
-      const String = API.JString
+      const String = API.JString;
       this.button.setText(String.$new(label));
     });
   }

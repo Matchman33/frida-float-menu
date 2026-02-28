@@ -112,7 +112,7 @@ export class Collapsible extends UIComponent {
     (this.button as any).contentContainer = this.contentContainer;
 
     // Add click listener to title row
-    const OnClickListener = API.OnClickListener
+    const OnClickListener = API.OnClickListener;
     const self = this;
 
     const clickListener = Java.registerClass({
@@ -140,8 +140,8 @@ export class Collapsible extends UIComponent {
     // Update expanded state
     this.expanded = this.value;
     Java.scheduleOnMainThread(() => {
-const View = API.View;
-const String = API.JString;
+      const View = API.View;
+      const String = API.JString;
       const contentContainer = (this.button as any).contentContainer;
       const arrowView = this.arrowView;
 
@@ -200,7 +200,7 @@ const String = API.JString;
     Java.scheduleOnMainThread(() => {
       const titleView = (this.button as any).titleView;
       if (titleView) {
-        const String = API.JString
+        const String = API.JString;
         titleView.setText(String.$new(title));
       }
     });

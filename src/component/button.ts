@@ -12,17 +12,17 @@ export class Button extends UIComponent {
   }
 
   protected createView(context: any): void {
-    const Button = API.Button
+    const Button = API.Button;
     this.button = Button.$new(context);
-    const String = API.JString
-    const Color = API.Color
+    const String = API.JString;
+    const Color = API.Color;
 
     this.button.setText(String.$new(this.label));
     this.button.setTextColor(Color.WHITE.value);
     this.button.setBackgroundColor(0xff555555 | 0); // gray background
     this.button.setPadding(16, 8, 16, 8);
 
-    const OnClickListener = API.OnClickListener
+    const OnClickListener = API.OnClickListener;
     const self = this;
     const clickListener = Java.registerClass({
       name:
@@ -34,7 +34,7 @@ export class Button extends UIComponent {
         onClick: function (v) {
           self.emit("click");
           if (self.onClick) {
-            self.onClick();
+            setImmediate(self.onClick);
           }
         },
       },
@@ -58,7 +58,7 @@ export class Button extends UIComponent {
       return;
     }
     Java.scheduleOnMainThread(() => {
-      const String = API.JString
+      const String = API.JString;
       this.button.setText(String.$new(label));
     });
   }

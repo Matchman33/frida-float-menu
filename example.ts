@@ -23,7 +23,7 @@ Java.perform(() => {
 
   const options: FloatMenuOptions = {
     width: 1000,
-    height: 900,
+    height: 1400,
     x: -100,
     y: 0,
     iconWidth: 200,

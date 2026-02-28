@@ -68,8 +68,6 @@ export class FloatMenu {
   private menuWindowParams: any;
   private iconWindowParams: any;
   private iconContainerView: any;
-  private logicalX: number = 0;
-  private logicalY: number = 0;
   public get context(): any {
     if (this._context === null) {
       this._context = Java.use("android.app.ActivityThread")
@@ -116,6 +114,10 @@ export class FloatMenu {
 
       this.screenWidth = metrics.widthPixels.value;
       this.screenHeight = metrics.heightPixels.value;
+      this.options.height = Math.min(
+        this.options.height!,
+        this.screenHeight - 80,
+      );
     });
     console.log("屏幕尺寸:", this.screenWidth, this.screenHeight);
 
@@ -207,6 +209,83 @@ export class FloatMenu {
     };
   }
 
+  private addDragListener(targetView: any, window: any, winParams: any) {
+    const OnTouchListener = API.OnTouchListener;
+    const MotionEvent = API.MotionEvent;
+    targetView.setClickable(true);
+    // 拖动
+    const bounds = {
+      left: 0,
+      top: 0,
+      right: this.screenWidth - this.options.iconWidth!,
+      bottom: this.screenHeight - this.options.iconHeight!,
+    };
+    let isDragging = false;
+    const self = this;
+
+    const DRAG_THRESHOLD = 5; // 阈值，小于 5px 不算拖动
+
+    const touchListener = Java.registerClass({
+      name:
+        "com.frida.FloatDragListener" +
+        Date.now() +
+        Math.random().toString(36).substring(6),
+      implements: [OnTouchListener],
+      methods: {
+        onTouch: function (v: any, event: any) {
+          const action = event.getAction();
+
+          switch (action) {
+            case MotionEvent.ACTION_DOWN.value:
+              isDragging = false;
+
+              self.lastTouchX = event.getRawX();
+              self.lastTouchY = event.getRawY();
+
+              self.initialWindowX = winParams.x.value;
+              self.initialWindowY = winParams.y.value;
+
+              return false;
+            case MotionEvent.ACTION_MOVE.value: {
+              const dx = event.getRawX() - self.lastTouchX;
+              const dy = event.getRawY() - self.lastTouchY;
+
+              if (
+                Math.abs(dx) > DRAG_THRESHOLD ||
+                Math.abs(dy) > DRAG_THRESHOLD
+              ) {
+                isDragging = true;
+
+                let newX = self.initialWindowX + dx;
+                let newY = self.initialWindowY + dy;
+
+                // window → logical
+                const { x, y } = self.windowToLogical(newX, newY);
+                newX = x;
+                newY = y;
+
+                // 边界限制（logical 坐标）
+                newX = Math.max(bounds.left, Math.min(bounds.right, newX));
+                newY = Math.max(bounds.top, Math.min(bounds.bottom, newY));
+
+                // 同步更新icon + menu 坐标
+                self.updatePosition(window, winParams, { x: newX, y: newY });
+              }
+
+              return isDragging;
+            }
+
+            case MotionEvent.ACTION_UP.value:
+              return isDragging; // 拖动时消耗事件，避免触发点击
+          }
+
+          return false;
+        },
+      },
+    });
+    targetView.setOnTouchListener(touchListener.$new());
+  }
+
   private createMenuContainerWindow() {
     const FrameLayout = API.FrameLayout;
     const LinearLayout = API.LinearLayout;
@@ -225,6 +304,18 @@ export class FloatMenu {
         ViewGroupLayoutParams.MATCH_PARENT.value,
         ViewGroupLayoutParams.MATCH_PARENT.value,
       ),
+    );
+    // menuWindow 默认隐藏，由 icon 控制
+    const LayoutParams = API.LayoutParams;
+    this.menuWindowParams = LayoutParams.$new(
+      this.options.width,
+      this.options.height,
+      0,
+      0,
+      2038, // TYPE_APPLICATION_OVERLAY
+      LayoutParams.FLAG_NOT_FOCUSABLE.value |
+        LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
+      1, // PixelFormat.TRANSLUCENT
     );
 
     // header
@@ -289,40 +380,24 @@ export class FloatMenu {
       this.menuContainerView.addView(this.footerView);
     }
 
-    // menuWindow 默认隐藏，由 icon 控制
-    const LayoutParams = API.LayoutParams;
-    this.menuWindowParams = LayoutParams.$new(
-      this.options.width,
-      this.options.height,
-      0,
-      0,
-      2038, // TYPE_APPLICATION_OVERLAY
-      LayoutParams.FLAG_NOT_FOCUSABLE.value |
-        LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
-      1, // PixelFormat.TRANSLUCENT
-    );
     this.windowManager.addView(this.menuContainerView, this.menuWindowParams);
     this.menuContainerView.setVisibility(View.GONE.value);
   }
-  private updateWindowPosition(): void {
+  private updatePosition(
+    window: any,
+    winParams: any,
+    newPos: { x: number; y: number },
+  ): void {
     // icon
-    const { x: iconWX, y: iconWY } = this.logicalToWindow(
-      this.logicalX!,
-      this.logicalY!,
-    );
-    this.iconWindowParams.x.value = iconWX | 0;
-    this.iconWindowParams.y.value = iconWY | 0;
+    const { x: wx, y: wy } = this.logicalToWindow(newPos.x, newPos.y);
+    winParams.x.value = wx | 0;
+    winParams.y.value = wy | 0;
 
-    // menu（你可以加偏移，让菜单不盖住 icon）
-    const menuOffsetX = 0;
-    const menuOffsetY = this.options.iconHeight ?? 0;
+    Java.scheduleOnMainThread(() => {
+      this.windowManager.updateViewLayout(window, winParams);
+    });
 
-    const { x: menuWX, y: menuWY } = this.logicalToWindow(
-      this.logicalX! + menuOffsetX,
-      this.logicalY! + menuOffsetY,
-    );
-    this.menuWindowParams.x.value = menuWX | 0;
-    this.menuWindowParams.y.value = menuWY | 0;
+    // 刷新
   }
   private createIconWindow(): void {
     try {
@@ -335,8 +410,7 @@ export class FloatMenu {
       const BitmapFactory = API.BitmapFactory;
       const Base64 = API.Base64;
       const FrameLayout = API.FrameLayout;
-      const OnTouchListener = API.OnTouchListener;
-      const MotionEvent = API.MotionEvent;
+
       this.iconView = ImageView.$new(this.context);
 
       // icon 图片或默认圆
@@ -386,85 +460,7 @@ export class FloatMenu {
       // 添加到 window manager
       this.windowManager.addView(this.iconContainerView, this.iconWindowParams);
 
-      // 拖动
-      const bounds = {
-        left: 0,
-        top: 0,
-        right: this.screenWidth - this.options.iconWidth!,
-        bottom: this.screenHeight - this.options.iconHeight!,
-      };
-      let isDragging = false;
       const self = this;
-
-      const DRAG_THRESHOLD = 5; // 阈值，小于 5px 不算拖动
-
-      const touchListener = Java.registerClass({
-        name:
-          "com.frida.FloatDragListener" +
-          Date.now() +
-          Math.random().toString(36).substring(6),
-        implements: [OnTouchListener],
-        methods: {
-          onTouch: function (v: any, event: any) {
-            const action = event.getAction();
-            switch (action) {
-              case MotionEvent.ACTION_DOWN.value:
-                isDragging = false;
-
-                self.lastTouchX = event.getRawX();
-                self.lastTouchY = event.getRawY();
-
-                self.initialWindowX = self.iconWindowParams.x.value;
-                self.initialWindowY = self.iconWindowParams.y.value;
-
-                return false;
-              case MotionEvent.ACTION_MOVE.value: {
-                const dx = event.getRawX() - self.lastTouchX;
-                const dy = event.getRawY() - self.lastTouchY;
-
-                if (
-                  Math.abs(dx) > DRAG_THRESHOLD ||
-                  Math.abs(dy) > DRAG_THRESHOLD
-                ) {
-                  isDragging = true;
-
-                  let newX = self.initialWindowX + dx;
-                  let newY = self.initialWindowY + dy;
-
-                  // window → logical
-                  const { x, y } = self.windowToLogical(newX, newY);
-                  newX = x;
-                  newY = y;
-
-                  // 边界限制（logical 坐标）
-                  newX = Math.max(bounds.left, Math.min(bounds.right, newX));
-                  newY = Math.max(bounds.top, Math.min(bounds.bottom, newY));
-
-                  // 更新“唯一真实坐标”
-                  self.logicalX = newX;
-                  self.logicalY = newY;
-
-                  // 同步更新icon + menu 坐标
-                  self.updateWindowPosition();
-                  // 刷新
-                  self.windowManager.updateViewLayout(
-                    self.iconContainerView,
-                    self.iconWindowParams,
-                  );
-                }
-
-                return isDragging;
-              }
-
-              case MotionEvent.ACTION_UP.value:
-                return isDragging; // 拖动时消耗事件，避免触发点击
-            }
-
-            return false;
-          },
-        },
-      });
-
       // 点击切换 menu
 
       const clickListener = Java.registerClass({
@@ -473,11 +469,7 @@ export class FloatMenu {
         methods: {
           onClick: function () {
             self.isIconMode = false;
-            // 只有点击显示时才更新位置
-            self.windowManager.updateViewLayout(
-              self.menuContainerView,
-              self.menuWindowParams,
-            );
+
             // 再次被点击以后设置为不透明
             self.iconContainerView.setAlpha(1);
 
@@ -485,8 +477,12 @@ export class FloatMenu {
           },
         },
       });
-      this.iconContainerView.setOnTouchListener(touchListener.$new());
       this.iconContainerView.setOnClickListener(clickListener.$new());
+      this.addDragListener(
+        this.iconContainerView,
+        this.iconContainerView,
+        this.iconWindowParams,
+      );
     } catch (error) {
       console.trace("Failed to create icon view: " + error);
     }
@@ -930,13 +926,12 @@ export class FloatMenu {
 
       // Create header container (vertical LinearLayout)
       this.headerView = LinearLayout.$new(context);
-      this.headerView.setOrientation(1); // VERTICAL
-      this.headerView.setLayoutParams(
-        LinearLayoutParams.$new(
-          LinearLayoutParams.MATCH_PARENT.value,
-          LinearLayoutParams.WRAP_CONTENT.value,
-        ),
+      const headerLayoutParams = LinearLayoutParams.$new(
+        LinearLayoutParams.MATCH_PARENT.value,
+        LinearLayoutParams.WRAP_CONTENT.value,
       );
+      this.headerView.setOrientation(1); // VERTICAL
+      this.headerView.setLayoutParams(headerLayoutParams);
       this.headerView.setPadding(16, 16, 16, 16);
       this.headerView.setBackgroundColor(0xff333333 | 0); // Dark gray background
       const JString = API.JString;
@@ -969,6 +964,11 @@ export class FloatMenu {
 
       this.headerView.addView(titleView);
       this.headerView.addView(subtitleView);
+      this.addDragListener(
+        this.headerView,
+        this.menuContainerView,
+        this.menuWindowParams,
+      );
     } catch (error) {
       console.trace("Failed to create header view: " + error);
     }
