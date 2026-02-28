@@ -46,8 +46,12 @@ export const API = {
   get SeekBar() {
     return Java.use("android.widget.SeekBar");
   },
-  get Html() { return Java.use("android.text.Html"); },
-  get SeekBarOnSeekBarChangeListener() { return Java.use("android.widget.SeekBar$OnSeekBarChangeListener"); },
+  get Html() {
+    return Java.use("android.text.Html");
+  },
+  get SeekBarOnSeekBarChangeListener() {
+    return Java.use("android.widget.SeekBar$OnSeekBarChangeListener");
+  },
   get AdapterViewOnItemSelectedListener() {
     return Java.use("android.widget.AdapterView$OnItemSelectedListener");
   },
@@ -66,8 +70,18 @@ export const API = {
   get AlertDialogBuilder() {
     return Java.use("android.app.AlertDialog$Builder");
   },
+  get OnTouchListener() {
+    return Java.use("android.view.View$OnTouchListener");
+  },
+  get MotionEvent() {
+    return Java.use("android.view.MotionEvent");
+  },
   get EditText() {
     return Java.use("android.widget.EditText");
+  },
+  get Point() { return Java.use("android.graphics.Point"); },
+  get DisplayMetrics() {
+    return Java.use("android.util.DisplayMetrics");
   },
   get TextViewBufferType() {
     return Java.use("android.widget.TextView$BufferType");
