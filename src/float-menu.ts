@@ -29,7 +29,6 @@ export interface FloatMenuOptions {
 
 export class FloatMenu {
   private options: FloatMenuOptions;
-  private windowParams: any; // WindowManager.LayoutParams
   private menuContainerView: any; // Outer layout containing header, scrollable content and footer
   private contentContainer: any; // Scrollable content area (LinearLayout inside ScrollView)
   private scrollView: any; // ScrollView wrapping contentContainer
@@ -60,15 +59,17 @@ export class FloatMenu {
   private activeTabId: string = "default"; // Currently active tab ID
 
   private _context: any = null;
-  lastTouchX: any;
-  lastTouchY: any;
-  initialWindowX: any;
-  initialWindowY: any;
-  screenWidth: any;
-  screenHeight: any;
-  menuWindowParams: any;
-  iconWindowParams: any;
-  iconContainerView: any;
+  private lastTouchX: any;
+  private lastTouchY: any;
+  private initialWindowX: any;
+  private initialWindowY: any;
+  private screenWidth: any;
+  private screenHeight: any;
+  private menuWindowParams: any;
+  private iconWindowParams: any;
+  private iconContainerView: any;
+  private logicalX: number = 0;
+  private logicalY: number = 0;
   public get context(): any {
     if (this._context === null) {
       this._context = Java.use("android.app.ActivityThread")
@@ -109,6 +110,15 @@ export class FloatMenu {
       showTabs: undefined, // Will be determined based on tabs array
       ...options,
     };
+    Java.perform(() => {
+      const resources = this.context.getResources();
+      const metrics = resources.getDisplayMetrics();
+
+      this.screenWidth = metrics.widthPixels.value;
+      this.screenHeight = metrics.heightPixels.value;
+    });
+    console.log("屏幕尺寸:", this.screenWidth, this.screenHeight);
+
     this.logger = new Logger(this.options.showLogs ? "debug" : "none");
     if (this.options.showLogs) {
       this.logger.on("log", (level: LogLevel, message: string) => {
@@ -162,19 +172,55 @@ export class FloatMenu {
       this.options.showTabs = false; // Don't show tab bar for single default tab
     }
   }
+
+  /**
+   * 逻辑坐标转换为真实坐标，以左上角为原点转换为屏幕中心为原点
+   * @param lx
+   * @param ly
+   * @returns
+   */
+  private logicalToWindow(lx: number, ly: number) {
+    const sw = this.screenWidth;
+    const sh = this.screenHeight;
+    const iw = this.options.iconWidth!;
+    const ih = this.options.iconHeight!;
+    return {
+      x: Math.round(lx - (sw - iw) / 2),
+      y: Math.round(ly - (sh - ih) / 2),
+    };
+  }
+
+  /**
+   * 真实坐标转换为逻辑坐标，以左上角为原点转换为屏幕中心为原点
+   * @param wx
+   * @param wy
+   * @returns
+   */
+  private windowToLogical(wx: number, wy: number) {
+    const sw = this.screenWidth;
+    const sh = this.screenHeight;
+    const iw = this.options.iconWidth!;
+    const ih = this.options.iconHeight!;
+    return {
+      x: Math.round(wx + (sw - iw) / 2),
+      y: Math.round(wy + (sh - ih) / 2),
+    };
+  }
+
   private enableDragForView(
     targetView: any,
-    options?: { bounds?: any; snapToEdge?: boolean },
+    options?: {
+      bounds: { left: number; top: number; right: number; bottom: number };
+    },
   ) {
     const MotionEvent = API.MotionEvent;
     const self = this;
     const bounds = options?.bounds || {
       left: 0,
       top: 0,
-      right: self.screenWidth.value - self.options.iconWidth!,
-      bottom: self.screenHeight.value - self.options.iconHeight!,
+      right: self.screenWidth - self.options.iconWidth!,
+      bottom: self.screenHeight - self.options.iconHeight!,
     };
-    const snapToEdge = options?.snapToEdge ?? true;
     let isDragging = false;
     const DRAG_THRESHOLD = 5; // 阈值，小于 5px 不算拖动
 
@@ -191,16 +237,18 @@ export class FloatMenu {
           switch (action) {
             case MotionEvent.ACTION_DOWN.value:
               isDragging = false;
+
               self.lastTouchX = event.getRawX();
               self.lastTouchY = event.getRawY();
+
               self.initialWindowX = self.iconWindowParams.x.value;
               self.initialWindowY = self.iconWindowParams.y.value;
-              return false; // allow click
 
-            case MotionEvent.ACTION_MOVE.value:
+              return false;
+            case MotionEvent.ACTION_MOVE.value: {
               const dx = event.getRawX() - self.lastTouchX;
               const dy = event.getRawY() - self.lastTouchY;
-              console.log(dx, dy);
+
               if (
                 Math.abs(dx) > DRAG_THRESHOLD ||
                 Math.abs(dy) > DRAG_THRESHOLD
@@ -210,37 +258,61 @@ export class FloatMenu {
                 let newX = self.initialWindowX + dx;
                 let newY = self.initialWindowY + dy;
 
-                // 限制屏幕边界
+                // window → logical
+                const { x, y } = self.windowToLogical(newX, newY);
+                newX = x;
+                newY = y;
+
+                // 边界限制（logical 坐标）
                 newX = Math.max(bounds.left, Math.min(bounds.right, newX));
                 newY = Math.max(bounds.top, Math.min(bounds.bottom, newY));
 
-                self.iconWindowParams.x.value = newX | 0;
-                self.iconWindowParams.y.value = newY | 0;
+                // 更新“唯一真实坐标”
+                self.logicalX = newX;
+                self.logicalY = newY;
 
+                // 同步更新坐标icon + menu
+                self.updateWindowPosition();
+                // 刷新
                 self.windowManager.updateViewLayout(
                   self.iconContainerView,
                   self.iconWindowParams,
                 );
               }
 
-              return isDragging; // only consume if dragging
+              return isDragging;
+            }
 
             case MotionEvent.ACTION_UP.value:
-              // 拖动结束后，如果启用吸边
-              if (isDragging && snapToEdge) {
-                const midX = self.screenWidth.value / 2;
-                if (self.iconWindowParams.x < midX) {
-                  self.iconWindowParams.x = 0; // 吸左边
-                } else {
-                  self.iconWindowParams.x =
-                    self.screenWidth.value - self.options.iconWidth!; // 吸右边
-                }
-                self.windowManager.updateViewLayout(
-                  self.iconContainerView,
-                  self.iconWindowParams,
-                );
-              }
-              return isDragging; // if dragged, prevent click
+              // if (isDragging && snapToEdge) {
+              //   // 1) 先把当前 window 坐标转换成 logical 坐标（统一坐标系）
+              //   let { x: lx, y: ly } = self.windowToLogical(
+              //     self.iconWindowParams.x.value,
+              //     self.iconWindowParams.y.value,
+              //   );
+
+              //   // 2) 逻辑坐标下的吸边判断
+              //   const midX = self.screenWidth / 2;
+              //   if (lx < midX) {
+              //     lx = 0; // 吸左边
+              //   } else {
+              //     lx = self.screenWidth - self.options.iconWidth!;
+              //   }
+
+              //   // 3) logical → window (一次性转换)
+              //   const { x: wx, y: wy } = self.logicalToWindow(lx, ly);
+
+              //   // 4) 更新到 WindowManager
+              //   self.iconWindowParams.x.value = wx | 0;
+              //   self.iconWindowParams.y.value = wy | 0;
+
+              //   self.windowManager.updateViewLayout(
+              //     self.iconContainerView,
+              //     self.iconWindowParams,
+              //   );
+              // }
+
+              return isDragging; // 拖动时消耗事件，避免触发点击
           }
 
           return false;
@@ -347,21 +419,43 @@ export class FloatMenu {
     this.windowManager.addView(this.menuContainerView, this.menuWindowParams);
     this.menuContainerView.setVisibility(View.GONE.value);
   }
+  private updateWindowPosition(): void {
+    // icon
+    const { x: iconWX, y: iconWY } = this.logicalToWindow(
+      this.logicalX!,
+      this.logicalY!,
+    );
+    this.iconWindowParams.x.value = iconWX | 0;
+    this.iconWindowParams.y.value = iconWY | 0;
 
+    // menu（你可以加偏移，让菜单不盖住 icon）
+    const menuOffsetX = 0;
+    const menuOffsetY = this.options.iconHeight ?? 0;
+
+    const { x: menuWX, y: menuWY } = this.logicalToWindow(
+      this.logicalX! + menuOffsetX,
+      this.logicalY! + menuOffsetY,
+    );
+    this.menuWindowParams.x.value = menuWX | 0;
+    this.menuWindowParams.y.value = menuWY | 0;
+  }
   private createIconWindow(): void {
     try {
       const ImageView = API.ImageView;
       const ImageView$ScaleType = API.ImageViewScaleType;
       const FrameLayoutParams = API.FrameLayoutParams;
+      const OnClickListener = API.OnClickListener;
       const Gravity = API.Gravity;
       const LayoutParams = API.LayoutParams;
-
+      const BitmapFactory = API.BitmapFactory;
+      const Base64 = API.Base64;
+      const FrameLayout = API.FrameLayout;
+      const OnTouchListener = API.OnTouchListener;
+      const MotionEvent = API.MotionEvent;
       this.iconView = ImageView.$new(this.context);
 
       // icon 图片或默认圆
       if (this.options.iconBase64) {
-        const BitmapFactory = API.BitmapFactory;
-        const Base64 = API.Base64;
         const decoded = Base64.decode(
           this.options.iconBase64,
           Base64.DEFAULT.value,
@@ -381,19 +475,19 @@ export class FloatMenu {
 
       this.iconView.setScaleType(ImageView$ScaleType.FIT_CENTER.value);
 
+      const { x, y } = this.logicalToWindow(this.options.x!, this.options.y!);
       // icon window
       this.iconWindowParams = LayoutParams.$new(
         this.options.iconWidth,
         this.options.iconHeight,
-        this.options.x,
-        this.options.y,
+        x,
+        y,
         2038,
         LayoutParams.FLAG_NOT_FOCUSABLE.value |
           LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
         1,
       );
 
-      const FrameLayout = API.FrameLayout;
       this.iconContainerView = FrameLayout.$new(this.context);
       this.iconContainerView.setLayoutParams(
         FrameLayoutParams.$new(
@@ -407,39 +501,104 @@ export class FloatMenu {
       // 添加到 window manager
       this.windowManager.addView(this.iconContainerView, this.iconWindowParams);
 
-      const resources = this.context.getResources();
-      const metrics = resources.getDisplayMetrics();
-
-      this.screenWidth = metrics.widthPixels;
-      this.screenHeight = metrics.heightPixels;
-
-      console.log("屏幕尺寸:", this.screenWidth.value, this.screenHeight.value);
-
       // 拖动
-      this.enableDragForView(this.iconContainerView, {
-        bounds: {
-          left: 0,
-          top: 0,
-          right: this.screenWidth.value - this.options.iconWidth!,
-          bottom: this.screenHeight.value - this.options.iconHeight!,
+      const bounds = {
+        left: 0,
+        top: 0,
+        right: this.screenWidth - this.options.iconWidth!,
+        bottom: this.screenHeight - this.options.iconHeight!,
+      };
+      let isDragging = false;
+      const self = this;
+
+      const DRAG_THRESHOLD = 5; // 阈值，小于 5px 不算拖动
+
+      const touchListener = Java.registerClass({
+        name:
+          "com.frida.FloatDragListener" +
+          Date.now() +
+          Math.random().toString(36).substring(6),
+        implements: [OnTouchListener],
+        methods: {
+          onTouch: function (v: any, event: any) {
+            const action = event.getAction();
+            switch (action) {
+              case MotionEvent.ACTION_DOWN.value:
+                isDragging = false;
+
+                self.lastTouchX = event.getRawX();
+                self.lastTouchY = event.getRawY();
+
+                self.initialWindowX = self.iconWindowParams.x.value;
+                self.initialWindowY = self.iconWindowParams.y.value;
+
+                return false;
+              case MotionEvent.ACTION_MOVE.value: {
+                const dx = event.getRawX() - self.lastTouchX;
+                const dy = event.getRawY() - self.lastTouchY;
+
+                if (
+                  Math.abs(dx) > DRAG_THRESHOLD ||
+                  Math.abs(dy) > DRAG_THRESHOLD
+                ) {
+                  isDragging = true;
+
+                  let newX = self.initialWindowX + dx;
+                  let newY = self.initialWindowY + dy;
+
+                  // window → logical
+                  const { x, y } = self.windowToLogical(newX, newY);
+                  newX = x;
+                  newY = y;
+
+                  // 边界限制（logical 坐标）
+                  newX = Math.max(bounds.left, Math.min(bounds.right, newX));
+                  newY = Math.max(bounds.top, Math.min(bounds.bottom, newY));
+
+                  // 更新“唯一真实坐标”
+                  self.logicalX = newX;
+                  self.logicalY = newY;
+
+                  // 同步更新icon + menu 坐标
+                  self.updateWindowPosition();
+                  // 刷新
+                  self.windowManager.updateViewLayout(
+                    self.iconContainerView,
+                    self.iconWindowParams,
+                  );
+                }
+
+                return isDragging;
+              }
+
+              case MotionEvent.ACTION_UP.value:
+                return isDragging; // 拖动时消耗事件，避免触发点击
+            }
+
+            return false;
+          },
         },
-        snapToEdge: true,
       });
 
       // 点击切换 menu
-      const OnClickListener = API.OnClickListener;
-      const self = this;
+
       const clickListener = Java.registerClass({
         name: "com.frida.IconClickListener" + Date.now(),
         implements: [OnClickListener],
         methods: {
           onClick: function () {
             self.isIconMode = false;
+            // 只有点击显示时才更新位置
+            self.windowManager.updateViewLayout(
+              self.menuContainerView,
+              self.menuWindowParams,
+            );
             self.toggleView();
           },
         },
       });
-      // this.iconView.setOnClickListener(clickListener.$new());
+      this.iconContainerView.setOnTouchListener(touchListener.$new());
+      this.iconContainerView.setOnClickListener(clickListener.$new());
     } catch (error) {
       console.trace("Failed to create icon view: " + error);
     }
