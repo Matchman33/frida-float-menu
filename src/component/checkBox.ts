@@ -32,7 +32,7 @@ export class CheckBoxGroup extends UIComponent {
   ) {
     super(id);
     // 初始化选中状态
-    this.columns = columns ??  (Math.ceil(options.length / 2) || 3)
+    this.columns = columns ?? (Math.ceil(options.length / 2) || 3);
     for (const opt of options) {
       const checked = initialChecked.includes(opt.id);
       this.optionsMap.set(opt.id, { ...opt, checked });
@@ -55,12 +55,12 @@ export class CheckBoxGroup extends UIComponent {
   }
   protected createView(context: any): void {
     // 使用 GridLayout 实现自动换行
-    const GridLayout = API.GridLayout
-    const CheckBox = API.CheckBox
-    const String = API.JString
-    const Color = API.Color
-    const GridLayoutParams = API.GridLayoutParams
-    const ViewGroupLayoutParams = API.ViewGroupLayoutParams
+    const GridLayout = API.GridLayout;
+    const CheckBox = API.CheckBox;
+    const String = API.JString;
+    const Color = API.Color;
+    const GridLayoutParams = API.GridLayoutParams;
+    const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
 
     // 创建 GridLayout 作为容器
     const layout = GridLayout.$new(context);
@@ -74,7 +74,7 @@ export class CheckBoxGroup extends UIComponent {
     this.button = layout;
 
     const self = this;
-    const OnCheckedChangeListener = API.OnCheckedChangeListener
+    const OnCheckedChangeListener = API.OnCheckedChangeListener;
 
     // 遍历选项，创建 CheckBox
     for (const opt of this.optionsMap.values()) {
@@ -115,12 +115,16 @@ export class CheckBoxGroup extends UIComponent {
               checked: isChecked,
             });
             if (self.changeHandler)
-              self.changeHandler(self.value, {
-                id: opt.id,
-                checked: isChecked,
+              setImmediate(() => {
+                self.changeHandler!(self.value, {
+                  id: opt.id,
+                  checked: isChecked,
+                });
               });
+
             self.emit("valueChanged", self.value);
-            if (self.valueChangeHandler) self.valueChangeHandler(self.value);
+            if (self.valueChangeHandler)
+              setImmediate(() => self.valueChangeHandler!(self.value));
           },
         },
       }).$new();

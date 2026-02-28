@@ -2,6 +2,7 @@ import { EventEmitter } from "../event-emitter";
 
 export abstract class UIComponent {
   protected emitter: EventEmitter = new EventEmitter();
+  // 必须实例化button
   protected button: any; // Android View
   protected value: any;
   protected id: string;

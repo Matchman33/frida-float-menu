@@ -11,6 +11,7 @@ import {
 } from "./src/index";
 import { NumberInput, TextInput } from "./src/component/input";
 import { CheckBoxGroup } from "./src/component/checkBox";
+import { ImageView, LayoutParamsEnum } from "./src/component/image";
 
 // Optional: attach to global for easier access in Frida REPL
 // import { attachToGlobal } from './src/index';
@@ -73,7 +74,8 @@ Java.perform(() => {
     menu.setComponentValue("name_display", "Hello, <b>Anonymous</b>!");
   });
   menu.addComponent(clearTextButton, "inputs");
-
+  const imageView = new ImageView("image", iconBase64, 1400, 1400);
+  menu.addComponent(imageView, "layout");
   // TextInput component (multiline)
   const multiInput = new TextInput(
     "notes_input",
@@ -131,7 +133,6 @@ Java.perform(() => {
     ],
     ["male"], // 初始选中 male
   );
-
 
   // 获取选中值
   const selected = genderGroup.getCheckedValues(); // ["male"]

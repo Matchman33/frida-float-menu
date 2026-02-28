@@ -2,10 +2,15 @@ import { API } from "../api";
 import { UIComponent } from "./ui-components";
 
 export class Selector extends UIComponent {
-  private items: string[];
+  private items: { lable: string; [key: string]: any }[];
   private selectedIndex: number;
+  private handler?: (value: any) => {};
 
-  constructor(id: string, items: string[], selectedIndex: number = 0) {
+  constructor(
+    id: string,
+    items: { lable: string; [key: string]: any }[],
+    selectedIndex: number = 0,
+  ) {
     super(id);
     this.items = items;
     this.selectedIndex = selectedIndex;
@@ -21,7 +26,7 @@ export class Selector extends UIComponent {
     this.button.setBackgroundColor(0xff555555 | 0); // gray background
 
     // Convert JavaScript strings to Java strings
-    const javaItems = this.items.map((item) => String.$new(item));
+    const javaItems = this.items.map((item) => String.$new(item.lable));
     // const R = Java.use("android.R");
 
     const adapter = ArrayAdapter.$new(
@@ -61,6 +66,7 @@ export class Selector extends UIComponent {
           self.selectedIndex = position;
           self.value = self.items[position];
           self.emit("valueChanged", self.value);
+          if (self.handler) setImmediate(() => self.handler!(self.value));
         },
         onNothingSelected: function (parent: any) {
           // Do nothing
@@ -68,6 +74,10 @@ export class Selector extends UIComponent {
       },
     });
     this.button.setOnItemSelectedListener(itemSelectedListener.$new());
+  }
+
+  public onValueChange(handler: (value: any) => {}) {
+    this.handler = handler;
   }
 
   protected updateView(): void {
@@ -78,7 +88,10 @@ export class Selector extends UIComponent {
       return;
     }
     // Update selection based on value
-    const index = this.items.indexOf(this.value);
+
+    const index = this.items.findIndex(
+      (value) => value.lable == this.value.lable,
+    );
     if (index !== -1) {
       Java.scheduleOnMainThread(() => {
         this.button.setSelection(index);
@@ -89,7 +102,7 @@ export class Selector extends UIComponent {
   /**
    * Set selector items
    */
-  public setItems(items: string[]): void {
+  public setItems(items: { lable: string; [key: string]: any }[]): void {
     this.items = items;
     if (!this.button) {
       console.warn(
@@ -100,12 +113,12 @@ export class Selector extends UIComponent {
     // Update adapter
     Java.scheduleOnMainThread(() => {
       try {
-        const ArrayAdapter = API.ArrayAdapter
+        const ArrayAdapter = API.ArrayAdapter;
         const context = this.button.getContext();
-const R_layout = API.R_layout;
-const String = API.JString;
+        const R_layout = API.R_layout;
+        const String = API.JString;
         // Convert JavaScript strings to Java strings
-        const javaItems = items.map((item) => String.$new(item));
+        const javaItems = items.map((item) => String.$new(item.lable));
         // const R = Java.use("android.R");
 
         const adapter = ArrayAdapter.$new(

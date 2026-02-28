@@ -6,6 +6,7 @@ export class Slider extends UIComponent {
   private max: number;
   private step: number;
   private label: string;
+  private handler?: any;
 
   constructor(
     id: string,
@@ -25,13 +26,13 @@ export class Slider extends UIComponent {
   }
 
   protected createView(context: any): void {
-const LinearLayout = API.LinearLayout;
-const TextView = API.TextView;
-const SeekBar = API.SeekBar;
-const Color = API.Color;
-const String = API.JString;
-const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
-const LinearLayoutParams = API.LinearLayoutParams;
+    const LinearLayout = API.LinearLayout;
+    const TextView = API.TextView;
+    const SeekBar = API.SeekBar;
+    const Color = API.Color;
+    const String = API.JString;
+    const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+    const LinearLayoutParams = API.LinearLayoutParams;
 
     // Create a horizontal LinearLayout to hold label and value
     const container = LinearLayout.$new(context);
@@ -102,7 +103,7 @@ const LinearLayoutParams = API.LinearLayoutParams;
     (this.button as any).labelView = labelView;
     (this.button as any).container = container;
 
-    const SeekBarOnSeekBarChangeListener =API.SeekBarOnSeekBarChangeListener
+    const SeekBarOnSeekBarChangeListener = API.SeekBarOnSeekBarChangeListener;
     const self = this;
 
     const changeListener = Java.registerClass({
@@ -128,6 +129,7 @@ const LinearLayoutParams = API.LinearLayoutParams;
               }
             });
             self.emit("valueChanged", newValue);
+            if (self.handler) setImmediate(() => self.handler!(newValue));
           }
         },
         onStartTrackingTouch: function (seekBar: any) {
@@ -139,6 +141,10 @@ const LinearLayoutParams = API.LinearLayoutParams;
       },
     });
     seekBar.setOnSeekBarChangeListener(changeListener.$new());
+  }
+
+  public setOnValueChange(handler: (value: number) => void) {
+    this.handler = handler;
   }
 
   protected updateView(): void {
@@ -155,7 +161,7 @@ const LinearLayoutParams = API.LinearLayoutParams;
         seekBar.setProgress(this.valueToProgress(this.value));
       }
       if (valueView) {
-        const String = API.JString
+        const String = API.JString;
         valueView.setText(String.$new(this.value.toString()));
       }
     });
@@ -175,7 +181,7 @@ const LinearLayoutParams = API.LinearLayoutParams;
     Java.scheduleOnMainThread(() => {
       const labelView = (this.button as any).labelView;
       if (labelView) {
-        const String = API.JString
+        const String = API.JString;
         labelView.setText(String.$new(label));
       }
     });
