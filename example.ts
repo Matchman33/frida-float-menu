@@ -32,8 +32,7 @@ Java.perform(() => {
     showLogs: false,
     logMaxLines: 50,
     iconBase64: iconBase64,
-    title: "Frida Float Menu - New Components Demo",
-    subtitle: "这是我美好的一天",
+    title: "这是我的易游",
     showHeader: true,
     showFooter: true,
     tabs: [

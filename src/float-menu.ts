@@ -297,13 +297,13 @@ export class FloatMenu {
     // 创建 menu 容器
     // --------------------
     this.menuContainerView = LinearLayout.$new(this.context);
+
     this.menuContainerView.setOrientation(1); // VERTICAL
-    this.menuContainerView.setLayoutParams(
-      ViewGroupLayoutParams.$new(
-        ViewGroupLayoutParams.MATCH_PARENT.value,
-        ViewGroupLayoutParams.MATCH_PARENT.value,
-      ),
+    const layoutParams = ViewGroupLayoutParams.$new(
+      ViewGroupLayoutParams.MATCH_PARENT.value,
+      ViewGroupLayoutParams.MATCH_PARENT.value,
     );
+    this.menuContainerView.setLayoutParams(layoutParams);
     const LayoutParams = API.LayoutParams;
     this.menuWindowParams = LayoutParams.$new(
       this.options.width,
@@ -334,7 +334,7 @@ export class FloatMenu {
     this.scrollView.setLayoutParams(
       LinearLayoutParams.$new(ViewGroupLayoutParams.MATCH_PARENT.value, 0, 1.0),
     );
-
+    this.scrollView.setBackgroundColor(0xff555555 | 0);
     const tabContainersWrapper = FrameLayout.$new(this.context);
     tabContainersWrapper.setLayoutParams(
       ViewGroupLayoutParams.$new(
@@ -374,10 +374,10 @@ export class FloatMenu {
     this.menuContainerView.addView(this.scrollView);
 
     // footer
-    if (this.options.showFooter) {
-      this.createFooterView(this.context);
-      this.menuContainerView.addView(this.footerView);
-    }
+    // if (this.options.showFooter) {
+    //   this.createFooterView(this.context);
+    //   this.menuContainerView.addView(this.footerView);
+    // }
 
     this.windowManager.addView(this.menuContainerView, this.menuWindowParams);
     this.menuContainerView.setVisibility(View.GONE.value);
@@ -810,7 +810,7 @@ export class FloatMenu {
       );
       scrollView.setHorizontalScrollBarEnabled(false); // 显示滚动条
       scrollView.setScrollbarFadingEnabled(true); // 允许滚动条淡出
-
+      scrollView.setBackgroundColor(0xff333333 | 0);
       // 创建内部的水平标签容器（原来的 tabView）
       const tabContainer = LinearLayout.$new(context);
       tabContainer.setOrientation(0); // HORIZONTAL
@@ -828,7 +828,7 @@ export class FloatMenu {
         tabText.setText(JString.$new(tabInfo.label));
         tabText.setAllCaps(false);
         tabText.setPadding(4, 0, 10, 4);
-        tabText.setTextSize(18);
+        tabText.setTextSize(14);
         const Gravity = API.Gravity;
         tabText.setGravity(Gravity.CENTER.value);
         // 应用当前标签样式（激活/非激活）
@@ -856,7 +856,7 @@ export class FloatMenu {
           LinearLayoutParams.WRAP_CONTENT.value,
           LinearLayoutParams.WRAP_CONTENT.value,
         );
-        btnParams.setMargins(8, 8, 8, 8);
+        btnParams.setMargins(16, 8, 16, 16);
         tabText.setLayoutParams(btnParams);
 
         tabContainer.addView(tabText);
@@ -937,38 +937,155 @@ export class FloatMenu {
   /**
    * Create header view with title and subtitle
    */
+  // private createHeaderView(context: any): void {
+  //   try {
+  //     const LinearLayout = API.LinearLayout;
+  //     const LinearLayoutParams = API.LinearLayoutParams;
+  //     const TextView = API.TextView;
+  //     const Color = API.Color;
+
+  //     // Create header container (vertical LinearLayout)
+  //     this.headerView = LinearLayout.$new(context);
+  //     const headerLayoutParams = LinearLayoutParams.$new(
+  //       LinearLayoutParams.MATCH_PARENT.value,
+  //       LinearLayoutParams.WRAP_CONTENT.value,
+  //     );
+  //     this.headerView.setOrientation(1); // VERTICAL
+  //     this.headerView.setLayoutParams(headerLayoutParams);
+  //     this.headerView.setPadding(16, 16, 16, 16);
+  //     this.headerView.setBackgroundColor(0xff333333 | 0); // Dark gray background
+  //     const JString = API.JString;
+  //     // Main title
+  //     const titleView = TextView.$new(context);
+  //     titleView.setText(JString.$new(this.options.title || "Frida Float Menu"));
+  //     titleView.setTextSize(18);
+  //     titleView.setTextColor(Color.WHITE.value);
+  //     titleView.setTypeface(null, 1); // Typeface.BOLD
+  //     titleView.setLayoutParams(
+  //       LinearLayoutParams.$new(
+  //         LinearLayoutParams.MATCH_PARENT.value,
+  //         LinearLayoutParams.WRAP_CONTENT.value,
+  //       ),
+  //     );
+
+  //     this.headerView.addView(titleView);
+  //     this.addDragListener(
+  //       this.headerView,
+  //       this.menuContainerView,
+  //       this.menuWindowParams,
+  //     );
+  //   } catch (error) {
+  //     console.trace("Failed to create header view: " + error);
+  //   }
+  // }
+
   private createHeaderView(context: any): void {
     try {
       const LinearLayout = API.LinearLayout;
       const LinearLayoutParams = API.LinearLayoutParams;
       const TextView = API.TextView;
       const Color = API.Color;
+      const JString = API.JString;
+      const GradientDrawable = API.GradientDrawable;
+      const Gravity = API.Gravity || Java.use("android.view.Gravity");
 
-      // Create header container (vertical LinearLayout)
+      // 辅助函数：创建圆形按钮
+      function createRadiusBtn(
+        text: string,
+        bgColor: number,
+        textColor: number,
+      ) {
+        const button = TextView.$new(context);
+        button.setText(JString.$new(text));
+        button.setTextSize(16); // 符号大小
+        button.setTextColor(textColor);
+        button.setGravity(Gravity.CENTER.value);
+        button.setPadding(10, 10, 10, 10);
+
+        // 圆形背景
+        const drawable = GradientDrawable.$new();
+        drawable.setCornerRadius(50); // 圆角半径 = 宽/2 得到圆形
+        drawable.setColor(bgColor);
+        button.setBackgroundDrawable(drawable);
+        return button;
+      }
+
+      // 创建水平标题栏容器
       this.headerView = LinearLayout.$new(context);
       const headerLayoutParams = LinearLayoutParams.$new(
         LinearLayoutParams.MATCH_PARENT.value,
         LinearLayoutParams.WRAP_CONTENT.value,
       );
-      this.headerView.setOrientation(1); // VERTICAL
+      this.headerView.setOrientation(0); // HORIZONTAL
       this.headerView.setLayoutParams(headerLayoutParams);
-      this.headerView.setPadding(16, 16, 16, 16);
-      this.headerView.setBackgroundColor(0xff333333 | 0); // Dark gray background
-      const JString = API.JString;
-      // Main title
-      const titleView = TextView.$new(context);
-      titleView.setText(JString.$new(this.options.title || "Frida Float Menu"));
-      titleView.setTextSize(18);
-      titleView.setTextColor(Color.WHITE.value);
-      titleView.setTypeface(null, 1); // Typeface.BOLD
-      titleView.setLayoutParams(
-        LinearLayoutParams.$new(
-          LinearLayoutParams.MATCH_PARENT.value,
-          LinearLayoutParams.WRAP_CONTENT.value,
-        ),
+      this.headerView.setPadding(16, 8, 16, 8); // 垂直内边距减小
+      this.headerView.setBackgroundColor(0xff333333 | 0);
+      this.headerView.setGravity(Gravity.CENTER_VERTICAL.value); // 子视图垂直居中
+      const self = this;
+      // 左侧最小化按钮 (使用减号 "－")
+      const minButton = createRadiusBtn("小化", 0xff555555 | 0, 0xffffffff | 0);
+      minButton.setOnClickListener(
+        Java.registerClass({
+          name: "MinButtonClickListener" + Date.now(),
+          implements: [API.OnClickListener],
+          methods: {
+            onClick: function (view: any) {
+              self.isIconMode = true;
+              self.toggleView();
+            },
+          },
+        }).$new(),
       );
 
+      // 标题（缩小字体，加粗）
+      const titleView = TextView.$new(context);
+      titleView.setText(JString.$new(this.options.title));
+      titleView.setPadding(10, 10, 10, 10);
+
+      titleView.setTextSize(16); // 从 18 缩小到 14
+      titleView.setTextColor(Color.WHITE.value);
+      titleView.setTypeface(null, 1); // BOLD
+      titleView.setGravity(Gravity.CENTER.value);
+      const drawable = GradientDrawable.$new();
+      drawable.setCornerRadius(50); // 圆角半径 = 宽/2 得到圆形
+      drawable.setColor(0xff555555 | 0);
+      titleView.setBackgroundDrawable(drawable);
+      // 标题占据剩余空间，实现居中
+      const titleParams = LinearLayoutParams.$new(
+        0,
+        LinearLayoutParams.WRAP_CONTENT.value,
+        1.0, // weight
+      );
+      titleParams.setMargins(40, 8, 40, 8);
+      titleView.setLayoutParams(titleParams);
+
+      // 右侧隐藏按钮 (使用黑色圆 "●")
+      const hideButton = createRadiusBtn(
+        "隐藏",
+        0xff555555 | 0,
+        0xffffffff | 0,
+      );
+      hideButton.setOnClickListener(
+        Java.registerClass({
+          name: "HideButtonClickListener" + Date.now(),
+          implements: [API.OnClickListener],
+          methods: {
+            onClick: function (view: any) {
+              self.isIconMode = true;
+              self.toggleView();
+              self.hide(); // Hide the floating window
+              self.toast("菜单已隐藏,单击原来位置显示");
+            },
+          },
+        }).$new(),
+      );
+
+      // 将所有视图添加到标题栏
+      this.headerView.addView(minButton);
       this.headerView.addView(titleView);
+      this.headerView.addView(hideButton);
+
+      // 保留原有的拖动监听（如果需要调整事件冲突，可后续优化）
       this.addDragListener(
         this.headerView,
         this.menuContainerView,
@@ -978,95 +1095,94 @@ export class FloatMenu {
       console.trace("Failed to create header view: " + error);
     }
   }
-
   /**
    * Create footer view with buttons
    */
-  private createFooterView(context: any): void {
-    try {
-      const LinearLayout = API.LinearLayout;
-      const LinearLayoutParams = API.LinearLayoutParams;
-      const Button = API.Button;
-      const Color = API.Color;
-      const OnClickListener = API.OnClickListener;
+  // private createFooterView(context: any): void {
+  //   try {
+  //     const LinearLayout = API.LinearLayout;
+  //     const LinearLayoutParams = API.LinearLayoutParams;
+  //     const Button = API.Button;
+  //     const Color = API.Color;
+  //     const OnClickListener = API.OnClickListener;
 
-      // Create footer container (horizontal LinearLayout)
-      this.footerView = LinearLayout.$new(context);
-      this.footerView.setOrientation(0); // HORIZONTAL
-      this.footerView.setLayoutParams(
-        LinearLayoutParams.$new(
-          LinearLayoutParams.MATCH_PARENT.value,
-          LinearLayoutParams.WRAP_CONTENT.value,
-        ),
-      );
-      this.footerView.setPadding(8, 8, 8, 8);
-      this.footerView.setBackgroundColor(0xff444444 | 0); // Medium gray background
+  //     // Create footer container (horizontal LinearLayout)
+  //     this.footerView = LinearLayout.$new(context);
+  //     this.footerView.setOrientation(0); // HORIZONTAL
+  //     this.footerView.setLayoutParams(
+  //       LinearLayoutParams.$new(
+  //         LinearLayoutParams.MATCH_PARENT.value,
+  //         LinearLayoutParams.WRAP_CONTENT.value,
+  //       ),
+  //     );
+  //     this.footerView.setPadding(8, 8, 8, 8);
+  //     this.footerView.setBackgroundColor(0xff444444 | 0); // Medium gray background
 
-      const JString = API.JString;
-      // Minimize button (switch to icon mode)
-      const minimizeBtn = Button.$new(context);
-      minimizeBtn.setText(JString.$new("最小化"));
-      minimizeBtn.setTextColor(Color.WHITE.value);
-      minimizeBtn.setBackgroundColor(0xff555555 | 0);
-      minimizeBtn.setPadding(16, 8, 16, 8);
+  //     const JString = API.JString;
+  //     // Minimize button (switch to icon mode)
+  //     const minimizeBtn = Button.$new(context);
+  //     minimizeBtn.setText(JString.$new("最小化"));
+  //     minimizeBtn.setTextColor(Color.WHITE.value);
+  //     minimizeBtn.setBackgroundColor(0xff555555 | 0);
+  //     minimizeBtn.setPadding(16, 8, 16, 8);
 
-      const self = this;
-      const minimizeListener = Java.registerClass({
-        name:
-          "com.example.MinimizeClickListener" +
-          Date.now() +
-          Math.random().toString(36).substring(6),
-        implements: [OnClickListener],
-        methods: {
-          onClick: function (view: any) {
-            self.isIconMode = true;
-            self.toggleView();
-          },
-        },
-      });
-      minimizeBtn.setOnClickListener(minimizeListener.$new());
+  //     const self = this;
+  //     const minimizeListener = Java.registerClass({
+  //       name:
+  //         "com.example.MinimizeClickListener" +
+  //         Date.now() +
+  //         Math.random().toString(36).substring(6),
+  //       implements: [OnClickListener],
+  //       methods: {
+  //         onClick: function (view: any) {
+  //           self.isIconMode = true;
+  //           self.toggleView();
+  //         },
+  //       },
+  //     });
+  //     minimizeBtn.setOnClickListener(minimizeListener.$new());
 
-      // Hide button
-      const hideBtn = Button.$new(context);
-      hideBtn.setText(JString.$new("隐藏"));
-      hideBtn.setTextColor(Color.WHITE.value);
-      hideBtn.setBackgroundColor(0xff555555 | 0);
-      hideBtn.setPadding(16, 8, 16, 8);
+  //     // Hide button
+  //     const hideBtn = Button.$new(context);
+  //     hideBtn.setText(JString.$new("隐藏"));
+  //     hideBtn.setTextColor(Color.WHITE.value);
+  //     hideBtn.setBackgroundColor(0xff555555 | 0);
+  //     hideBtn.setPadding(16, 8, 16, 8);
 
-      const hideListener = Java.registerClass({
-        name:
-          "com.example.HideClickListener" +
-          Date.now() +
-          Math.random().toString(36).substring(6),
-        implements: [OnClickListener],
-        methods: {
-          onClick: function (view: any) {
-            self.isIconMode = true;
-            self.toggleView();
-            self.hide(); // Hide the floating window
-            self.toast("菜单已隐藏,单击原来位置显示");
-          },
-        },
-      });
-      hideBtn.setOnClickListener(hideListener.$new());
+  //     const hideListener = Java.registerClass({
+  //       name:
+  //         "com.example.HideClickListener" +
+  //         Date.now() +
+  //         Math.random().toString(36).substring(6),
+  //       implements: [OnClickListener],
+  //       methods: {
+  //         onClick: function (view: any) {
+  //           self.isIconMode = true;
+  //           self.toggleView();
+  //           self.hide(); // Hide the floating window
+  //           self.toast("菜单已隐藏,单击原来位置显示");
+  //         },
+  //       },
+  //     });
+  //     hideBtn.setOnClickListener(hideListener.$new());
 
-      // Layout params for buttons
-      const btnParams = LinearLayoutParams.$new(
-        0, // width will be set by weight
-        LinearLayoutParams.WRAP_CONTENT.value,
-        1.0, // weight = 1, buttons share space equally
-      );
-      btnParams.setMargins(4, 0, 4, 0);
+  //     // Layout params for buttons
+  //     const btnParams = LinearLayoutParams.$new(
+  //       0, // width will be set by weight
+  //       LinearLayoutParams.WRAP_CONTENT.value,
+  //       1.0, // weight = 1, buttons share space equally
+  //     );
+  //     btnParams.setMargins(4, 0, 4, 100);
 
-      minimizeBtn.setLayoutParams(btnParams);
-      hideBtn.setLayoutParams(btnParams);
+  //     minimizeBtn.setLayoutParams(btnParams);
+  //     hideBtn.setLayoutParams(btnParams);
 
-      this.footerView.addView(minimizeBtn);
-      this.footerView.addView(hideBtn);
-    } catch (error) {
-      console.trace("Failed to create footer view: " + error);
-    }
-  }
+  //     this.footerView.addView(minimizeBtn);
+  //     this.footerView.addView(hideBtn);
+  //   } catch (error) {
+  //     console.trace("Failed to create footer view: " + error);
+  //   }
+  // }
 
   /**
    * Add log message to log view
