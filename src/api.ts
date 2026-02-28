@@ -11,8 +11,14 @@ export const API = {
   get Gravity() {
     return Java.use("android.view.Gravity");
   },
+    get HorizontalScrollView() {
+    return Java.use("android.widget.HorizontalScrollView");
+  },
   get Context() {
     return Java.use("android.content.Context");
+  },
+  get GradientDrawable() {
+    return Java.use("android.graphics.drawable.GradientDrawable");
   },
   get BitmapFactory() {
     return Java.use("android.graphics.BitmapFactory");
@@ -79,7 +85,9 @@ export const API = {
   get EditText() {
     return Java.use("android.widget.EditText");
   },
-  get Point() { return Java.use("android.graphics.Point"); },
+  get Point() {
+    return Java.use("android.graphics.Point");
+  },
   get DisplayMetrics() {
     return Java.use("android.util.DisplayMetrics");
   },

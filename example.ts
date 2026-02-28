@@ -37,11 +37,14 @@ Java.perform(() => {
     showHeader: true,
     showFooter: true,
     tabs: [
-      { id: "controls", label: "Controls" },
-      { id: "inputs", label: "Inputs" },
-      { id: "layout", label: "Layout" },
+      { id: "controls", label: "控制台1" },
+      { id: "inputs", label: "恭喜" },
+      { id: "layout", label: "真不栋" },
+      { id: "controls1", label: "画画嗨嗨嗨" },
+      { id: "inputs1", label: "Inputs" },
+      { id: "layout1", label: "Layout" },
     ],
-    activeTab: "layout",
+    activeTab: "inputs1",
     showTabs: true,
   };
 

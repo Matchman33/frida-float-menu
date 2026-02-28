@@ -68,6 +68,7 @@ export class FloatMenu {
   private menuWindowParams: any;
   private iconWindowParams: any;
   private iconContainerView: any;
+  private tabContainer: any;
   public get context(): any {
     if (this._context === null) {
       this._context = Java.use("android.app.ActivityThread")
@@ -305,7 +306,6 @@ export class FloatMenu {
         ViewGroupLayoutParams.MATCH_PARENT.value,
       ),
     );
-    // menuWindow 默认隐藏，由 icon 控制
     const LayoutParams = API.LayoutParams;
     this.menuWindowParams = LayoutParams.$new(
       this.options.width,
@@ -313,6 +313,7 @@ export class FloatMenu {
       0,
       0,
       2038, // TYPE_APPLICATION_OVERLAY
+      // 必须添加FLAG_NOT_FOCUSABLE防止游戏卡死
       LayoutParams.FLAG_NOT_FOCUSABLE.value |
         LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
       1, // PixelFormat.TRANSLUCENT
@@ -772,6 +773,23 @@ export class FloatMenu {
   public off(event: string, callback: (...args: any[]) => void): void {
     this.eventEmitter.off(event, callback);
   }
+  private updateTabStyle(button: any, isActive: boolean) {
+    function createRoundedBg(color: number, radius: number = 20) {
+      const drawable = GradientDrawable.$new();
+      drawable.setCornerRadius(radius);
+      drawable.setColor(color);
+      return drawable;
+    }
+    const bgColor = isActive ? 0xff4285f4 : 0xff666666;
+    const textColor = isActive ? 0xffffffff : 0xffcccccc;
+    const GradientDrawable = API.GradientDrawable;
+
+    const drawable = GradientDrawable.$new();
+    drawable.setCornerRadius(14); // 设置圆角半径（像素）
+    drawable.setColor(bgColor | 0);
+    button.setTextColor(textColor | 0);
+    button.setBackgroundDrawable(createRoundedBg(bgColor | 0));
+  }
 
   /**
    * Create tab bar view with buttons for each tab
@@ -780,44 +798,48 @@ export class FloatMenu {
     try {
       const LinearLayout = API.LinearLayout;
       const LinearLayoutParams = API.LinearLayoutParams;
-      const Button = API.Button;
-      const Color = API.Color;
+      const textView = API.TextView;
       const OnClickListener = API.OnClickListener;
+      const JString = API.JString;
+      // 获取 HorizontalScrollView 类（如果 API 中没有，可以用 Java.use）
+      const HorizontalScrollView = API.HorizontalScrollView;
+      const self = this;
 
-      // Create tab bar container (horizontal LinearLayout)
-      this.tabView = LinearLayout.$new(context);
-      this.tabView.setOrientation(0); // HORIZONTAL
-      this.tabView.setLayoutParams(
+      // 创建横向滚动视图作为外层容器
+      const scrollView = HorizontalScrollView.$new(context);
+      scrollView.setLayoutParams(
         LinearLayoutParams.$new(
-          LinearLayoutParams.MATCH_PARENT.value,
+          LinearLayoutParams.MATCH_PARENT.value, // 宽度填满父容器，以便显示滚动条
           LinearLayoutParams.WRAP_CONTENT.value,
         ),
       );
-      this.tabView.setPadding(8, 8, 8, 8);
-      this.tabView.setBackgroundColor(0xff555555 | 0); // Medium dark gray
+      scrollView.setHorizontalScrollBarEnabled(false); // 显示滚动条
+      scrollView.setScrollbarFadingEnabled(true); // 允许滚动条淡出
 
-      const JString = API.JString;
-      const self = this;
+      // 创建内部的水平标签容器（原来的 tabView）
+      const tabContainer = LinearLayout.$new(context);
+      tabContainer.setOrientation(0); // HORIZONTAL
+      tabContainer.setLayoutParams(
+        LinearLayoutParams.$new(
+          LinearLayoutParams.WRAP_CONTENT.value, // 宽度根据内容自适应
+          LinearLayoutParams.WRAP_CONTENT.value,
+        ),
+      );
+      // 容器本身透明，圆角由按钮实现
 
-      // Create a button for each tab
+      // 遍历所有标签创建按钮
       for (const [tabId, tabInfo] of this.tabs) {
-        const tabButton = Button.$new(context);
-        tabButton.setText(JString.$new(tabInfo.label));
+        const tabText = textView.$new(context);
+        tabText.setText(JString.$new(tabInfo.label));
+        tabText.setAllCaps(false);
+        tabText.setPadding(4, 0, 10, 4);
+        tabText.setTextSize(18); // 14sp
+        const Gravity = API.Gravity;
+        tabText.setGravity(Gravity.CENTER.value);
+        // 应用当前标签样式（激活/非激活）
+        this.updateTabStyle(tabText, tabId === this.activeTabId);
 
-        // Style active tab differently
-        if (tabId === this.activeTabId) {
-          tabButton.setTextColor(Color.WHITE.value);
-          tabButton.setBackgroundColor(0xff4285f4 | 0); // Blue for active tab
-          tabButton.setTypeface(null, 1); // Typeface.BOLD
-        } else {
-          tabButton.setTextColor(0xffcccccc | 0); // Light gray for inactive
-          tabButton.setBackgroundColor(0xff666666 | 0); // Darker gray
-        }
-
-        tabButton.setPadding(16, 8, 16, 8);
-        tabButton.setAllCaps(false);
-
-        // Create click listener for tab button
+        // 点击监听
         const tabClickListener = Java.registerClass({
           name:
             "com.example.TabClickListener" +
@@ -832,19 +854,27 @@ export class FloatMenu {
             },
           },
         });
-        tabButton.setOnClickListener(tabClickListener.$new());
+        tabText.setOnClickListener(tabClickListener.$new());
 
-        // Layout params for tab buttons (equal weight)
+        // 按钮布局参数（宽度自适应，高度自适应）
         const btnParams = LinearLayoutParams.$new(
-          0, // width will be set by weight
           LinearLayoutParams.WRAP_CONTENT.value,
-          1.0, // weight = 1, buttons share space equally
+          LinearLayoutParams.WRAP_CONTENT.value,
         );
-        btnParams.setMargins(2, 0, 2, 0);
-        tabButton.setLayoutParams(btnParams);
-
-        this.tabView.addView(tabButton);
+        btnParams.setMargins(8, 8, 8, 8);
+        tabText.setLayoutParams(btnParams);
+        // 保存 tabId 到 Tag，方便切换时识别
+        tabText.setTag(JString.$new(tabId));
+        tabContainer.addView(tabText);
       }
+
+      // 将标签容器添加到滚动视图
+      scrollView.addView(tabContainer);
+
+      // 将滚动视图赋值给 this.tabView（供外部添加到父布局）
+      this.tabView = scrollView;
+      // 同时保留内部容器的引用，便于后续更新按钮样式（例如在 switchTab 中遍历子视图）
+      this.tabContainer = tabContainer;
     } catch (error) {
       console.trace("Failed to create tab view: " + error);
     }
@@ -865,7 +895,6 @@ export class FloatMenu {
     Java.scheduleOnMainThread(() => {
       try {
         const View = API.View;
-        const Color = API.Color;
         // Update tab containers visibility
         for (const [id, tabInfo] of this.tabs) {
           if (tabInfo.container) {
@@ -880,28 +909,25 @@ export class FloatMenu {
         }
 
         // Update tab button styles if tabView exists
-        if (this.tabView) {
+        if (this.tabContainer) {
           // Get all child buttons in tabView
 
-          const childCount = this.tabView.getChildCount();
+          const childCount = this.tabContainer.getChildCount();
           for (let i = 0; i < childCount; i++) {
             // const button = this.tabView.getChildAt(i);
-            const button = Java.cast(this.tabView.getChildAt(i), API.Button);
-            // We need to identify which button corresponds to which tab
-            // This is simplified - in a real implementation we might want to store button references
-            // For now, we'll rely on the order matching the creation order
+            const text = Java.cast(
+              this.tabContainer.getChildAt(i),
+              API.TextView,
+            );
             const tabIds = Array.from(this.tabs.keys());
             if (i < tabIds.length) {
               const buttonTabId = tabIds[i];
+
+              // 使用时的代码
               if (buttonTabId === tabId) {
-                // Active tab style
-                button.setTextColor(Color.WHITE.value);
-                button.setBackgroundColor(0xff4285f4 | 0); // Blue
-                // button.setTypeface(null, 1); // Bold
+                this.updateTabStyle(text, true);
               } else if (buttonTabId === oldTabId) {
-                // Previously active tab style
-                button.setTextColor(0xffcccccc | 0); // Light gray
-                button.setBackgroundColor(0xff666666 | 0); // Darker gray
+                this.updateTabStyle(text, false);
               }
             }
           }
