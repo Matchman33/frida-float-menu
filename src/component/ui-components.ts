@@ -2,7 +2,7 @@ import { EventEmitter } from "../event-emitter";
 
 export abstract class UIComponent {
   protected emitter: EventEmitter = new EventEmitter();
-  protected view: any; // Android View
+  protected button: any; // Android View
   protected value: any;
   protected id: string;
 
@@ -14,7 +14,7 @@ export abstract class UIComponent {
    * Get the Android View associated with this component
    */
   public getView(): any {
-    return this.view;
+    return this.button;
   }
 
   /**

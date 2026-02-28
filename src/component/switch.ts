@@ -19,10 +19,10 @@ export class Switch extends UIComponent {
     const String = API.JString;
     const Color = API.Color;
 
-    this.view = Switch.$new(context);
-    this.view.setText(String.$new(this.label));
-    this.view.setTextColor(Color.WHITE.value);
-    this.view.setChecked(this.value);
+    this.button = Switch.$new(context);
+    this.button.setText(String.$new(this.label));
+    this.button.setTextColor(Color.WHITE.value);
+    this.button.setChecked(this.value);
     const CompoundButtonOnCheckedChangeListener =
       API.CompoundButtonOnCheckedChangeListener;
     const self = this;
@@ -41,18 +41,18 @@ export class Switch extends UIComponent {
         },
       },
     });
-    this.view.setOnCheckedChangeListener(changeListener.$new());
+    this.button.setOnCheckedChangeListener(changeListener.$new());
   }
 
   protected updateView(): void {
-    if (!this.view) {
+    if (!this.button) {
       console.warn(
         `[Switch:${this.id}] Cannot update view - view not initialized`,
       );
       return;
     }
     Java.scheduleOnMainThread(() => {
-      this.view.setChecked(this.value);
+      this.button.setChecked(this.value);
     });
   }
 
@@ -61,7 +61,7 @@ export class Switch extends UIComponent {
    */
   public setLabel(label: string): void {
     this.label = label;
-    if (!this.view) {
+    if (!this.button) {
       console.warn(
         `[Switch:${this.id}] Cannot set label - view not initialized`,
       );
@@ -69,7 +69,7 @@ export class Switch extends UIComponent {
     }
     Java.scheduleOnMainThread(() => {
       const String = API.JString
-      this.view.setText(String.$new(label));
+      this.button.setText(String.$new(label));
     });
   }
 }

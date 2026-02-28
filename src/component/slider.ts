@@ -96,11 +96,11 @@ const LinearLayoutParams = API.LinearLayoutParams;
     verticalLayout.addView(seekBar);
 
     // Store references on the view for later updates
-    this.view = verticalLayout;
-    (this.view as any).seekBar = seekBar;
-    (this.view as any).valueView = valueView;
-    (this.view as any).labelView = labelView;
-    (this.view as any).container = container;
+    this.button = verticalLayout;
+    (this.button as any).seekBar = seekBar;
+    (this.button as any).valueView = valueView;
+    (this.button as any).labelView = labelView;
+    (this.button as any).container = container;
 
     const SeekBarOnSeekBarChangeListener =API.SeekBarOnSeekBarChangeListener
     const self = this;
@@ -122,7 +122,7 @@ const LinearLayoutParams = API.LinearLayoutParams;
             self.value = newValue;
             // Update value display
             Java.scheduleOnMainThread(() => {
-              const valueView = (self.view as any).valueView;
+              const valueView = (self.button as any).valueView;
               if (valueView) {
                 valueView.setText(String.$new(newValue.toString()));
               }
@@ -142,15 +142,15 @@ const LinearLayoutParams = API.LinearLayoutParams;
   }
 
   protected updateView(): void {
-    if (!this.view) {
+    if (!this.button) {
       console.warn(
         `[Slider:${this.id}] Cannot update view - view not initialized`,
       );
       return;
     }
     Java.scheduleOnMainThread(() => {
-      const seekBar = (this.view as any).seekBar;
-      const valueView = (this.view as any).valueView;
+      const seekBar = (this.button as any).seekBar;
+      const valueView = (this.button as any).valueView;
       if (seekBar) {
         seekBar.setProgress(this.valueToProgress(this.value));
       }
@@ -166,14 +166,14 @@ const LinearLayoutParams = API.LinearLayoutParams;
    */
   public setLabel(label: string): void {
     this.label = label;
-    if (!this.view) {
+    if (!this.button) {
       console.warn(
         `[Slider:${this.id}] Cannot set label - view not initialized`,
       );
       return;
     }
     Java.scheduleOnMainThread(() => {
-      const labelView = (this.view as any).labelView;
+      const labelView = (this.button as any).labelView;
       if (labelView) {
         const String = API.JString
         labelView.setText(String.$new(label));
@@ -189,14 +189,14 @@ const LinearLayoutParams = API.LinearLayoutParams;
     this.max = max;
     this.step = step;
     this.value = this.clampToStep(this.value); // Re-clamp current value
-    if (!this.view) {
+    if (!this.button) {
       console.warn(
         `[Slider:${this.id}] Cannot set range - view not initialized`,
       );
       return;
     }
     Java.scheduleOnMainThread(() => {
-      const seekBar = (this.view as any).seekBar;
+      const seekBar = (this.button as any).seekBar;
       if (seekBar) {
         seekBar.setMax(this.calculateSeekBarMax());
         seekBar.setProgress(this.valueToProgress(this.value));

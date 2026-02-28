@@ -17,14 +17,14 @@ export class Category extends UIComponent {
     const LinearLayoutParams = API.LinearLayoutParams
     const ViewGroupLayoutParams = API.ViewGroupLayoutParams
 
-    this.view = TextView.$new(context);
-    this.view.setText(String.$new(this.label));
-    this.view.setTextColor(Color.WHITE.value);
-    this.view.setTextSize(16);
-    this.view.setTypeface(null, 1); // BOLD
-    this.view.setBackgroundColor(0xff555555 | 0); // Medium gray background
-    this.view.setPadding(16, 12, 16, 12);
-    this.view.setLayoutParams(
+    this.button = TextView.$new(context);
+    this.button.setText(String.$new(this.label));
+    this.button.setTextColor(Color.WHITE.value);
+    this.button.setTextSize(16);
+    this.button.setTypeface(null, 1); // BOLD
+    this.button.setBackgroundColor(0xff555555 | 0); // Medium gray background
+    this.button.setPadding(16, 12, 16, 12);
+    this.button.setLayoutParams(
       LinearLayoutParams.$new(
         ViewGroupLayoutParams.MATCH_PARENT.value,
         ViewGroupLayoutParams.WRAP_CONTENT.value,
@@ -33,7 +33,7 @@ export class Category extends UIComponent {
   }
 
   protected updateView(): void {
-    if (!this.view) {
+    if (!this.button) {
       console.warn(
         `[Category:${this.id}] Cannot update view - view not initialized`,
       );
@@ -41,7 +41,7 @@ export class Category extends UIComponent {
     }
     Java.scheduleOnMainThread(() => {
       const String = API.JString
-      this.view.setText(String.$new(this.value));
+      this.button.setText(String.$new(this.value));
     });
   }
 

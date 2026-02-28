@@ -15,16 +15,16 @@ export class Text extends UIComponent {
     const Color = API.Color;
     const Html = API.Html;
 
-    this.view = TextView.$new(context);
-    this.view.setTextColor(Color.WHITE.value);
-    this.view.setTextSize(14);
+    this.button = TextView.$new(context);
+    this.button.setTextColor(Color.WHITE.value);
+    this.button.setTextSize(14);
     // const String = Java.use("java.lang.String");
     // this.view.setText(String.$new(this.content));
-    this.view.setText(Html.fromHtml(this.content));
+    this.button.setText(Html.fromHtml(this.content));
   }
 
   protected updateView(): void {
-    if (!this.view) {
+    if (!this.button) {
       console.warn(
         `[Text:${this.id}] Cannot update view - view not initialized`,
       );
@@ -32,7 +32,7 @@ export class Text extends UIComponent {
     }
     Java.scheduleOnMainThread(() => {
       const Html = API.Html
-      this.view.setText(Html.fromHtml(this.value));
+      this.button.setText(Html.fromHtml(this.value));
     });
   }
 

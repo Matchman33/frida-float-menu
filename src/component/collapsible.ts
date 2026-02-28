@@ -104,12 +104,12 @@ export class Collapsible extends UIComponent {
     container.addView(titleRow);
     container.addView(this.contentContainer);
 
-    this.view = container;
+    this.button = container;
 
     // Store references
-    (this.view as any).titleRow = titleRow;
-    (this.view as any).titleView = titleView;
-    (this.view as any).contentContainer = this.contentContainer;
+    (this.button as any).titleRow = titleRow;
+    (this.button as any).titleView = titleView;
+    (this.button as any).contentContainer = this.contentContainer;
 
     // Add click listener to title row
     const OnClickListener = API.OnClickListener
@@ -131,7 +131,7 @@ export class Collapsible extends UIComponent {
   }
 
   protected updateView(): void {
-    if (!this.view) {
+    if (!this.button) {
       console.warn(
         `[Collapsible:${this.id}] Cannot update view - view not initialized`,
       );
@@ -142,7 +142,7 @@ export class Collapsible extends UIComponent {
     Java.scheduleOnMainThread(() => {
 const View = API.View;
 const String = API.JString;
-      const contentContainer = (this.view as any).contentContainer;
+      const contentContainer = (this.button as any).contentContainer;
       const arrowView = this.arrowView;
 
       if (contentContainer) {
@@ -191,14 +191,14 @@ const String = API.JString;
    */
   public setTitle(title: string): void {
     this.title = title;
-    if (!this.view) {
+    if (!this.button) {
       console.warn(
         `[Collapsible:${this.id}] Cannot set title - view not initialized`,
       );
       return;
     }
     Java.scheduleOnMainThread(() => {
-      const titleView = (this.view as any).titleView;
+      const titleView = (this.button as any).titleView;
       if (titleView) {
         const String = API.JString
         titleView.setText(String.$new(title));

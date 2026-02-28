@@ -7,6 +7,7 @@ export class NumberInput extends UIComponent {
   private min: number | null;
   private max: number | null;
   private handler?: (value: number) => void;
+  private title: string;
 
   /**
    *
@@ -24,6 +25,7 @@ export class NumberInput extends UIComponent {
     max: number | null = null,
     text: string = "单击输入数值",
     hint: string = "请输入数值",
+    title: string = "请输入",
   ) {
     super(id);
     this.value = initialValue;
@@ -31,21 +33,33 @@ export class NumberInput extends UIComponent {
     this.hint = hint;
     this.min = min;
     this.max = max;
+    this.title = title;
   }
 
-  protected updateView(): void {}
+  protected updateView(): void {
+    if (!this.button) {
+      console.warn(
+        `[Switch:${this.id}] Cannot update view - view not initialized`,
+      );
+      return;
+    }
+    Java.scheduleOnMainThread(() => {
+      const String = API.JString;
+      this.button.setText(String.$new(`${this.text}: ${this.value}`));
+    });
+  }
 
   protected createView(context: any): void {
     const Button = API.Button;
     const String = API.JString;
 
-    this.view = Button.$new(context);
-    this.view.setText(String.$new(this.text));
+    this.button = Button.$new(context);
+    this.button.setText(String.$new(`${this.text}: ${this.value}`));
 
     const self = this;
 
     // 点击按钮弹窗
-    this.view.setOnClickListener(
+    this.button.setOnClickListener(
       Java.registerClass({
         name:
           "com.frida.NumberInputClick" +
@@ -70,7 +84,7 @@ export class NumberInput extends UIComponent {
       const InputType = API.InputType;
       const LayoutParams = API.LayoutParams;
       const builder = AlertDialogBuilder.$new(context);
-      builder.setTitle(String.$new("请输入"));
+      builder.setTitle(String.$new(this.title));
 
       const input = EditText.$new(context);
       input.setHint(String.$new(this.hint));
@@ -121,7 +135,7 @@ export class NumberInput extends UIComponent {
 
               // 应用约束
               self.applyConstraints();
-
+              self.button.setText(String.$new(`${self.text}: ${self.value}`));
               self.emit("valueChanged", self.value);
               if (self.handler) self.handler(self.value);
             },
@@ -176,10 +190,10 @@ export class NumberInput extends UIComponent {
   }
 }
 export class TextInput extends UIComponent {
-  protected updateView(): void {}
   private text: string;
   private hint: string;
   private handler?: (value: string) => void;
+  private title: string;
 
   /**
    *
@@ -193,24 +207,36 @@ export class TextInput extends UIComponent {
     initialValue: string = "",
     text: string = "单击输入文本",
     hint: string = "请输入文本",
+    title = "请输入",
   ) {
     super(id);
     this.text = text;
     this.hint = hint;
     this.value = initialValue;
+    this.title = title;
   }
-
+  protected updateView(): void {
+    if (!this.button) {
+      console.warn(
+        `[Switch:${this.id}] Cannot update view - view not initialized`,
+      );
+      return;
+    }
+    Java.scheduleOnMainThread(() => {
+      const String = API.JString;
+      this.button.setText(String.$new(`${this.text}: ${this.value}`));
+    });
+  }
   protected createView(context: any): void {
     const Button = API.Button;
     const String = API.JString;
 
-    this.view = Button.$new(context);
-    this.view.setText(String.$new(this.text));
-
+    this.button = Button.$new(context);
+    this.button.setText(String.$new(`${this.text}: ${this.value}`));
     const self = this;
 
     // 点击按钮弹窗
-    this.view.setOnClickListener(
+    this.button.setOnClickListener(
       Java.registerClass({
         name:
           "com.frida.AlertTextInputClick" +
@@ -241,7 +267,7 @@ export class TextInput extends UIComponent {
       const String = API.JString;
       const TextViewBufferType = API.TextViewBufferType;
       const builder = AlertDialogBuilder.$new(context);
-      builder.setTitle(String.$new("请输入"));
+      builder.setTitle(String.$new(this.title));
 
       const input = EditText.$new(context);
       input.setHint(String.$new(this.hint));
@@ -258,9 +284,7 @@ export class TextInput extends UIComponent {
             "com.frida.AlertTextInputOK" +
             Date.now() +
             Math.random().toString(36).substring(6),
-          implements: [
-            API.DialogInterfaceOnClickListener
-          ],
+          implements: [API.DialogInterfaceOnClickListener],
           methods: {
             onClick: function (dialog: any, which: number) {
               const text =
@@ -269,6 +293,7 @@ export class TextInput extends UIComponent {
                   Java.use("java.lang.CharSequence"),
                 ).toString() + "";
               self.value = text;
+              self.button.setText(String.$new(`${self.text}: ${self.value}`));
               self.emit("valueChanged", text);
               if (self.handler) self.handler(text);
             },
@@ -277,7 +302,7 @@ export class TextInput extends UIComponent {
       );
 
       builder.setNegativeButton(String.$new("取消"), null);
-      const LayoutParams = API.LayoutParams
+      const LayoutParams = API.LayoutParams;
       const dialog = builder.create();
       // 关键步骤：修改对话框窗口的类型
       const window = dialog.getWindow();
@@ -291,10 +316,10 @@ export class TextInput extends UIComponent {
   }
 
   public setText(text: string): void {
-    if (this.view) {
+    if (this.button) {
       Java.scheduleOnMainThread(() => {
-        const String = API.JString
-        this.view.setText(String.$new(text));
+        const String = API.JString;
+        this.button.setText(String.$new(text));
       });
     }
   }

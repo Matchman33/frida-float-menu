@@ -478,6 +478,9 @@ export class FloatMenu {
               self.menuContainerView,
               self.menuWindowParams,
             );
+            // 再次被点击以后设置为不透明
+            self.iconContainerView.setAlpha(1);
+
             self.toggleView();
           },
         },
@@ -579,16 +582,30 @@ export class FloatMenu {
    * Hide and destroy the floating window
    */
   public hide(): void {
-    // if (!this.isIconMode) return;
-    // Java.scheduleOnMainThread(() => {
-    //   try {
-    //     this.windowManager.removeView(this.parentContainerView);
-    //     this.isShown = false;
-    //     console.info("Floating window hidden");
-    //   } catch (error) {
-    //     console.error("Failed to hide floating window: " + error);
-    //   }
-    // });
+    Java.scheduleOnMainThread(() => {
+      try {
+        this.iconContainerView.setAlpha(0); // 完全透明
+        this.windowManager.updateViewLayout(
+          this.iconContainerView,
+          this.iconWindowParams,
+        );
+      } catch (error) {
+        console.error("Failed to hide floating window: " + error);
+      }
+    });
+  }
+
+  public toast(msg: string, duration: 0 | 1 = 0): void {
+    Java.scheduleOnMainThread(() => {
+      var toast = Java.use("android.widget.Toast");
+      toast
+        .makeText(
+          this.context,
+          Java.use("java.lang.String").$new(msg),
+          duration,
+        )
+        .show();
+    });
   }
 
   /**
@@ -1019,7 +1036,10 @@ export class FloatMenu {
         implements: [OnClickListener],
         methods: {
           onClick: function (view: any) {
+            self.isIconMode = true;
+            self.toggleView();
             self.hide(); // Hide the floating window
+            self.toast("菜单已隐藏,单击原来位置显示");
           },
         },
       });
