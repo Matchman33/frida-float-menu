@@ -63,6 +63,12 @@ export class FloatMenu {
   private activeTabId: string = "default"; // Currently active tab ID
 
   private _context: any = null;
+  lastTouchX: any;
+  lastTouchY: any;
+  initialWindowX: any;
+  initialWindowY: any;
+  screenWidth: any;
+  screenHeight: any;
   public get context(): any {
     if (this._context === null) {
       this._context = Java.use("android.app.ActivityThread")
@@ -309,6 +315,7 @@ export class FloatMenu {
           },
         },
       });
+      this.enableDragForView(this.iconView);
       this.iconView.setOnClickListener(clickListener.$new());
     } catch (error) {
       console.trace("Failed to create icon view: " + error);
@@ -374,18 +381,70 @@ export class FloatMenu {
     });
   }
 
-  /**
-   * Show as menu (expand)
-   */
-  public showMenu(): void {
-    if (!this.isShown) return;
-    Java.scheduleOnMainThread(() => {
-      if (this.isIconMode) {
-        this.toggleView();
-      }
-    });
-  }
+  private enableDragForView(targetView: any): void {
+    const OnTouchListener = API.OnTouchListener;
+    const MotionEvent = API.MotionEvent;
+    const self = this;
 
+    let isDragging = false;
+    const DRAG_THRESHOLD = 10;
+
+    const touchListener = Java.registerClass({
+      name:
+        "com.example.FloatDragListener" +
+        Date.now() +
+        Math.random().toString(36).substring(6),
+      implements: [OnTouchListener],
+      methods: {
+        onTouch: function (v: any, event: any) {
+          const action = event.getAction();
+
+          switch (action) {
+            case MotionEvent.ACTION_DOWN.value:
+              isDragging = false;
+
+              self.lastTouchX = event.getRawX();
+              self.lastTouchY = event.getRawY();
+
+              // ⚠️ 注意这里要用 .value
+              self.initialWindowX = self.windowParams.x.value;
+              self.initialWindowY = self.windowParams.y.value;
+
+              return false;
+
+            case MotionEvent.ACTION_MOVE.value:
+              const dx = event.getRawX() - self.lastTouchX;
+              const dy = event.getRawY() - self.lastTouchY;
+
+              if (
+                Math.abs(dx) > DRAG_THRESHOLD ||
+                Math.abs(dy) > DRAG_THRESHOLD
+              ) {
+                isDragging = true;
+
+                // ✅ 正确修改字段
+                self.windowParams.x.value = (self.initialWindowX + dx) | 0;
+                self.windowParams.y.value = (self.initialWindowY + dy) | 0;
+
+                self.windowManager.updateViewLayout(
+                  self.parentContainerView,
+                  self.windowParams,
+                );
+              }
+
+              return isDragging;
+
+            case MotionEvent.ACTION_UP.value:
+              return isDragging;
+          }
+
+          return false;
+        },
+      },
+    });
+
+    targetView.setOnTouchListener(touchListener.$new());
+  }
   /**
    * Create and show the floating window
    */
@@ -403,9 +462,11 @@ export class FloatMenu {
           // FLAG_NOT_FOCUSABLE必须添加，防止页面卡死
           LayoutParams.FLAG_NOT_FOCUSABLE.value |
             LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
+
           1, // PixelFormat.TRANSLUCENT
         );
 
+        console.log(this.screenWidth.value, this.screenHeight.value);
         // Create parent container (FrameLayout to hold both icon and menu)
         const FrameLayout = API.FrameLayout;
         this.parentContainerView = FrameLayout.$new(this.context);
@@ -750,12 +811,11 @@ export class FloatMenu {
    */
   private createTabView(context: any): void {
     try {
-
-      const LinearLayout = API.LinearLayout
-      const LinearLayoutParams = API.LinearLayoutParams
-      const Button = API.Button
-      const Color = API.Color
-      const OnClickListener = API.OnClickListener
+      const LinearLayout = API.LinearLayout;
+      const LinearLayoutParams = API.LinearLayoutParams;
+      const Button = API.Button;
+      const Color = API.Color;
+      const OnClickListener = API.OnClickListener;
 
       // Create tab bar container (horizontal LinearLayout)
       this.tabView = LinearLayout.$new(context);
@@ -769,7 +829,7 @@ export class FloatMenu {
       this.tabView.setPadding(8, 8, 8, 8);
       this.tabView.setBackgroundColor(0xff555555 | 0); // Medium dark gray
 
-      const JString = API.JString
+      const JString = API.JString;
       const self = this;
 
       // Create a button for each tab
@@ -837,8 +897,8 @@ export class FloatMenu {
 
     Java.scheduleOnMainThread(() => {
       try {
-        const View = API.View
-        const Color =API.Color
+        const View = API.View;
+        const Color = API.Color;
         // Update tab containers visibility
         for (const [id, tabInfo] of this.tabs) {
           if (tabInfo.container) {
@@ -859,10 +919,7 @@ export class FloatMenu {
           const childCount = this.tabView.getChildCount();
           for (let i = 0; i < childCount; i++) {
             // const button = this.tabView.getChildAt(i);
-            const button = Java.cast(
-              this.tabView.getChildAt(i),
-              API.Button
-            );
+            const button = Java.cast(this.tabView.getChildAt(i), API.Button);
             // We need to identify which button corresponds to which tab
             // This is simplified - in a real implementation we might want to store button references
             // For now, we'll rely on the order matching the creation order
@@ -895,10 +952,10 @@ export class FloatMenu {
    */
   private createHeaderView(context: any): void {
     try {
-      const LinearLayout = API.LinearLayout
-      const LinearLayoutParams = API.LinearLayoutParams
-      const TextView = API.TextView
-      const Color = API.Color
+      const LinearLayout = API.LinearLayout;
+      const LinearLayoutParams = API.LinearLayoutParams;
+      const TextView = API.TextView;
+      const Color = API.Color;
 
       // Create header container (vertical LinearLayout)
       this.headerView = LinearLayout.$new(context);
@@ -911,7 +968,7 @@ export class FloatMenu {
       );
       this.headerView.setPadding(16, 16, 16, 16);
       this.headerView.setBackgroundColor(0xff333333 | 0); // Dark gray background
-      const JString = API.JString
+      const JString = API.JString;
       // Main title
       const titleView = TextView.$new(context);
       titleView.setText(JString.$new(this.options.title || "Frida Float Menu"));
@@ -951,11 +1008,11 @@ export class FloatMenu {
    */
   private createFooterView(context: any): void {
     try {
-      const LinearLayout = API.LinearLayout
-      const LinearLayoutParams = API.LinearLayoutParams
-      const Button = API.Button
-      const Color = API.Color
-      const OnClickListener = API.OnClickListener
+      const LinearLayout = API.LinearLayout;
+      const LinearLayoutParams = API.LinearLayoutParams;
+      const Button = API.Button;
+      const Color = API.Color;
+      const OnClickListener = API.OnClickListener;
 
       // Create footer container (horizontal LinearLayout)
       this.footerView = LinearLayout.$new(context);
@@ -969,7 +1026,7 @@ export class FloatMenu {
       this.footerView.setPadding(8, 8, 8, 8);
       this.footerView.setBackgroundColor(0xff444444 | 0); // Medium gray background
 
-      const JString = API.JString
+      const JString = API.JString;
       // Minimize button (switch to icon mode)
       const minimizeBtn = Button.$new(context);
       minimizeBtn.setText(JString.$new("最小化"));
@@ -1035,9 +1092,9 @@ export class FloatMenu {
    * Create log view (TextView) for displaying logs
    */
   private createLogView(context: any): void {
-    const TextView = API.TextView
+    const TextView = API.TextView;
     this.logView = TextView.$new(context);
-    const LinearLayoutParams = API.LinearLayoutParams
+    const LinearLayoutParams = API.LinearLayoutParams;
     this.logView.setLayoutParams(
       LinearLayoutParams.$new(this.options.width, 200),
     );
@@ -1072,7 +1129,7 @@ export class FloatMenu {
         lines.shift();
       }
       lines.push(newLine);
-      const String = API.JString
+      const String = API.JString;
       logView.setText(String.$new(lines.join("\n")));
     });
   }
@@ -1083,7 +1140,7 @@ export class FloatMenu {
   public clearLogs(): void {
     if (!this.logView) return;
     Java.scheduleOnMainThread(() => {
-      const String = API.JString
+      const String = API.JString;
       this.logView.setText(String.$new(""));
     });
   }
