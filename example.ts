@@ -70,8 +70,6 @@ Java.perform(() => {
   // Button to clear text input
   const clearTextButton = new Button("clear_text_button", "Clear Name");
   clearTextButton.setOnClick(() => {
-    console.log("Clear name button clicked");
-    textInput.setText("123");
     menu.setComponentValue("name_display", "Hello, <b>Anonymous</b>!");
   });
   menu.addComponent(clearTextButton, "inputs");
@@ -134,18 +132,6 @@ Java.perform(() => {
     ["male"], // 初始选中 male
   );
 
-  // 监听变化
-  genderGroup.on("change", (checkedValues, lastChange) => {
-    console.log("当前选中:", checkedValues);
-    if (lastChange) {
-      console.log(
-        `选项 ${lastChange.id} 变为 ${lastChange.checked ? "选中" : "未选中"}`,
-      );
-    }
-  });
-  genderGroup.setOnValueChangeHandler((value) => {
-    console.log(JSON.stringify(value), "changgeggggggg");
-  });
 
   // 获取选中值
   const selected = genderGroup.getCheckedValues(); // ["male"]

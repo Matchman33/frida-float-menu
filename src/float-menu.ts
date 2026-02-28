@@ -37,7 +37,6 @@ export class FloatMenu {
   private headerView: any; // Header area with title and subtitle
   private footerView: any; // Footer area with buttons
   private iconView: any; // ImageView for icon
-  private parentContainerView: any; // Backward compatibility alias for parentContainerView
   private uiComponents: Map<string, UIComponent> = new Map();
   private pendingComponents: Array<{
     id: string;
@@ -47,7 +46,6 @@ export class FloatMenu {
   private logView: any; // TextView or ListView for logs
   private eventEmitter: EventEmitter = new EventEmitter();
   private logger: Logger;
-  private isShown: boolean = false;
   private isIconMode: boolean = true; // Whether currently showing icon or menu
 
   // Tab management
@@ -69,6 +67,9 @@ export class FloatMenu {
   initialWindowY: any;
   screenWidth: any;
   screenHeight: any;
+  menuWindowParams: any;
+  iconWindowParams: any;
+  iconContainerView: any;
   public get context(): any {
     if (this._context === null) {
       this._context = Java.use("android.app.ActivityThread")
@@ -163,44 +164,44 @@ export class FloatMenu {
       this.options.showTabs = false; // Don't show tab bar for single default tab
     }
   }
-  private createMenuContainerView() {
+  private createMenuContainerWindow() {
     const FrameLayout = API.FrameLayout;
-    const LinearLayoutParams = API.LinearLayoutParams;
-    const ScrollView = API.ScrollView;
-    // Create outer menu container (vertical LinearLayout)
     const LinearLayout = API.LinearLayout;
     const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+    const ScrollView = API.ScrollView;
+    const LinearLayoutParams = API.LinearLayoutParams;
+    const View = API.View;
+
+    // --------------------
+    // 创建 menu 容器
+    // --------------------
     this.menuContainerView = LinearLayout.$new(this.context);
-    this.menuContainerView.setOrientation(1); // LinearLayout.VERTICAL
+    this.menuContainerView.setOrientation(1); // VERTICAL
     this.menuContainerView.setLayoutParams(
       ViewGroupLayoutParams.$new(
         ViewGroupLayoutParams.MATCH_PARENT.value,
         ViewGroupLayoutParams.MATCH_PARENT.value,
       ),
     );
-    // Create and add header if enabled
+
+    // header
     if (this.options.showHeader) {
       this.createHeaderView(this.context);
-
       this.menuContainerView.addView(this.headerView);
     }
 
-    // Create and add tab bar if enabled
+    // tab bar
     if (this.options.showTabs) {
       this.createTabView(this.context);
       this.menuContainerView.addView(this.tabView);
     }
 
-    // Create scrollable content area
+    // scrollable content
     this.scrollView = ScrollView.$new(this.context);
-    const scrollParams = LinearLayoutParams.$new(
-      ViewGroupLayoutParams.MATCH_PARENT.value,
-      0, // height will be set by weight
-      1.0, // weight = 1, takes remaining space
+    this.scrollView.setLayoutParams(
+      LinearLayoutParams.$new(ViewGroupLayoutParams.MATCH_PARENT.value, 0, 1.0),
     );
-    this.scrollView.setLayoutParams(scrollParams);
 
-    // Create tab containers inside ScrollView
     const tabContainersWrapper = FrameLayout.$new(this.context);
     tabContainersWrapper.setLayoutParams(
       ViewGroupLayoutParams.$new(
@@ -209,11 +210,9 @@ export class FloatMenu {
       ),
     );
 
-    // Create a container for each tab
-    const View = API.View;
     for (const [tabId, tabInfo] of this.tabs) {
       const tabContainer = LinearLayout.$new(this.context);
-      tabContainer.setOrientation(1); // LinearLayout.VERTICAL
+      tabContainer.setOrientation(1);
       tabContainer.setLayoutParams(
         ViewGroupLayoutParams.$new(
           ViewGroupLayoutParams.MATCH_PARENT.value,
@@ -221,10 +220,8 @@ export class FloatMenu {
         ),
       );
 
-      // Set visibility: only active tab is visible
       if (tabId === this.activeTabId) {
         tabContainer.setVisibility(View.VISIBLE.value);
-        // Set this.contentContainer to active tab's container for backward compatibility
         this.contentContainer = tabContainer;
       } else {
         tabContainer.setVisibility(View.GONE.value);
@@ -234,7 +231,6 @@ export class FloatMenu {
       tabContainersWrapper.addView(tabContainer);
     }
 
-    // If no active tab found (shouldn't happen), create a default container
     if (!this.contentContainer && this.tabs.size > 0) {
       const firstTab = Array.from(this.tabs.values())[0];
       this.contentContainer = firstTab.container;
@@ -244,26 +240,41 @@ export class FloatMenu {
     this.scrollView.addView(tabContainersWrapper);
     this.menuContainerView.addView(this.scrollView);
 
-    // Create and add footer if enabled
+    // footer
     if (this.options.showFooter) {
       this.createFooterView(this.context);
       this.menuContainerView.addView(this.footerView);
     }
+
+    // menuWindow 默认隐藏，由 icon 控制
+    const LayoutParams = API.LayoutParams;
+    this.menuWindowParams = LayoutParams.$new(
+      this.options.width,
+      this.options.height,
+      0,
+      0,
+      2038, // TYPE_APPLICATION_OVERLAY
+      LayoutParams.FLAG_NOT_FOCUSABLE.value |
+        LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
+      1, // PixelFormat.TRANSLUCENT
+    );
+    this.windowManager.addView(this.menuContainerView, this.menuWindowParams);
+    this.menuContainerView.setVisibility(View.GONE.value);
   }
-  /**
-   * Create icon view
-   */
-  private createIconView(): void {
+
+  private createIconWindow(): void {
     try {
       const ImageView = API.ImageView;
       const ImageView$ScaleType = API.ImageViewScaleType;
       const FrameLayoutParams = API.FrameLayoutParams;
       const Gravity = API.Gravity;
+      const LayoutParams = API.LayoutParams;
+      const View = API.View;
 
       this.iconView = ImageView.$new(this.context);
 
+      // icon 图片或默认圆
       if (this.options.iconBase64) {
-        // Decode Base64 icon
         const BitmapFactory = API.BitmapFactory;
         const Base64 = API.Base64;
         const decoded = Base64.decode(
@@ -277,45 +288,69 @@ export class FloatMenu {
         );
         this.iconView.setImageBitmap(bitmap);
       } else {
-        // Create a simple colored circle as default icon
-        const Color = API.Color;
-        this.iconView.setBackgroundColor(0xff4285f4 | 0); // blue color
-        // Try to make it circular (requires API 21+)
+        this.iconView.setBackgroundColor(0xff4285f4 | 0);
         try {
           this.iconView.setClipToOutline(true);
-        } catch (e) {
-          // ignore if not supported
-        }
+        } catch {}
       }
 
       this.iconView.setScaleType(ImageView$ScaleType.FIT_CENTER.value);
 
-      // Set layout params - centered in parent
-      const iconSize = this.options.iconWidth;
-      const params = FrameLayoutParams.$new(
-        iconSize,
-        iconSize,
-        Gravity.CENTER.value,
+      // icon window
+      this.iconWindowParams = LayoutParams.$new(
+        this.options.iconWidth,
+        this.options.iconHeight,
+        this.options.x,
+        this.options.y,
+        2038,
+        LayoutParams.FLAG_NOT_FOCUSABLE.value |
+          LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
+        1,
       );
-      this.iconView.setLayoutParams(params);
 
-      // Add click listener to toggle between icon and menu
+      const FrameLayout = API.FrameLayout;
+      this.iconContainerView = FrameLayout.$new(this.context);
+      this.iconContainerView.setLayoutParams(
+        FrameLayoutParams.$new(
+          this.options.iconWidth,
+          this.options.iconHeight,
+          Gravity.CENTER.value,
+        ),
+      );
+      this.iconContainerView.addView(this.iconView);
+
+      // 添加到 window manager
+      this.windowManager.addView(this.iconContainerView, this.iconWindowParams);
+
+      // 拖动
+      // this.enableDragForView(this.iconContainerView, {
+      //   bounds: {
+      //     left: 0,
+      //     top: 0,
+      //     right: this.screenWidth.value - this.options.iconWidth,
+      //     bottom: this.screenHeight.value - this.options.iconHeight,
+      //   },
+      //   snapToEdge: true,
+      // });
+
+      // 点击切换 menu
       const OnClickListener = API.OnClickListener;
       const self = this;
-
       const clickListener = Java.registerClass({
-        name:
-          "com.frida.ClickListener" +
-          Date.now() +
-          Math.random().toString(36).substring(6),
+        name: "com.frida.IconClickListener" + Date.now(),
         implements: [OnClickListener],
         methods: {
-          onClick: function (view: any) {
+          onClick: function () {
+            self.isIconMode = false;
             self.toggleView();
+            // if (self.menuContainerView.getVisibility() === View.VISIBLE.value) {
+            //   self.menuContainerView.setVisibility(View.GONE.value);
+            // } else {
+            //   self.menuContainerView.setVisibility(View.VISIBLE.value);
+            // }
           },
         },
       });
-      this.enableDragForView(this.iconView);
       this.iconView.setOnClickListener(clickListener.$new());
     } catch (error) {
       console.trace("Failed to create icon view: " + error);
@@ -326,191 +361,27 @@ export class FloatMenu {
    * Toggle between icon and menu view
    */
   public toggleView(): void {
-    if (!this.isShown) return;
-
     Java.scheduleOnMainThread(() => {
       const View = API.View;
-
       if (this.isIconMode) {
-        // Currently showing icon, switch to menu
-        if (this.iconView) this.iconView.setVisibility(View.GONE.value);
-        if (this.menuContainerView)
-          this.menuContainerView.setVisibility(View.VISIBLE.value);
-        this.isIconMode = false;
-
-        // Update window size to menu size
-        this.windowParams.width = this.options.width;
-        this.windowParams.height = this.options.height;
+        this.menuContainerView.setVisibility(View.GONE.value);
+        this.iconContainerView.setVisibility(View.VISIBLE.value);
       } else {
-        // Currently showing menu, switch to icon
-        if (this.iconView) this.iconView.setVisibility(View.VISIBLE.value);
-        if (this.menuContainerView)
-          this.menuContainerView.setVisibility(View.GONE.value);
-        this.isIconMode = true;
-
-        // Update window size to icon size
-        this.windowParams.width = this.options.iconWidth || 50;
-        this.windowParams.height = this.options.iconHeight || 50;
-      }
-
-      // Update container layout params
-      const layoutParams = this.parentContainerView.getLayoutParams();
-      layoutParams.width = this.windowParams.width;
-      layoutParams.height = this.windowParams.height;
-      this.parentContainerView.setLayoutParams(layoutParams);
-
-      // Update window layout
-      if (this.windowManager) {
-        this.windowManager.updateViewLayout(
-          this.parentContainerView,
-          this.windowParams,
-        );
+        this.menuContainerView.setVisibility(View.VISIBLE.value);
+        this.iconContainerView.setVisibility(View.GONE.value);
       }
     });
   }
 
-  /**
-   * Show as icon (minimize)
-   */
-  public showIcon(): void {
-    if (!this.isShown) return;
-    Java.scheduleOnMainThread(() => {
-      if (!this.isIconMode) {
-        this.toggleView();
-      }
-    });
-  }
-
-  private enableDragForView(targetView: any): void {
-    const OnTouchListener = API.OnTouchListener;
-    const MotionEvent = API.MotionEvent;
-    const self = this;
-
-    let isDragging = false;
-    const DRAG_THRESHOLD = 10;
-
-    const touchListener = Java.registerClass({
-      name:
-        "com.example.FloatDragListener" +
-        Date.now() +
-        Math.random().toString(36).substring(6),
-      implements: [OnTouchListener],
-      methods: {
-        onTouch: function (v: any, event: any) {
-          const action = event.getAction();
-
-          switch (action) {
-            case MotionEvent.ACTION_DOWN.value:
-              isDragging = false;
-
-              self.lastTouchX = event.getRawX();
-              self.lastTouchY = event.getRawY();
-
-              // ⚠️ 注意这里要用 .value
-              self.initialWindowX = self.windowParams.x.value;
-              self.initialWindowY = self.windowParams.y.value;
-
-              return false;
-
-            case MotionEvent.ACTION_MOVE.value:
-              const dx = event.getRawX() - self.lastTouchX;
-              const dy = event.getRawY() - self.lastTouchY;
-
-              if (
-                Math.abs(dx) > DRAG_THRESHOLD ||
-                Math.abs(dy) > DRAG_THRESHOLD
-              ) {
-                isDragging = true;
-
-                // ✅ 正确修改字段
-                self.windowParams.x.value = (self.initialWindowX + dx) | 0;
-                self.windowParams.y.value = (self.initialWindowY + dy) | 0;
-
-                self.windowManager.updateViewLayout(
-                  self.parentContainerView,
-                  self.windowParams,
-                );
-              }
-
-              return isDragging;
-
-            case MotionEvent.ACTION_UP.value:
-              return isDragging;
-          }
-
-          return false;
-        },
-      },
-    });
-
-    targetView.setOnTouchListener(touchListener.$new());
-  }
   /**
    * Create and show the floating window
    */
   public show(): void {
     Java.scheduleOnMainThread(() => {
       try {
-        const LayoutParams = API.LayoutParams;
-        // Use 7-parameter constructor: (width, height, x, y, type, flags, format)
-        this.windowParams = LayoutParams.$new(
-          this.options.width,
-          this.options.height,
-          this.options.x,
-          this.options.y,
-          2038, // TYPE_APPLICATION_OVERLAY
-          // FLAG_NOT_FOCUSABLE必须添加，防止页面卡死
-          LayoutParams.FLAG_NOT_FOCUSABLE.value |
-            LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
-
-          1, // PixelFormat.TRANSLUCENT
-        );
-
-        console.log(this.screenWidth.value, this.screenHeight.value);
-        // Create parent container (FrameLayout to hold both icon and menu)
-        const FrameLayout = API.FrameLayout;
-        this.parentContainerView = FrameLayout.$new(this.context);
-        const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
-        this.parentContainerView.setLayoutParams(
-          ViewGroupLayoutParams.$new(this.options.width, this.options.height),
-        );
-        const View = API.View;
-
         // Create icon view
-        this.createIconView();
-        this.createMenuContainerView();
-
-        // Add both views to parent container
-        this.parentContainerView.addView(this.iconView);
-        this.parentContainerView.addView(this.menuContainerView);
-
-        // Set initial visibility based on iconVisible option
-        if (this.options.iconVisible) {
-          // Show icon, hide menu
-          this.iconView.setVisibility(View.VISIBLE.value);
-          this.menuContainerView.setVisibility(View.GONE.value);
-          this.isIconMode = true;
-          // Update window size for icon
-          this.windowParams.width = this.options.iconWidth;
-          this.windowParams.height = this.options.iconHeight;
-        } else {
-          // Show menu, hide icon
-          this.iconView.setVisibility(View.GONE.value);
-          this.menuContainerView.setVisibility(View.VISIBLE.value);
-          this.isIconMode = false;
-          // Use full window size for menu
-          this.windowParams.width = this.options.width;
-          this.windowParams.height = this.options.height;
-        }
-
-        // Add log view if enabled
-        if (this.options.showLogs) {
-          this.createLogView(this.context);
-        }
-
-        // Add parent container to window manager
-        this.windowManager.addView(this.parentContainerView, this.windowParams);
-        this.isShown = true;
+        this.createIconWindow();
+        this.createMenuContainerWindow();
 
         // Add any pending components that were added before window was shown
         this.processPendingComponents(this.context);
@@ -576,16 +447,16 @@ export class FloatMenu {
    * Hide and destroy the floating window
    */
   public hide(): void {
-    if (!this.isShown) return;
-    Java.scheduleOnMainThread(() => {
-      try {
-        this.windowManager.removeView(this.parentContainerView);
-        this.isShown = false;
-        console.info("Floating window hidden");
-      } catch (error) {
-        console.error("Failed to hide floating window: " + error);
-      }
-    });
+    // if (!this.isIconMode) return;
+    // Java.scheduleOnMainThread(() => {
+    //   try {
+    //     this.windowManager.removeView(this.parentContainerView);
+    //     this.isShown = false;
+    //     console.info("Floating window hidden");
+    //   } catch (error) {
+    //     console.error("Failed to hide floating window: " + error);
+    //   }
+    // });
   }
 
   /**
@@ -611,7 +482,7 @@ export class FloatMenu {
     // Record component ID in tab's component set
     tabInfo.components.add(id);
 
-    if (!this.parentContainerView) {
+    if (!this.menuContainerView) {
       // Window not shown yet, queue component with tab info
       this.pendingComponents.push({ id, component, tabId: targetTabId });
       console.debug(
@@ -704,25 +575,11 @@ export class FloatMenu {
           try {
             this.contentContainer.removeView(view);
           } catch (e) {
-            if (this.menuContainerView) {
-              try {
-                this.menuContainerView.removeView(view);
-              } catch (e2) {
-                this.parentContainerView.removeView(view);
-              }
-            } else {
-              this.parentContainerView.removeView(view);
-            }
+            this.menuContainerView.removeView(view);
           }
         } else if (this.menuContainerView) {
-          try {
-            this.menuContainerView.removeView(view);
-          } catch (e) {
-            this.parentContainerView.removeView(view);
-          }
-        } else {
-          this.parentContainerView.removeView(view);
-        }
+          this.menuContainerView.removeView(view);
+        } else console.error("error");
       }
     });
 
@@ -769,41 +626,6 @@ export class FloatMenu {
    */
   public off(event: string, callback: (...args: any[]) => void): void {
     this.eventEmitter.off(event, callback);
-  }
-
-  /**
-   * Update floating window position
-   */
-  public setPosition(x: number, y: number): void {
-    if (!this.isShown) return;
-    Java.scheduleOnMainThread(() => {
-      this.windowParams.x = x;
-      this.windowParams.y = y;
-      this.windowManager.updateViewLayout(
-        this.parentContainerView,
-        this.windowParams,
-      );
-    });
-  }
-
-  /**
-   * Update floating window size
-   */
-  public setSize(width: number, height: number): void {
-    if (!this.isShown) return;
-    Java.scheduleOnMainThread(() => {
-      this.windowParams.width = width;
-      this.windowParams.height = height;
-      this.windowManager.updateViewLayout(
-        this.parentContainerView,
-        this.windowParams,
-      );
-      // Also update container layout params
-      const layoutParams = this.parentContainerView.getLayoutParams();
-      layoutParams.width = width;
-      layoutParams.height = height;
-      this.parentContainerView.setLayoutParams(layoutParams);
-    });
   }
 
   /**
@@ -1043,7 +865,8 @@ export class FloatMenu {
         implements: [OnClickListener],
         methods: {
           onClick: function (view: any) {
-            self.showIcon(); // Switch to icon mode
+            self.isIconMode = true;
+            self.toggleView();
           },
         },
       });
@@ -1085,32 +908,6 @@ export class FloatMenu {
       this.footerView.addView(hideBtn);
     } catch (error) {
       console.trace("Failed to create footer view: " + error);
-    }
-  }
-
-  /**
-   * Create log view (TextView) for displaying logs
-   */
-  private createLogView(context: any): void {
-    const TextView = API.TextView;
-    this.logView = TextView.$new(context);
-    const LinearLayoutParams = API.LinearLayoutParams;
-    this.logView.setLayoutParams(
-      LinearLayoutParams.$new(this.options.width, 200),
-    );
-    this.logView.setTextSize(10);
-    // this.logView.setBackgroundColor(0x80000000 | 0); // semi-transparent black as 32-bit int
-    // this.logView.setTextColor(0xFFFFFFFF | 0); // white as 32-bit int
-    this.logView.setMaxLines(this.options.logMaxLines);
-    this.logView.setVerticalScrollBarEnabled(true);
-    // Add to content container (scrollable area with other components)
-    if (this.contentContainer) {
-      this.contentContainer.addView(this.logView);
-    } else if (this.menuContainerView) {
-      // Fallback to menu container if contentContainer not available
-      this.menuContainerView.addView(this.logView);
-    } else {
-      this.parentContainerView.addView(this.logView);
     }
   }
 
