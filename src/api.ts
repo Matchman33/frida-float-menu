@@ -79,6 +79,7 @@ export const API = {
   get EditText() {
     return Java.use("android.widget.EditText");
   },
+  get Point() { return Java.use("android.graphics.Point"); },
   get DisplayMetrics() {
     return Java.use("android.util.DisplayMetrics");
   },
