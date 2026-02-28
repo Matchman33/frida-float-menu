@@ -19,7 +19,6 @@ export interface FloatMenuOptions {
   showLogs?: boolean; // whether to show log panel
   logMaxLines?: number;
   title?: string; // Main title text (default: "Frida Float Menu")
-  subtitle?: string; // Subtitle text (default: "Interactive Debugging Panel")
   showHeader?: boolean; // Whether to show header (default: true)
   showFooter?: boolean; // Whether to show footer (default: true)
   tabs?: TabDefinition[]; // Tab definitions (optional)
@@ -101,7 +100,6 @@ export class FloatMenu {
       showLogs: false,
       logMaxLines: 100,
       title: "Frida Float Menu",
-      subtitle: "Interactive Debugging Panel",
       showHeader: true,
       showFooter: true,
       tabs: undefined,
@@ -784,9 +782,6 @@ export class FloatMenu {
     const textColor = isActive ? 0xffffffff : 0xffcccccc;
     const GradientDrawable = API.GradientDrawable;
 
-    const drawable = GradientDrawable.$new();
-    drawable.setCornerRadius(14); // 设置圆角半径（像素）
-    drawable.setColor(bgColor | 0);
     button.setTextColor(textColor | 0);
     button.setBackgroundDrawable(createRoundedBg(bgColor | 0));
   }
@@ -833,7 +828,7 @@ export class FloatMenu {
         tabText.setText(JString.$new(tabInfo.label));
         tabText.setAllCaps(false);
         tabText.setPadding(4, 0, 10, 4);
-        tabText.setTextSize(18); // 14sp
+        tabText.setTextSize(18);
         const Gravity = API.Gravity;
         tabText.setGravity(Gravity.CENTER.value);
         // 应用当前标签样式（激活/非激活）
@@ -863,8 +858,7 @@ export class FloatMenu {
         );
         btnParams.setMargins(8, 8, 8, 8);
         tabText.setLayoutParams(btnParams);
-        // 保存 tabId 到 Tag，方便切换时识别
-        tabText.setTag(JString.$new(tabId));
+
         tabContainer.addView(tabText);
       }
 
@@ -974,22 +968,7 @@ export class FloatMenu {
         ),
       );
 
-      // Subtitle
-      const subtitleView = TextView.$new(context);
-      subtitleView.setText(
-        JString.$new(this.options.subtitle || "Interactive Debugging Panel"),
-      );
-      subtitleView.setTextSize(12);
-      subtitleView.setTextColor(0xffaaaaaa | 0); // Light gray
-      subtitleView.setLayoutParams(
-        LinearLayoutParams.$new(
-          LinearLayoutParams.MATCH_PARENT.value,
-          LinearLayoutParams.WRAP_CONTENT.value,
-        ),
-      );
-
       this.headerView.addView(titleView);
-      this.headerView.addView(subtitleView);
       this.addDragListener(
         this.headerView,
         this.menuContainerView,
