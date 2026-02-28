@@ -1,3 +1,4 @@
+import { API } from "../api";
 import { UIComponent } from "./ui-components";
 
 export class Slider extends UIComponent {
@@ -24,17 +25,13 @@ export class Slider extends UIComponent {
   }
 
   protected createView(context: any): void {
-    const LinearLayout = Java.use("android.widget.LinearLayout");
-    const TextView = Java.use("android.widget.TextView");
-    const SeekBar = Java.use("android.widget.SeekBar");
-    const Color = Java.use("android.graphics.Color");
-    const String = Java.use("java.lang.String");
-    const ViewGroupLayoutParams = Java.use(
-      "android.view.ViewGroup$LayoutParams",
-    );
-    const LinearLayoutParams = Java.use(
-      "android.widget.LinearLayout$LayoutParams",
-    );
+const LinearLayout = API.LinearLayout;
+const TextView = API.TextView;
+const SeekBar = API.SeekBar;
+const Color = API.Color;
+const String = API.JString;
+const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+const LinearLayoutParams = API.LinearLayoutParams;
 
     // Create a horizontal LinearLayout to hold label and value
     const container = LinearLayout.$new(context);
@@ -105,9 +102,7 @@ export class Slider extends UIComponent {
     (this.view as any).labelView = labelView;
     (this.view as any).container = container;
 
-    const SeekBarOnSeekBarChangeListener = Java.use(
-      "android.widget.SeekBar$OnSeekBarChangeListener",
-    );
+    const SeekBarOnSeekBarChangeListener =API.SeekBarOnSeekBarChangeListener
     const self = this;
 
     const changeListener = Java.registerClass({
@@ -160,7 +155,7 @@ export class Slider extends UIComponent {
         seekBar.setProgress(this.valueToProgress(this.value));
       }
       if (valueView) {
-        const String = Java.use("java.lang.String");
+        const String = API.JString
         valueView.setText(String.$new(this.value.toString()));
       }
     });
@@ -180,7 +175,7 @@ export class Slider extends UIComponent {
     Java.scheduleOnMainThread(() => {
       const labelView = (this.view as any).labelView;
       if (labelView) {
-        const String = Java.use("java.lang.String");
+        const String = API.JString
         labelView.setText(String.$new(label));
       }
     });

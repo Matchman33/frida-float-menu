@@ -1,3 +1,4 @@
+import { API } from "../api";
 import { UIComponent } from "./ui-components";
 
 // 选项类型定义
@@ -54,14 +55,12 @@ export class CheckBoxGroup extends UIComponent {
   }
   protected createView(context: any): void {
     // 使用 GridLayout 实现自动换行
-    const GridLayout = Java.use("android.widget.GridLayout");
-    const CheckBox = Java.use("android.widget.CheckBox");
-    const String = Java.use("java.lang.String");
-    const Color = Java.use("android.graphics.Color");
-    const GridLayoutParams = Java.use("android.widget.GridLayout$LayoutParams");
-    const ViewGroupLayoutParams = Java.use(
-      "android.view.ViewGroup$LayoutParams",
-    );
+    const GridLayout = API.GridLayout
+    const CheckBox = API.CheckBox
+    const String = API.JString
+    const Color = API.Color
+    const GridLayoutParams = API.GridLayoutParams
+    const ViewGroupLayoutParams = API.ViewGroupLayoutParams
 
     // 创建 GridLayout 作为容器
     const layout = GridLayout.$new(context);
@@ -75,9 +74,7 @@ export class CheckBoxGroup extends UIComponent {
     this.view = layout;
 
     const self = this;
-    const OnCheckedChangeListener = Java.use(
-      "android.widget.CompoundButton$OnCheckedChangeListener",
-    );
+    const OnCheckedChangeListener = API.OnCheckedChangeListener
 
     // 遍历选项，创建 CheckBox
     for (const opt of this.optionsMap.values()) {

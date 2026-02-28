@@ -1,3 +1,4 @@
+import { API } from "../api";
 import { UIComponent } from "./ui-components";
 
 export class Button extends UIComponent {
@@ -11,17 +12,17 @@ export class Button extends UIComponent {
   }
 
   protected createView(context: any): void {
-    const Button = Java.use("android.widget.Button");
+    const Button = API.Button
     this.view = Button.$new(context);
-    const String = Java.use("java.lang.String");
-    const Color = Java.use("android.graphics.Color");
+    const String = API.JString
+    const Color = API.Color
 
     this.view.setText(String.$new(this.label));
     this.view.setTextColor(Color.WHITE.value);
     this.view.setBackgroundColor(0xff555555 | 0); // gray background
     this.view.setPadding(16, 8, 16, 8);
 
-    const OnClickListener = Java.use("android.view.View$OnClickListener");
+    const OnClickListener = API.OnClickListener
     const self = this;
     const clickListener = Java.registerClass({
       name:
@@ -57,7 +58,7 @@ export class Button extends UIComponent {
       return;
     }
     Java.scheduleOnMainThread(() => {
-      const String = Java.use("java.lang.String");
+      const String = API.JString
       this.view.setText(String.$new(label));
     });
   }

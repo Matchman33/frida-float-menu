@@ -1,7 +1,12 @@
+import { API } from "../api";
 import { UIComponent } from "./ui-components";
 
 export class Switch extends UIComponent {
   private label: string;
+  private handler?: (vlaue: boolean) => void;
+  private setOnValueChange(handler: (vlaue: boolean) => void) {
+    this.handler = handler;
+  }
 
   constructor(id: string, label: string, initialValue: boolean = false) {
     super(id);
@@ -10,17 +15,16 @@ export class Switch extends UIComponent {
   }
 
   protected createView(context: any): void {
-    const Switch = Java.use("android.widget.Switch");
-    const String = Java.use("java.lang.String");
-    const Color = Java.use("android.graphics.Color");
+    const Switch = API.Switch;
+    const String = API.JString;
+    const Color = API.Color;
 
     this.view = Switch.$new(context);
     this.view.setText(String.$new(this.label));
     this.view.setTextColor(Color.WHITE.value);
     this.view.setChecked(this.value);
-    const CompoundButtonOnCheckedChangeListener = Java.use(
-      "android.widget.CompoundButton$OnCheckedChangeListener",
-    );
+    const CompoundButtonOnCheckedChangeListener =
+      API.CompoundButtonOnCheckedChangeListener;
     const self = this;
 
     const changeListener = Java.registerClass({
@@ -33,6 +37,7 @@ export class Switch extends UIComponent {
         onCheckedChanged: function (buttonView: any, isChecked: boolean) {
           self.value = isChecked;
           self.emit("valueChanged", isChecked);
+          if (self.handler) self.handler(isChecked);
         },
       },
     });
@@ -63,7 +68,7 @@ export class Switch extends UIComponent {
       return;
     }
     Java.scheduleOnMainThread(() => {
-      const String = Java.use("java.lang.String");
+      const String = API.JString
       this.view.setText(String.$new(label));
     });
   }

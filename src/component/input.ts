@@ -1,3 +1,4 @@
+import { API } from "../api";
 import { UIComponent } from "./ui-components";
 
 export class NumberInput extends UIComponent {
@@ -8,7 +9,7 @@ export class NumberInput extends UIComponent {
   private handler?: (value: number) => void;
 
   /**
-   * 
+   *
    * @param id 组件唯一id
    * @param initialValue 初始值
    * @param min 限定最小值
@@ -35,8 +36,8 @@ export class NumberInput extends UIComponent {
   protected updateView(): void {}
 
   protected createView(context: any): void {
-    const Button = Java.use("android.widget.Button");
-    const String = Java.use("java.lang.String");
+    const Button = API.Button;
+    const String = API.JString;
 
     this.view = Button.$new(context);
     this.view.setText(String.$new(this.text));
@@ -50,7 +51,7 @@ export class NumberInput extends UIComponent {
           "com.frida.NumberInputClick" +
           Date.now() +
           Math.random().toString(36).substring(6),
-        implements: [Java.use("android.view.View$OnClickListener")],
+        implements: [API.OnClickListener],
         methods: {
           onClick: function (v: any) {
             self.showDialog(context);
@@ -62,13 +63,12 @@ export class NumberInput extends UIComponent {
 
   private showDialog(context: any): void {
     Java.scheduleOnMainThread(() => {
-      const AlertDialogBuilder = Java.use("android.app.AlertDialog$Builder");
-      const EditText = Java.use("android.widget.EditText");
-      const String = Java.use("java.lang.String");
-      const TextViewBufferType = Java.use("android.widget.TextView$BufferType");
-      const InputType = Java.use("android.text.InputType");
-      const LayoutParams = Java.use("android.view.WindowManager$LayoutParams");
-
+      const AlertDialogBuilder = API.AlertDialogBuilder;
+      const EditText = API.EditText;
+      const String = API.JString;
+      const TextViewBufferType = API.TextViewBufferType;
+      const InputType = API.InputType;
+      const LayoutParams = API.LayoutParams;
       const builder = AlertDialogBuilder.$new(context);
       builder.setTitle(String.$new("请输入"));
 
@@ -96,9 +96,7 @@ export class NumberInput extends UIComponent {
             "com.frida.NumberInputOK" +
             Date.now() +
             Math.random().toString(36).substring(6),
-          implements: [
-            Java.use("android.content.DialogInterface$OnClickListener"),
-          ],
+          implements: [API.DialogInterfaceOnClickListener],
           methods: {
             onClick: function (dialog: any, which: number) {
               // 安全获取输入文本
@@ -203,8 +201,8 @@ export class TextInput extends UIComponent {
   }
 
   protected createView(context: any): void {
-    const Button = Java.use("android.widget.Button");
-    const String = Java.use("java.lang.String");
+    const Button = API.Button;
+    const String = API.JString;
 
     this.view = Button.$new(context);
     this.view.setText(String.$new(this.text));
@@ -218,7 +216,7 @@ export class TextInput extends UIComponent {
           "com.frida.AlertTextInputClick" +
           Date.now() +
           Math.random().toString(36).substring(6),
-        implements: [Java.use("android.view.View$OnClickListener")],
+        implements: [API.OnClickListener],
         methods: {
           onClick: function (v: any) {
             self.showDialog(context);
@@ -238,10 +236,10 @@ export class TextInput extends UIComponent {
 
   private showDialog(context: any): void {
     Java.scheduleOnMainThread(() => {
-      const AlertDialogBuilder = Java.use("android.app.AlertDialog$Builder");
-      const EditText = Java.use("android.widget.EditText");
-      const String = Java.use("java.lang.String");
-      const TextViewBufferType = Java.use("android.widget.TextView$BufferType");
+      const AlertDialogBuilder = API.AlertDialogBuilder;
+      const EditText = API.EditText;
+      const String = API.JString;
+      const TextViewBufferType = API.TextViewBufferType;
       const builder = AlertDialogBuilder.$new(context);
       builder.setTitle(String.$new("请输入"));
 
@@ -261,7 +259,7 @@ export class TextInput extends UIComponent {
             Date.now() +
             Math.random().toString(36).substring(6),
           implements: [
-            Java.use("android.content.DialogInterface$OnClickListener"),
+            API.DialogInterfaceOnClickListener
           ],
           methods: {
             onClick: function (dialog: any, which: number) {
@@ -279,7 +277,7 @@ export class TextInput extends UIComponent {
       );
 
       builder.setNegativeButton(String.$new("取消"), null);
-      const LayoutParams = Java.use("android.view.WindowManager$LayoutParams");
+      const LayoutParams = API.LayoutParams
       const dialog = builder.create();
       // 关键步骤：修改对话框窗口的类型
       const window = dialog.getWindow();
@@ -295,7 +293,7 @@ export class TextInput extends UIComponent {
   public setText(text: string): void {
     if (this.view) {
       Java.scheduleOnMainThread(() => {
-        const String = Java.use("java.lang.String");
+        const String = API.JString
         this.view.setText(String.$new(text));
       });
     }

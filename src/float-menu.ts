@@ -1,6 +1,7 @@
 import { EventEmitter } from "./event-emitter";
 import { UIComponent } from "./component/ui-components";
 import { Logger, LogLevel } from "./logger";
+import { API } from "./api";
 
 export interface TabDefinition {
   id: string;
@@ -12,13 +13,12 @@ export interface FloatMenuOptions {
   height?: number;
   x?: number;
   y?: number;
-  iconVisible?: boolean;
+  iconVisible?: boolean; // 是否显示图标
   iconWidth?: number;
   iconHeight?: number;
   iconBase64?: string; // base64 encoded icon for floating window
   showLogs?: boolean; // whether to show log panel
   logMaxLines?: number;
-  activityName?: string; // optional activity class name to attach to
   title?: string; // Main title text (default: "Frida Float Menu")
   subtitle?: string; // Subtitle text (default: "Interactive Debugging Panel")
   showHeader?: boolean; // Whether to show header (default: true)
@@ -75,10 +75,10 @@ export class FloatMenu {
 
   public get windowManager(): any {
     if (this._windowManager === null) {
-      const Context = Java.use("android.content.Context");
+      const Context = API.Context;
       this._windowManager = Java.cast(
         this.context.getSystemService(Context.WINDOW_SERVICE.value),
-        Java.use("android.view.ViewManager"),
+        API.ViewManager,
       );
     }
     return this._windowManager;
@@ -157,25 +157,109 @@ export class FloatMenu {
       this.options.showTabs = false; // Don't show tab bar for single default tab
     }
   }
+  private createMenuContainerView() {
+    const FrameLayout = API.FrameLayout;
+    const LinearLayoutParams = API.LinearLayoutParams;
+    const ScrollView = API.ScrollView;
+    // Create outer menu container (vertical LinearLayout)
+    const LinearLayout = API.LinearLayout;
+    const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+    this.menuContainerView = LinearLayout.$new(this.context);
+    this.menuContainerView.setOrientation(1); // LinearLayout.VERTICAL
+    this.menuContainerView.setLayoutParams(
+      ViewGroupLayoutParams.$new(
+        ViewGroupLayoutParams.MATCH_PARENT.value,
+        ViewGroupLayoutParams.MATCH_PARENT.value,
+      ),
+    );
+    // Create and add header if enabled
+    if (this.options.showHeader) {
+      this.createHeaderView(this.context);
 
+      this.menuContainerView.addView(this.headerView);
+    }
+
+    // Create and add tab bar if enabled
+    if (this.options.showTabs) {
+      this.createTabView(this.context);
+      this.menuContainerView.addView(this.tabView);
+    }
+
+    // Create scrollable content area
+    this.scrollView = ScrollView.$new(this.context);
+    const scrollParams = LinearLayoutParams.$new(
+      ViewGroupLayoutParams.MATCH_PARENT.value,
+      0, // height will be set by weight
+      1.0, // weight = 1, takes remaining space
+    );
+    this.scrollView.setLayoutParams(scrollParams);
+
+    // Create tab containers inside ScrollView
+    const tabContainersWrapper = FrameLayout.$new(this.context);
+    tabContainersWrapper.setLayoutParams(
+      ViewGroupLayoutParams.$new(
+        ViewGroupLayoutParams.MATCH_PARENT.value,
+        ViewGroupLayoutParams.WRAP_CONTENT.value,
+      ),
+    );
+
+    // Create a container for each tab
+    const View = API.View;
+    for (const [tabId, tabInfo] of this.tabs) {
+      const tabContainer = LinearLayout.$new(this.context);
+      tabContainer.setOrientation(1); // LinearLayout.VERTICAL
+      tabContainer.setLayoutParams(
+        ViewGroupLayoutParams.$new(
+          ViewGroupLayoutParams.MATCH_PARENT.value,
+          ViewGroupLayoutParams.WRAP_CONTENT.value,
+        ),
+      );
+
+      // Set visibility: only active tab is visible
+      if (tabId === this.activeTabId) {
+        tabContainer.setVisibility(View.VISIBLE.value);
+        // Set this.contentContainer to active tab's container for backward compatibility
+        this.contentContainer = tabContainer;
+      } else {
+        tabContainer.setVisibility(View.GONE.value);
+      }
+
+      tabInfo.container = tabContainer;
+      tabContainersWrapper.addView(tabContainer);
+    }
+
+    // If no active tab found (shouldn't happen), create a default container
+    if (!this.contentContainer && this.tabs.size > 0) {
+      const firstTab = Array.from(this.tabs.values())[0];
+      this.contentContainer = firstTab.container;
+      firstTab.container.setVisibility(View.VISIBLE.value);
+    }
+
+    this.scrollView.addView(tabContainersWrapper);
+    this.menuContainerView.addView(this.scrollView);
+
+    // Create and add footer if enabled
+    if (this.options.showFooter) {
+      this.createFooterView(this.context);
+      this.menuContainerView.addView(this.footerView);
+    }
+  }
   /**
    * Create icon view
    */
   private createIconView(): void {
     try {
-      const ImageView = Java.use("android.widget.ImageView");
-      const ScaleType = Java.use("android.widget.ImageView$ScaleType");
-      const FrameLayoutParams = Java.use(
-        "android.widget.FrameLayout$LayoutParams",
-      );
-      const Gravity = Java.use("android.view.Gravity");
+      const ImageView = API.ImageView;
+      const ImageView$ScaleType = API.ImageViewScaleType;
+      const FrameLayoutParams = API.FrameLayoutParams;
+      const Gravity = API.Gravity;
 
       this.iconView = ImageView.$new(this.context);
 
       if (this.options.iconBase64) {
         // Decode Base64 icon
-        const BitmapFactory = Java.use("android.graphics.BitmapFactory");
-        const Base64 = Java.use("android.util.Base64");
+        const BitmapFactory = API.BitmapFactory;
+        const Base64 = API.Base64;
         const decoded = Base64.decode(
           this.options.iconBase64,
           Base64.DEFAULT.value,
@@ -188,7 +272,7 @@ export class FloatMenu {
         this.iconView.setImageBitmap(bitmap);
       } else {
         // Create a simple colored circle as default icon
-        const Color = Java.use("android.graphics.Color");
+        const Color = API.Color;
         this.iconView.setBackgroundColor(0xff4285f4 | 0); // blue color
         // Try to make it circular (requires API 21+)
         try {
@@ -198,10 +282,10 @@ export class FloatMenu {
         }
       }
 
-      this.iconView.setScaleType(ScaleType.FIT_CENTER.value);
+      this.iconView.setScaleType(ImageView$ScaleType.FIT_CENTER.value);
 
       // Set layout params - centered in parent
-      const iconSize = this.options.iconWidth || 50;
+      const iconSize = this.options.iconWidth;
       const params = FrameLayoutParams.$new(
         iconSize,
         iconSize,
@@ -210,12 +294,12 @@ export class FloatMenu {
       this.iconView.setLayoutParams(params);
 
       // Add click listener to toggle between icon and menu
-      const OnClickListener = Java.use("android.view.View$OnClickListener");
+      const OnClickListener = API.OnClickListener;
       const self = this;
 
       const clickListener = Java.registerClass({
         name:
-          "com.example.ClickListener" +
+          "com.frida.ClickListener" +
           Date.now() +
           Math.random().toString(36).substring(6),
         implements: [OnClickListener],
@@ -226,8 +310,6 @@ export class FloatMenu {
         },
       });
       this.iconView.setOnClickListener(clickListener.$new());
-
-      console.debug("Icon view created");
     } catch (error) {
       console.trace("Failed to create icon view: " + error);
     }
@@ -240,7 +322,7 @@ export class FloatMenu {
     if (!this.isShown) return;
 
     Java.scheduleOnMainThread(() => {
-      const View = Java.use("android.view.View");
+      const View = API.View;
 
       if (this.isIconMode) {
         // Currently showing icon, switch to menu
@@ -277,8 +359,6 @@ export class FloatMenu {
           this.windowParams,
         );
       }
-
-      console.debug(`Switched to ${this.isIconMode ? "icon" : "menu"} mode`);
     });
   }
 
@@ -312,9 +392,7 @@ export class FloatMenu {
   public show(): void {
     Java.scheduleOnMainThread(() => {
       try {
-        const LayoutParams = Java.use(
-          "android.view.WindowManager$LayoutParams",
-        );
+        const LayoutParams = API.LayoutParams;
         // Use 7-parameter constructor: (width, height, x, y, type, flags, format)
         this.windowParams = LayoutParams.$new(
           this.options.width,
@@ -329,104 +407,17 @@ export class FloatMenu {
         );
 
         // Create parent container (FrameLayout to hold both icon and menu)
-        const FrameLayout = Java.use("android.widget.FrameLayout");
+        const FrameLayout = API.FrameLayout;
         this.parentContainerView = FrameLayout.$new(this.context);
-        const ViewGroupLayoutParams = Java.use(
-          "android.view.ViewGroup$LayoutParams",
-        );
+        const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
         this.parentContainerView.setLayoutParams(
           ViewGroupLayoutParams.$new(this.options.width, this.options.height),
         );
+        const View = API.View;
 
-        // Create outer layout for menu (contains header, scrollable content and footer)
-        const LinearLayout = Java.use("android.widget.LinearLayout");
-        const LinearLayoutParams = Java.use(
-          "android.widget.LinearLayout$LayoutParams",
-        );
-        const ScrollView = Java.use("android.widget.ScrollView");
-
-        // Create outer menu container (vertical LinearLayout)
-        this.menuContainerView = LinearLayout.$new(this.context);
-        this.menuContainerView.setOrientation(1); // LinearLayout.VERTICAL
-        this.menuContainerView.setLayoutParams(
-          ViewGroupLayoutParams.$new(
-            ViewGroupLayoutParams.MATCH_PARENT.value,
-            ViewGroupLayoutParams.MATCH_PARENT.value,
-          ),
-        );
-        // Create and add header if enabled
-        if (this.options.showHeader) {
-          this.createHeaderView(this.context);
-
-          this.menuContainerView.addView(this.headerView);
-        }
-
-        // Create and add tab bar if enabled
-        if (this.options.showTabs) {
-          this.createTabView(this.context);
-          this.menuContainerView.addView(this.tabView);
-        }
-
-        // Create scrollable content area
-        this.scrollView = ScrollView.$new(this.context);
-        const scrollParams = LinearLayoutParams.$new(
-          ViewGroupLayoutParams.MATCH_PARENT.value,
-          0, // height will be set by weight
-          1.0, // weight = 1, takes remaining space
-        );
-        this.scrollView.setLayoutParams(scrollParams);
-
-        // Create tab containers inside ScrollView
-        const tabContainersWrapper = FrameLayout.$new(this.context);
-        tabContainersWrapper.setLayoutParams(
-          ViewGroupLayoutParams.$new(
-            ViewGroupLayoutParams.MATCH_PARENT.value,
-            ViewGroupLayoutParams.WRAP_CONTENT.value,
-          ),
-        );
-
-        // Create a container for each tab
-        const View = Java.use("android.view.View");
-        for (const [tabId, tabInfo] of this.tabs) {
-          const tabContainer = LinearLayout.$new(this.context);
-          tabContainer.setOrientation(1); // LinearLayout.VERTICAL
-          tabContainer.setLayoutParams(
-            ViewGroupLayoutParams.$new(
-              ViewGroupLayoutParams.MATCH_PARENT.value,
-              ViewGroupLayoutParams.WRAP_CONTENT.value,
-            ),
-          );
-
-          // Set visibility: only active tab is visible
-          if (tabId === this.activeTabId) {
-            tabContainer.setVisibility(View.VISIBLE.value);
-            // Set this.contentContainer to active tab's container for backward compatibility
-            this.contentContainer = tabContainer;
-          } else {
-            tabContainer.setVisibility(View.GONE.value);
-          }
-
-          tabInfo.container = tabContainer;
-          tabContainersWrapper.addView(tabContainer);
-        }
-
-        // If no active tab found (shouldn't happen), create a default container
-        if (!this.contentContainer && this.tabs.size > 0) {
-          const firstTab = Array.from(this.tabs.values())[0];
-          this.contentContainer = firstTab.container;
-          firstTab.container.setVisibility(View.VISIBLE.value);
-        }
-
-        this.scrollView.addView(tabContainersWrapper);
-        this.menuContainerView.addView(this.scrollView);
-
-        // Create and add footer if enabled
-        if (this.options.showFooter) {
-          this.createFooterView(this.context);
-          this.menuContainerView.addView(this.footerView);
-        }
         // Create icon view
         this.createIconView();
+        this.createMenuContainerView();
 
         // Add both views to parent container
         this.parentContainerView.addView(this.iconView);
@@ -439,8 +430,8 @@ export class FloatMenu {
           this.menuContainerView.setVisibility(View.GONE.value);
           this.isIconMode = true;
           // Update window size for icon
-          this.windowParams.width = this.options.iconWidth || 50;
-          this.windowParams.height = this.options.iconHeight || 50;
+          this.windowParams.width = this.options.iconWidth;
+          this.windowParams.height = this.options.iconHeight;
         } else {
           // Show menu, hide icon
           this.iconView.setVisibility(View.GONE.value);
@@ -759,13 +750,12 @@ export class FloatMenu {
    */
   private createTabView(context: any): void {
     try {
-      const LinearLayout = Java.use("android.widget.LinearLayout");
-      const LinearLayoutParams = Java.use(
-        "android.widget.LinearLayout$LayoutParams",
-      );
-      const Button = Java.use("android.widget.Button");
-      const Color = Java.use("android.graphics.Color");
-      const OnClickListener = Java.use("android.view.View$OnClickListener");
+
+      const LinearLayout = API.LinearLayout
+      const LinearLayoutParams = API.LinearLayoutParams
+      const Button = API.Button
+      const Color = API.Color
+      const OnClickListener = API.OnClickListener
 
       // Create tab bar container (horizontal LinearLayout)
       this.tabView = LinearLayout.$new(context);
@@ -779,7 +769,7 @@ export class FloatMenu {
       this.tabView.setPadding(8, 8, 8, 8);
       this.tabView.setBackgroundColor(0xff555555 | 0); // Medium dark gray
 
-      const JString = Java.use("java.lang.String");
+      const JString = API.JString
       const self = this;
 
       // Create a button for each tab
@@ -847,9 +837,8 @@ export class FloatMenu {
 
     Java.scheduleOnMainThread(() => {
       try {
-        const View = Java.use("android.view.View");
-        const Color = Java.use("android.graphics.Color");
-        const JString = Java.use("java.lang.String");
+        const View = API.View
+        const Color =API.Color
         // Update tab containers visibility
         for (const [id, tabInfo] of this.tabs) {
           if (tabInfo.container) {
@@ -872,7 +861,7 @@ export class FloatMenu {
             // const button = this.tabView.getChildAt(i);
             const button = Java.cast(
               this.tabView.getChildAt(i),
-              Java.use("android.widget.Button"),
+              API.Button
             );
             // We need to identify which button corresponds to which tab
             // This is simplified - in a real implementation we might want to store button references
@@ -906,12 +895,10 @@ export class FloatMenu {
    */
   private createHeaderView(context: any): void {
     try {
-      const LinearLayout = Java.use("android.widget.LinearLayout");
-      const LinearLayoutParams = Java.use(
-        "android.widget.LinearLayout$LayoutParams",
-      );
-      const TextView = Java.use("android.widget.TextView");
-      const Color = Java.use("android.graphics.Color");
+      const LinearLayout = API.LinearLayout
+      const LinearLayoutParams = API.LinearLayoutParams
+      const TextView = API.TextView
+      const Color = API.Color
 
       // Create header container (vertical LinearLayout)
       this.headerView = LinearLayout.$new(context);
@@ -924,7 +911,7 @@ export class FloatMenu {
       );
       this.headerView.setPadding(16, 16, 16, 16);
       this.headerView.setBackgroundColor(0xff333333 | 0); // Dark gray background
-      const JString = Java.use("java.lang.String");
+      const JString = API.JString
       // Main title
       const titleView = TextView.$new(context);
       titleView.setText(JString.$new(this.options.title || "Frida Float Menu"));
@@ -964,13 +951,11 @@ export class FloatMenu {
    */
   private createFooterView(context: any): void {
     try {
-      const LinearLayout = Java.use("android.widget.LinearLayout");
-      const LinearLayoutParams = Java.use(
-        "android.widget.LinearLayout$LayoutParams",
-      );
-      const Button = Java.use("android.widget.Button");
-      const Color = Java.use("android.graphics.Color");
-      const OnClickListener = Java.use("android.view.View$OnClickListener");
+      const LinearLayout = API.LinearLayout
+      const LinearLayoutParams = API.LinearLayoutParams
+      const Button = API.Button
+      const Color = API.Color
+      const OnClickListener = API.OnClickListener
 
       // Create footer container (horizontal LinearLayout)
       this.footerView = LinearLayout.$new(context);
@@ -984,7 +969,7 @@ export class FloatMenu {
       this.footerView.setPadding(8, 8, 8, 8);
       this.footerView.setBackgroundColor(0xff444444 | 0); // Medium gray background
 
-      const JString = Java.use("java.lang.String");
+      const JString = API.JString
       // Minimize button (switch to icon mode)
       const minimizeBtn = Button.$new(context);
       minimizeBtn.setText(JString.$new("最小化"));
@@ -1050,11 +1035,9 @@ export class FloatMenu {
    * Create log view (TextView) for displaying logs
    */
   private createLogView(context: any): void {
-    const TextView = Java.use("android.widget.TextView");
+    const TextView = API.TextView
     this.logView = TextView.$new(context);
-    const LinearLayoutParams = Java.use(
-      "android.widget.LinearLayout$LayoutParams",
-    );
+    const LinearLayoutParams = API.LinearLayoutParams
     this.logView.setLayoutParams(
       LinearLayoutParams.$new(this.options.width, 200),
     );
@@ -1089,7 +1072,7 @@ export class FloatMenu {
         lines.shift();
       }
       lines.push(newLine);
-      const String = Java.use("java.lang.String");
+      const String = API.JString
       logView.setText(String.$new(lines.join("\n")));
     });
   }
@@ -1100,7 +1083,7 @@ export class FloatMenu {
   public clearLogs(): void {
     if (!this.logView) return;
     Java.scheduleOnMainThread(() => {
-      const String = Java.use("java.lang.String");
+      const String = API.JString
       this.logView.setText(String.$new(""));
     });
   }

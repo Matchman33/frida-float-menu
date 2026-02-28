@@ -1,3 +1,4 @@
+import { API } from "../api";
 import { UIComponent } from "./ui-components";
 
 export class Category extends UIComponent {
@@ -10,15 +11,11 @@ export class Category extends UIComponent {
   }
 
   protected createView(context: any): void {
-    const TextView = Java.use("android.widget.TextView");
-    const Color = Java.use("android.graphics.Color");
-    const String = Java.use("java.lang.String");
-    const LinearLayoutParams = Java.use(
-      "android.widget.LinearLayout$LayoutParams",
-    );
-    const ViewGroupLayoutParams = Java.use(
-      "android.view.ViewGroup$LayoutParams",
-    );
+    const TextView = API.TextView
+    const Color = API.Color
+    const String = API.JString
+    const LinearLayoutParams = API.LinearLayoutParams
+    const ViewGroupLayoutParams = API.ViewGroupLayoutParams
 
     this.view = TextView.$new(context);
     this.view.setText(String.$new(this.label));
@@ -43,7 +40,7 @@ export class Category extends UIComponent {
       return;
     }
     Java.scheduleOnMainThread(() => {
-      const String = Java.use("java.lang.String");
+      const String = API.JString
       this.view.setText(String.$new(this.value));
     });
   }

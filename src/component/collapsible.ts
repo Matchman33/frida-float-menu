@@ -1,3 +1,4 @@
+import { API } from "../api";
 import { UIComponent } from "./ui-components";
 
 export class Collapsible extends UIComponent {
@@ -14,18 +15,14 @@ export class Collapsible extends UIComponent {
   }
 
   protected createView(context: any): void {
-    const LinearLayout = Java.use("android.widget.LinearLayout");
-    const TextView = Java.use("android.widget.TextView");
-    const ImageView = Java.use("android.widget.ImageView");
-    const Color = Java.use("android.graphics.Color");
-    const String = Java.use("java.lang.String");
-    const ViewGroupLayoutParams = Java.use(
-      "android.view.ViewGroup$LayoutParams",
-    );
-    const LinearLayoutParams = Java.use(
-      "android.widget.LinearLayout$LayoutParams",
-    );
-    const View = Java.use("android.view.View");
+    const LinearLayout = API.LinearLayout;
+    const TextView = API.TextView;
+    const ImageView = API.ImageView;
+    const Color = API.Color;
+    const String = API.JString;
+    const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+    const LinearLayoutParams = API.LinearLayoutParams;
+    const View = API.View;
 
     // Main vertical container
     const container = LinearLayout.$new(context);
@@ -115,7 +112,7 @@ export class Collapsible extends UIComponent {
     (this.view as any).contentContainer = this.contentContainer;
 
     // Add click listener to title row
-    const OnClickListener = Java.use("android.view.View$OnClickListener");
+    const OnClickListener = API.OnClickListener
     const self = this;
 
     const clickListener = Java.registerClass({
@@ -143,8 +140,8 @@ export class Collapsible extends UIComponent {
     // Update expanded state
     this.expanded = this.value;
     Java.scheduleOnMainThread(() => {
-      const View = Java.use("android.view.View");
-      const String = Java.use("java.lang.String");
+const View = API.View;
+const String = API.JString;
       const contentContainer = (this.view as any).contentContainer;
       const arrowView = this.arrowView;
 
@@ -203,7 +200,7 @@ export class Collapsible extends UIComponent {
     Java.scheduleOnMainThread(() => {
       const titleView = (this.view as any).titleView;
       if (titleView) {
-        const String = Java.use("java.lang.String");
+        const String = API.JString
         titleView.setText(String.$new(title));
       }
     });

@@ -49,74 +49,73 @@ Java.perform(() => {
 
   // === Tab 2: Inputs (TextInput, NumberInput) ===
 
-  // Category separator
-  // const catInputs = new Category("inputs_cat", "Input Components");
-  // menu.addComponent("inputs_cat", catInputs, "inputs");
+  const catInputs = new Category("inputs_cat", "Input Components");
+  menu.addComponent(catInputs, "inputs");
 
-  // // TextInput component (single line)
-  // // const textInput = new TextInput("name_input", "John Doe", "Enter your name");
+  // TextInput component (single line)
   // const textInput = new TextInput("name_input", "John Doe", "Enter your name");
-  // textInput.on("valueChanged", (value: string) => {
-  //   console.log(`TextInput changed: "${value}"`);
-  //   menu.setComponentValue(
-  //     "name_display",
-  //     `Hello, <b>${value || "Anonymous"}</b>!`,
-  //   );
-  // });
-  // menu.addComponent("name_input", textInput, "inputs");
+  const textInput = new TextInput("name_input", "John Doe", "Enter your name");
+  textInput.on("valueChanged", (value: string) => {
+    console.log(`TextInput changed: "${value}"`);
+    menu.setComponentValue(
+      "name_display",
+      `Hello, <b>${value || "Anonymous"}</b>!`,
+    );
+  });
+  menu.addComponent(textInput, "inputs");
 
-  // const nameDisplay = new Text("name_display", "Hello, <b>John Doe</b>!");
-  // menu.addComponent("name_display", nameDisplay, "inputs");
+  const nameDisplay = new Text("name_display", "Hello, <b>John Doe</b>!");
+  menu.addComponent(nameDisplay, "inputs");
 
-  // // Button to clear text input
-  // const clearTextButton = new Button("clear_text_button", "Clear Name");
-  // clearTextButton.setOnClick(() => {
-  //   console.log("Clear name button clicked");
-  //   textInput.setText("123");
-  //   menu.setComponentValue("name_display", "Hello, <b>Anonymous</b>!");
-  // });
-  // menu.addComponent("clear_text_button", clearTextButton, "inputs");
+  // Button to clear text input
+  const clearTextButton = new Button("clear_text_button", "Clear Name");
+  clearTextButton.setOnClick(() => {
+    console.log("Clear name button clicked");
+    textInput.setText("123");
+    menu.setComponentValue("name_display", "Hello, <b>Anonymous</b>!");
+  });
+  menu.addComponent(clearTextButton, "inputs");
 
-  // // TextInput component (multiline)
-  // const multiInput = new TextInput(
-  //   "notes_input",
-  //   "",
-  //   "Enter notes here...",
-  //   "notes here",
-  // );
-  // multiInput.setOnValueChange((value: string) => {
-  //   console.log(`Notes changed (${value.length} characters)`);
+  // TextInput component (multiline)
+  const multiInput = new TextInput(
+    "notes_input",
+    "",
+    "Enter notes here...",
+    "notes here",
+  );
+  multiInput.setOnValueChange((value: string) => {
+    console.log(`Notes changed (${value.length} characters)`);
 
-  //   // Count lines and characters
-  //   const lines = value.split("\n").length;
-  //   const chars = value.length;
-  //   menu.setComponentValue(
-  //     "notes_stats",
-  //     `Lines: ${lines}, Characters: ${chars}`,
-  //   );
-  // });
-  // menu.addComponent("notes_input", multiInput, "inputs");
+    // Count lines and characters
+    const lines = value.split("\n").length;
+    const chars = value.length;
+    menu.setComponentValue(
+      "notes_stats",
+      `Lines: ${lines}, Characters: ${chars}`,
+    );
+  });
+  menu.addComponent(multiInput, "inputs");
 
-  // // NumberInput component
-  // const numberInput = new NumberInput(
-  //   "age_input",
-  //   25,
-  //   0, // min
-  //   120, // max
-  // );
-  // numberInput.on("valueChanged", (value: number) => {
-  //   console.log(`Age changed: ${value}`);
+  // NumberInput component
+  const numberInput = new NumberInput(
+    "age_input",
+    25,
+    0, // min
+    120, // max
+  );
+  numberInput.on("valueChanged", (value: number) => {
+    console.log(`Age changed: ${value}`);
 
-  //   // Categorize age
-  //   let category = "";
-  //   if (value < 13) category = "Child";
-  //   else if (value < 20) category = "Teenager";
-  //   else if (value < 65) category = "Adult";
-  //   else category = "Senior";
+    // Categorize age
+    let category = "";
+    if (value < 13) category = "Child";
+    else if (value < 20) category = "Teenager";
+    else if (value < 65) category = "Adult";
+    else category = "Senior";
 
-  //   menu.setComponentValue("age_category", `Age category: <b>${category}</b>`);
-  // });
-  // menu.addComponent("age_input", numberInput, "inputs");
+    menu.setComponentValue("age_category", `Age category: <b>${category}</b>`);
+  });
+  menu.addComponent(numberInput, "inputs");
 
   // 创建多选框组
   const genderGroup = new CheckBoxGroup(
@@ -157,7 +156,7 @@ Java.perform(() => {
   // 批量设置
   genderGroup.setCheckedValues(["other"]); // 只选中 other
 
-  menu.addComponent(genderGroup);
+  menu.addComponent(genderGroup, "controls");
   // === Global event listeners ===
 
   // Listen for all component value changes

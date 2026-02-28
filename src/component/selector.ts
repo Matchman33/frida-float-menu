@@ -1,3 +1,4 @@
+import { API } from "../api";
 import { UIComponent } from "./ui-components";
 
 export class Selector extends UIComponent {
@@ -12,18 +13,17 @@ export class Selector extends UIComponent {
   }
 
   protected createView(context: any): void {
-    const Spinner = Java.use("android.widget.Spinner");
-    const Color = Java.use("android.graphics.Color");
-
+    const Spinner = API.Spinner;
+    const ArrayAdapter = API.ArrayAdapter;
+    const String = API.JString;
+    const R_layout = API.R_layout;
     this.view = Spinner.$new(context);
     this.view.setBackgroundColor(0xff555555 | 0); // gray background
 
-    const ArrayAdapter = Java.use("android.widget.ArrayAdapter");
-    const String = Java.use("java.lang.String");
     // Convert JavaScript strings to Java strings
     const javaItems = this.items.map((item) => String.$new(item));
     // const R = Java.use("android.R");
-    const R_layout = Java.use("android.R$layout");
+
     const adapter = ArrayAdapter.$new(
       context,
       R_layout.simple_spinner_item.value,
@@ -41,9 +41,8 @@ export class Selector extends UIComponent {
     } catch (e) {
       // ignore
     }
-    const AdapterViewOnItemSelectedListener = Java.use(
-      "android.widget.AdapterView$OnItemSelectedListener",
-    );
+    const AdapterViewOnItemSelectedListener =
+      API.AdapterViewOnItemSelectedListener;
     const self = this;
 
     const itemSelectedListener = Java.registerClass({
@@ -101,13 +100,13 @@ export class Selector extends UIComponent {
     // Update adapter
     Java.scheduleOnMainThread(() => {
       try {
-        const ArrayAdapter = Java.use("android.widget.ArrayAdapter");
+        const ArrayAdapter = API.ArrayAdapter
         const context = this.view.getContext();
-        const String = Java.use("java.lang.String");
+const R_layout = API.R_layout;
+const String = API.JString;
         // Convert JavaScript strings to Java strings
         const javaItems = items.map((item) => String.$new(item));
         // const R = Java.use("android.R");
-        const R_layout = Java.use("android.R$layout");
 
         const adapter = ArrayAdapter.$new(
           context,
