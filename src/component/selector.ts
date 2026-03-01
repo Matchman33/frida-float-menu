@@ -22,8 +22,8 @@ export class Selector extends UIComponent {
     const ArrayAdapter = API.ArrayAdapter;
     const String = API.JString;
     const R_layout = API.R_layout;
-    this.button = Spinner.$new(context);
-    this.button.setBackgroundColor(0xff555555 | 0); // gray background
+    this.view = Spinner.$new(context);
+    this.view.setBackgroundColor(0xff555555 | 0); // gray background
 
     // Convert JavaScript strings to Java strings
     const javaItems = this.items.map((item) => String.$new(item.lable));
@@ -37,12 +37,12 @@ export class Selector extends UIComponent {
     adapter.setDropDownViewResource(
       R_layout.simple_spinner_dropdown_item.value,
     );
-    this.button.setAdapter(adapter);
-    this.button.setSelection(this.selectedIndex);
+    this.view.setAdapter(adapter);
+    this.view.setSelection(this.selectedIndex);
 
     // Try to set text color (may not work on all Android versions)
     try {
-      this.button.setPopupBackgroundResource(0xff333333);
+      this.view.setPopupBackgroundResource(0xff333333);
     } catch (e) {
       // ignore
     }
@@ -73,7 +73,7 @@ export class Selector extends UIComponent {
         },
       },
     });
-    this.button.setOnItemSelectedListener(itemSelectedListener.$new());
+    this.view.setOnItemSelectedListener(itemSelectedListener.$new());
   }
 
   public onValueChange(handler: (value: any) => {}) {
@@ -81,7 +81,7 @@ export class Selector extends UIComponent {
   }
 
   protected updateView(): void {
-    if (!this.button) {
+    if (!this.view) {
       console.warn(
         `[Selector:${this.id}] Cannot update view - view not initialized`,
       );
@@ -94,7 +94,7 @@ export class Selector extends UIComponent {
     );
     if (index !== -1) {
       Java.scheduleOnMainThread(() => {
-        this.button.setSelection(index);
+        this.view.setSelection(index);
       });
     }
   }
@@ -104,7 +104,7 @@ export class Selector extends UIComponent {
    */
   public setItems(items: { lable: string; [key: string]: any }[]): void {
     this.items = items;
-    if (!this.button) {
+    if (!this.view) {
       console.warn(
         `[Selector:${this.id}] Cannot set items - view not initialized`,
       );
@@ -114,7 +114,7 @@ export class Selector extends UIComponent {
     Java.scheduleOnMainThread(() => {
       try {
         const ArrayAdapter = API.ArrayAdapter;
-        const context = this.button.getContext();
+        const context = this.view.getContext();
         const R_layout = API.R_layout;
         const String = API.JString;
         // Convert JavaScript strings to Java strings
@@ -129,7 +129,7 @@ export class Selector extends UIComponent {
         adapter.setDropDownViewResource(
           R_layout.simple_spinner_dropdown_item.value,
         );
-        this.button.setAdapter(adapter);
+        this.view.setAdapter(adapter);
       } catch (error) {
         console.error(`[Selector:${this.id}] Failed to set items:`, error);
       }

@@ -97,11 +97,11 @@ export class Slider extends UIComponent {
     verticalLayout.addView(seekBar);
 
     // Store references on the view for later updates
-    this.button = verticalLayout;
-    (this.button as any).seekBar = seekBar;
-    (this.button as any).valueView = valueView;
-    (this.button as any).labelView = labelView;
-    (this.button as any).container = container;
+    this.view = verticalLayout;
+    (this.view as any).seekBar = seekBar;
+    (this.view as any).valueView = valueView;
+    (this.view as any).labelView = labelView;
+    (this.view as any).container = container;
 
     const SeekBarOnSeekBarChangeListener = API.SeekBarOnSeekBarChangeListener;
     const self = this;
@@ -123,7 +123,7 @@ export class Slider extends UIComponent {
             self.value = newValue;
             // Update value display
             Java.scheduleOnMainThread(() => {
-              const valueView = (self.button as any).valueView;
+              const valueView = (self.view as any).valueView;
               if (valueView) {
                 valueView.setText(String.$new(newValue.toString()));
               }
@@ -148,15 +148,15 @@ export class Slider extends UIComponent {
   }
 
   protected updateView(): void {
-    if (!this.button) {
+    if (!this.view) {
       console.warn(
         `[Slider:${this.id}] Cannot update view - view not initialized`,
       );
       return;
     }
     Java.scheduleOnMainThread(() => {
-      const seekBar = (this.button as any).seekBar;
-      const valueView = (this.button as any).valueView;
+      const seekBar = (this.view as any).seekBar;
+      const valueView = (this.view as any).valueView;
       if (seekBar) {
         seekBar.setProgress(this.valueToProgress(this.value));
       }
@@ -172,14 +172,14 @@ export class Slider extends UIComponent {
    */
   public setLabel(label: string): void {
     this.label = label;
-    if (!this.button) {
+    if (!this.view) {
       console.warn(
         `[Slider:${this.id}] Cannot set label - view not initialized`,
       );
       return;
     }
     Java.scheduleOnMainThread(() => {
-      const labelView = (this.button as any).labelView;
+      const labelView = (this.view as any).labelView;
       if (labelView) {
         const String = API.JString;
         labelView.setText(String.$new(label));
@@ -195,14 +195,14 @@ export class Slider extends UIComponent {
     this.max = max;
     this.step = step;
     this.value = this.clampToStep(this.value); // Re-clamp current value
-    if (!this.button) {
+    if (!this.view) {
       console.warn(
         `[Slider:${this.id}] Cannot set range - view not initialized`,
       );
       return;
     }
     Java.scheduleOnMainThread(() => {
-      const seekBar = (this.button as any).seekBar;
+      const seekBar = (this.view as any).seekBar;
       if (seekBar) {
         seekBar.setMax(this.calculateSeekBarMax());
         seekBar.setProgress(this.valueToProgress(this.value));

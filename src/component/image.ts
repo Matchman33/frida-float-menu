@@ -39,13 +39,13 @@ export class ImageView extends UIComponent {
     const Color = API.Color;
     const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
 
-    this.button = button.$new(context);
-    this.button.setScaleType(button$ScaleType.FIT_CENTER.value);
-    this.button.setBackgroundColor(Color.TRANSPARENT.value);
+    this.view = button.$new(context);
+    this.view.setScaleType(button$ScaleType.FIT_CENTER.value);
+    this.view.setBackgroundColor(Color.TRANSPARENT.value);
 
     // 设置自定义尺寸
     const layoutParams = ViewGroupLayoutParams.$new(this.width, this.height);
-    this.button.setLayoutParams(layoutParams);
+    this.view.setLayoutParams(layoutParams);
 
     this.loadImage(this.source);
   }
@@ -61,7 +61,7 @@ export class ImageView extends UIComponent {
           0,
           decoded.length,
         );
-        this.button.setImageBitmap(bitmap);
+        this.view.setImageBitmap(bitmap);
       } catch (error) {
         console.trace(`[Image:${this.id}] Failed to load image:`, error);
       }
@@ -69,7 +69,7 @@ export class ImageView extends UIComponent {
   }
 
   protected updateView(): void {
-    if (!this.button) {
+    if (!this.view) {
       console.warn(
         `[Image:${this.id}] Cannot update view - view not initialized`,
       );
@@ -83,14 +83,14 @@ export class ImageView extends UIComponent {
 
   private updateSize(): void {
     const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
-    const layoutParams = this.button.getLayoutParams();
+    const layoutParams = this.view.getLayoutParams();
     if (layoutParams) {
       layoutParams.width = this.width;
       layoutParams.height = this.height;
-      this.button.setLayoutParams(layoutParams);
+      this.view.setLayoutParams(layoutParams);
     } else {
       const newParams = ViewGroupLayoutParams.$new(this.width, this.height);
-      this.button.setLayoutParams(newParams);
+      this.view.setLayoutParams(newParams);
     }
   }
 
@@ -108,9 +108,9 @@ export class ImageView extends UIComponent {
    * 设置图片缩放类型
    */
   public setScaleType(scaleType: any): void {
-    if (this.button) {
+    if (this.view) {
       Java.scheduleOnMainThread(() => {
-        this.button.setScaleType(scaleType);
+        this.view.setScaleType(scaleType);
       });
     }
   }
@@ -123,7 +123,7 @@ export class ImageView extends UIComponent {
   public setSize(width: number, height: number): void {
     this.width = width;
     this.height = height;
-    if (this.button) {
+    if (this.view) {
       Java.scheduleOnMainThread(() => {
         this.updateSize();
       });
