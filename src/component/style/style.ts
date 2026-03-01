@@ -1,5 +1,3 @@
-// src/style/style.ts
-import { API } from "../../api";
 import { Theme } from "./theme";
 
 export type StyleRole =
@@ -12,28 +10,27 @@ export type StyleRole =
   | "inputTrigger" // looks like an input field but clickable
   | "primaryButton"
   | "dangerButton";
-export function dp(context: any, v: number): number {
-  const dm = context.getResources().getDisplayMetrics();
+
+export function dp(ctx: any, v: number): number {
+  const dm = ctx.getResources().getDisplayMetrics();
   return Math.floor(v * dm.density.value + 0.5);
 }
 
 export function applyStyle(view: any, role: StyleRole, theme: Theme) {
   const ctx = view.getContext();
-
-  //   const GradientDrawable = Java.use(
-  //     "android.graphics.drawable.GradientDrawable",
-  //   );
-  const GradientDrawable = API.GradientDrawable;
-  const TextView = API.TextView;
+  const GradientDrawable = Java.use(
+    "android.graphics.drawable.GradientDrawable",
+  );
+  const TextView = Java.use("android.widget.TextView");
 
   const rounded = (
     bg: number,
-    radiusDp: number,
+    rDp: number,
     stroke?: { c: number; wDp: number },
   ) => {
     const d = GradientDrawable.$new();
     d.setColor(bg | 0);
-    d.setCornerRadius(dp(ctx, radiusDp));
+    d.setCornerRadius(dp(ctx, rDp));
     if (stroke) d.setStroke(dp(ctx, stroke.wDp), stroke.c);
     view.setBackground(d);
   };
@@ -45,8 +42,7 @@ export function applyStyle(view: any, role: StyleRole, theme: Theme) {
       return null;
     }
   };
-
-  // role presets
+  console.log(role)
   switch (role) {
     case "overlay":
       rounded(theme.colors.overlayBg, theme.radiusDp.overlay);
@@ -127,7 +123,7 @@ export function applyStyle(view: any, role: StyleRole, theme: Theme) {
       view.setMinimumHeight(dp(ctx, 40));
       const tv = asTextView();
       if (tv) {
-        tv.setTextColor(0xffffffff);
+        tv.setTextColor(0xffffffff | 0);
         tv.setTextSize(2, theme.textSp.body);
         tv.setAllCaps(false);
       }
@@ -140,7 +136,7 @@ export function applyStyle(view: any, role: StyleRole, theme: Theme) {
       view.setMinimumHeight(dp(ctx, 40));
       const tv = asTextView();
       if (tv) {
-        tv.setTextColor(0xffffffff);
+        tv.setTextColor(0xffffffff | 0);
         tv.setTextSize(2, theme.textSp.body);
         tv.setAllCaps(false);
       }

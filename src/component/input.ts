@@ -1,4 +1,6 @@
 import { API } from "../api";
+import { applyEditTextStyle, applyStyle } from "./style/style";
+import { DarkNeonTheme } from "./style/theme";
 import { UIComponent } from "./ui-components";
 
 export class NumberInput extends UIComponent {
@@ -37,7 +39,7 @@ export class NumberInput extends UIComponent {
   }
 
   protected updateView(): void {
-    if (!this.button) {
+    if (!this.view) {
       console.warn(
         `[Switch:${this.id}] Cannot update view - view not initialized`,
       );
@@ -45,7 +47,7 @@ export class NumberInput extends UIComponent {
     }
     Java.scheduleOnMainThread(() => {
       const String = API.JString;
-      this.button.setText(String.$new(`${this.text}: ${this.value}`));
+      this.view.setText(String.$new(`${this.text}: ${this.value}`));
     });
   }
 
@@ -53,13 +55,13 @@ export class NumberInput extends UIComponent {
     const Button = API.Button;
     const String = API.JString;
 
-    this.button = Button.$new(context);
-    this.button.setText(String.$new(`${this.text}: ${this.value}`));
-
+    this.view = Button.$new(context);
+    this.view.setText(String.$new(`${this.text}: ${this.value}`));
+    applyStyle(this.view, "inputTrigger", DarkNeonTheme);
     const self = this;
 
     // 点击按钮弹窗
-    this.button.setOnClickListener(
+    this.view.setOnClickListener(
       Java.registerClass({
         name:
           "com.frida.NumberInputClick" +
@@ -87,6 +89,7 @@ export class NumberInput extends UIComponent {
       builder.setTitle(String.$new(this.title));
 
       const input = EditText.$new(context);
+      applyEditTextStyle(input, DarkNeonTheme);
       input.setHint(String.$new(this.hint));
       input.setText(
         String.$new(this.value + ""),
@@ -135,7 +138,7 @@ export class NumberInput extends UIComponent {
 
               // 应用约束
               self.applyConstraints();
-              self.button.setText(String.$new(`${self.text}: ${self.value}`));
+              self.view.setText(String.$new(`${self.text}: ${self.value}`));
               self.emit("valueChanged", self.value);
               if (self.handler) self.handler(self.value);
             },
@@ -216,7 +219,7 @@ export class TextInput extends UIComponent {
     this.title = title;
   }
   protected updateView(): void {
-    if (!this.button) {
+    if (!this.view) {
       console.warn(
         `[Switch:${this.id}] Cannot update view - view not initialized`,
       );
@@ -224,19 +227,20 @@ export class TextInput extends UIComponent {
     }
     Java.scheduleOnMainThread(() => {
       const String = API.JString;
-      this.button.setText(String.$new(`${this.text}: ${this.value}`));
+      this.view.setText(String.$new(`${this.text}: ${this.value}`));
     });
   }
   protected createView(context: any): void {
     const Button = API.Button;
     const String = API.JString;
 
-    this.button = Button.$new(context);
-    this.button.setText(String.$new(`${this.text}: ${this.value}`));
+    this.view = Button.$new(context);
+    applyStyle(this.view, "inputTrigger", DarkNeonTheme);
+    this.view.setText(String.$new(`${this.text}: ${this.value}`));
     const self = this;
 
     // 点击按钮弹窗
-    this.button.setOnClickListener(
+    this.view.setOnClickListener(
       Java.registerClass({
         name:
           "com.frida.AlertTextInputClick" +
@@ -270,6 +274,7 @@ export class TextInput extends UIComponent {
       builder.setTitle(String.$new(this.title));
 
       const input = EditText.$new(context);
+      applyEditTextStyle(input, DarkNeonTheme);
       input.setHint(String.$new(this.hint));
       input.setText(String.$new(this.value), TextViewBufferType.NORMAL.value);
 
@@ -293,7 +298,7 @@ export class TextInput extends UIComponent {
                   Java.use("java.lang.CharSequence"),
                 ).toString() + "";
               self.value = text;
-              self.button.setText(String.$new(`${self.text}: ${self.value}`));
+              self.view.setText(String.$new(`${self.text}: ${self.value}`));
               self.emit("valueChanged", text);
               if (self.handler) self.handler(text);
             },
@@ -316,10 +321,10 @@ export class TextInput extends UIComponent {
   }
 
   public setText(text: string): void {
-    if (this.button) {
+    if (this.view) {
       Java.scheduleOnMainThread(() => {
         const String = API.JString;
-        this.button.setText(String.$new(text));
+        this.view.setText(String.$new(text));
       });
     }
   }

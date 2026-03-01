@@ -71,7 +71,7 @@ export class CheckBoxGroup extends UIComponent {
         ViewGroupLayoutParams.WRAP_CONTENT.value,
       ),
     );
-    this.button = layout;
+    this.view = layout;
 
     const self = this;
     const OnCheckedChangeListener = API.OnCheckedChangeListener;
@@ -136,7 +136,7 @@ export class CheckBoxGroup extends UIComponent {
 
   protected updateView(): void {
     // 当外部调用 setValue 或 setChecked 时，需要同步 UI 状态
-    if (!this.button) return;
+    if (!this.view) return;
     Java.scheduleOnMainThread(() => {
       for (const [id, checkBox] of this.checkBoxMap.entries()) {
         const checked = this.optionsMap.get(id)?.checked || false;

@@ -13,14 +13,14 @@ export class Button extends UIComponent {
 
   protected createView(context: any): void {
     const Button = API.Button;
-    this.button = Button.$new(context);
+    this.view = Button.$new(context);
     const String = API.JString;
     const Color = API.Color;
 
-    this.button.setText(String.$new(this.label));
-    this.button.setTextColor(Color.WHITE.value);
-    this.button.setBackgroundColor(0xff555555 | 0); // gray background
-    this.button.setPadding(16, 8, 16, 8);
+    this.view.setText(String.$new(this.label));
+    this.view.setTextColor(Color.WHITE.value);
+    this.view.setBackgroundColor(0xff555555 | 0); // gray background
+    this.view.setPadding(16, 8, 16, 8);
 
     const OnClickListener = API.OnClickListener;
     const self = this;
@@ -39,7 +39,7 @@ export class Button extends UIComponent {
         },
       },
     });
-    this.button.setOnClickListener(clickListener.$new());
+    this.view.setOnClickListener(clickListener.$new());
   }
 
   protected updateView(): void {
@@ -51,7 +51,7 @@ export class Button extends UIComponent {
    */
   public setLabel(label: string): void {
     this.label = label;
-    if (!this.button) {
+    if (!this.view) {
       console.warn(
         `[Button:${this.id}] Cannot set label - view not initialized`,
       );
@@ -59,7 +59,7 @@ export class Button extends UIComponent {
     }
     Java.scheduleOnMainThread(() => {
       const String = API.JString;
-      this.button.setText(String.$new(label));
+      this.view.setText(String.$new(label));
     });
   }
 
