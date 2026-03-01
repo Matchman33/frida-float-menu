@@ -42,7 +42,6 @@ export function applyStyle(view: any, role: StyleRole, theme: Theme) {
       return null;
     }
   };
-  console.log(role)
   switch (role) {
     case "overlay":
       rounded(theme.colors.overlayBg, theme.radiusDp.overlay);

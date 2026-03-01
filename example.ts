@@ -8,6 +8,8 @@ import {
   FloatMenuOptions,
   Text,
   Category,
+  Switch,
+  Collapsible,
 } from "./src/index";
 import { NumberInput, TextInput } from "./src/component/input";
 import { CheckBoxGroup } from "./src/component/checkBox";
@@ -67,8 +69,17 @@ Java.perform(() => {
   });
   menu.addComponent(textInput, "inputs");
 
+  const collapsible = new Collapsible("collapsible", "Collapsible");
+  const switch1 = new Switch("switch1", "Switch");
+  menu.addComponent(switch1, "inputs");
+
   const nameDisplay = new Text("name_display", "Hello, <b>John Doe</b>!");
   menu.addComponent(nameDisplay, "inputs");
+  const category = new Category("category", "Category");
+  menu.addComponent(category, "inputs");
+  collapsible.addChild(switch1);
+  collapsible.addChild(nameDisplay);
+  menu.addComponent(collapsible, "inputs");
 
   // Button to clear text input
   const clearTextButton = new Button("clear_text_button", "Clear Name");
