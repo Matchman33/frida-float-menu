@@ -3,7 +3,7 @@ import { EventEmitter } from "../event-emitter";
 export abstract class UIComponent {
   protected emitter: EventEmitter = new EventEmitter();
   // 必须实例化view
-  protected view: any; // Android View
+  protected button: any; // Android View
   protected value: any;
   protected id: string;
 
@@ -12,15 +12,15 @@ export abstract class UIComponent {
   }
   // 可选：给后续写通用样式留口子
   public apply(role: any, theme: any) {
-    if (!this.view) return;
+    if (!this.button) return;
     const { applyStyle } = require("../style/style"); // 也可以正常 import
-    Java.scheduleOnMainThread(() => applyStyle(this.view, role, theme));
+    Java.scheduleOnMainThread(() => applyStyle(this.button, role, theme));
   }
   /**
    * Get the Android View associated with this component
    */
   public getView(): any {
-    return this.view;
+    return this.button;
   }
 
   /**
