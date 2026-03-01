@@ -1,11 +1,13 @@
 import { API } from "../api";
+import { applyStyle } from "./style/style";
+import { DarkNeonTheme } from "./style/theme";
 import { UIComponent } from "./ui-components";
 
 export class Button extends UIComponent {
   private label: string;
   private onClick: (() => void) | null = null;
-
-  constructor(id: string, label: string) {
+  private kind: "primary" | "danger" = "primary";
+  constructor(id: string, label: string, kind: "primary" | "danger" = "primary") {
     super(id);
     this.label = label;
     this.value = null; // Buttons don't have a value
@@ -15,12 +17,13 @@ export class Button extends UIComponent {
     const Button = API.Button;
     this.view = Button.$new(context);
     const String = API.JString;
-    const Color = API.Color;
 
     this.view.setText(String.$new(this.label));
-    this.view.setTextColor(Color.WHITE.value);
-    this.view.setBackgroundColor(0xff555555 | 0); // gray background
-    this.view.setPadding(16, 8, 16, 8);
+    applyStyle(
+      this.view,
+      this.kind === "danger" ? "dangerButton" : "primaryButton",
+      DarkNeonTheme,
+    );
 
     const OnClickListener = API.OnClickListener;
     const self = this;
