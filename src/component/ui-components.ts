@@ -2,20 +2,25 @@ import { EventEmitter } from "../event-emitter";
 
 export abstract class UIComponent {
   protected emitter: EventEmitter = new EventEmitter();
-  // 必须实例化button
-  protected button: any; // Android View
+  // 必须实例化view
+  protected view: any; // Android View
   protected value: any;
   protected id: string;
 
   constructor(id: string) {
     this.id = id;
   }
-
+  // 可选：给后续写通用样式留口子
+  public apply(role: any, theme: any) {
+    if (!this.view) return;
+    const { applyStyle } = require("../style/style"); // 也可以正常 import
+    Java.scheduleOnMainThread(() => applyStyle(this.view, role, theme));
+  }
   /**
    * Get the Android View associated with this component
    */
   public getView(): any {
-    return this.button;
+    return this.view;
   }
 
   /**
