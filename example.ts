@@ -25,7 +25,7 @@ Java.perform(() => {
   );
 
   const options: FloatMenuOptions = {
-    width: 1000,
+    width: 1200,
     height: 1400,
     x: -100,
     y: 0,
@@ -35,7 +35,6 @@ Java.perform(() => {
     logMaxLines: 50,
     iconBase64: iconBase64,
     title: "这是我的易游",
-    showHeader: true,
     showFooter: true,
     tabs: [
       { id: "controls", label: "控制台1" },

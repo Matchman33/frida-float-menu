@@ -2,6 +2,8 @@ import { EventEmitter } from "./event-emitter";
 import { UIComponent } from "./component/ui-components";
 import { Logger, LogLevel } from "./logger";
 import { API } from "./api";
+import { dp, applyStyle } from "./component/style/style";
+import { DarkNeonTheme } from "./component/style/theme";
 
 export interface TabDefinition {
   id: string;
@@ -19,7 +21,6 @@ export interface FloatMenuOptions {
   showLogs?: boolean; // whether to show log panel
   logMaxLines?: number;
   title?: string; // Main title text (default: "Frida Float Menu")
-  showHeader?: boolean; // Whether to show header (default: true)
   showFooter?: boolean; // Whether to show footer (default: true)
   tabs?: TabDefinition[]; // Tab definitions (optional)
   activeTab?: string; // Initially active tab ID (default: first tab or "default")
@@ -50,8 +51,10 @@ export class FloatMenu {
     string,
     {
       label: string;
-      container: any; // Content container for this tab
-      components: Set<string>; // Component IDs belonging to this tab
+      container: any; // ✅ 内容 LinearLayout（你 addView 用它）
+      root?: any; // ✅ 这个 tab 的根视图（建议就是 ScrollView）
+      scrollView?: any; // ✅ 这个 tab 自己的 ScrollView
+      components: Set<string>;
     }
   > = new Map();
   private tabView: any; // Tab bar view (LinearLayout with buttons)
@@ -100,7 +103,6 @@ export class FloatMenu {
       showLogs: false,
       logMaxLines: 100,
       title: "Frida Float Menu",
-      showHeader: true,
       showFooter: true,
       tabs: undefined,
       activeTab: undefined,
@@ -286,11 +288,8 @@ export class FloatMenu {
   }
 
   private createMenuContainerWindow() {
-    const FrameLayout = API.FrameLayout;
     const LinearLayout = API.LinearLayout;
     const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
-    const ScrollView = API.ScrollView;
-    const LinearLayoutParams = API.LinearLayoutParams;
     const View = API.View;
 
     // --------------------
@@ -317,61 +316,19 @@ export class FloatMenu {
       1, // PixelFormat.TRANSLUCENT
     );
 
-    // header
-    if (this.options.showHeader) {
-      this.createHeaderView(this.context);
-      this.menuContainerView.addView(this.headerView);
-    }
+    this.createHeaderView(this.context);
+    this.menuContainerView.addView(this.headerView);
 
     // tab bar
     if (this.options.showTabs) {
       this.createTabView(this.context);
+
       this.menuContainerView.addView(this.tabView);
     }
 
-    // scrollable content
-    this.scrollView = ScrollView.$new(this.context);
-    this.scrollView.setLayoutParams(
-      LinearLayoutParams.$new(ViewGroupLayoutParams.MATCH_PARENT.value, 0, 1.0),
-    );
-    this.scrollView.setBackgroundColor(0xff555555 | 0);
-    const tabContainersWrapper = FrameLayout.$new(this.context);
-    tabContainersWrapper.setLayoutParams(
-      ViewGroupLayoutParams.$new(
-        ViewGroupLayoutParams.MATCH_PARENT.value,
-        ViewGroupLayoutParams.WRAP_CONTENT.value,
-      ),
-    );
+    this.createTabContainer(this.context);
 
-    for (const [tabId, tabInfo] of this.tabs) {
-      const tabContainer = LinearLayout.$new(this.context);
-      tabContainer.setOrientation(1);
-      tabContainer.setLayoutParams(
-        ViewGroupLayoutParams.$new(
-          ViewGroupLayoutParams.MATCH_PARENT.value,
-          ViewGroupLayoutParams.WRAP_CONTENT.value,
-        ),
-      );
-
-      if (tabId === this.activeTabId) {
-        tabContainer.setVisibility(View.VISIBLE.value);
-        this.contentContainer = tabContainer;
-      } else {
-        tabContainer.setVisibility(View.GONE.value);
-      }
-
-      tabInfo.container = tabContainer;
-      tabContainersWrapper.addView(tabContainer);
-    }
-
-    if (!this.contentContainer && this.tabs.size > 0) {
-      const firstTab = Array.from(this.tabs.values())[0];
-      this.contentContainer = firstTab.container;
-      firstTab.container.setVisibility(View.VISIBLE.value);
-    }
-
-    this.scrollView.addView(tabContainersWrapper);
-    this.menuContainerView.addView(this.scrollView);
+    // this.menuContainerView.addView(this.scrollView);
 
     // footer
     // if (this.options.showFooter) {
@@ -771,21 +728,192 @@ export class FloatMenu {
   public off(event: string, callback: (...args: any[]) => void): void {
     this.eventEmitter.off(event, callback);
   }
+
+  private refreshTabsUI(): void {
+    try {
+      if (!this.tabContainer) return;
+
+      const GradientDrawable = API.GradientDrawable;
+      const count = this.tabContainer.getChildCount();
+
+      // tabs 的遍历顺序和 child 顺序一致
+      const tabIds = Array.from(this.tabs.keys());
+
+      for (let i = 0; i < count; i++) {
+        const tv = this.tabContainer.getChildAt(i);
+        const tabId = tabIds[i];
+        const active = tabId === this.activeTabId;
+
+        const d = GradientDrawable.$new();
+        d.setCornerRadius(dp(this.context, 12));
+        if (active) {
+          d.setColor(DarkNeonTheme.colors.accent);
+          tv.setTextColor(0xffffffff | 0);
+          try {
+            tv.setTypeface(null, 1);
+          } catch (e) {}
+        } else {
+          d.setColor(0x00000000);
+          d.setStroke(dp(this.context, 1), DarkNeonTheme.colors.divider);
+          tv.setTextColor(DarkNeonTheme.colors.subText);
+          try {
+            tv.setTypeface(null, 0);
+          } catch (e) {}
+        }
+        tv.setBackgroundDrawable(d);
+      }
+    } catch (e) {}
+  }
   private updateTabStyle(button: any, isActive: boolean) {
-    function createRoundedBg(color: number, radius: number = 20) {
-      const drawable = GradientDrawable.$new();
-      drawable.setCornerRadius(radius);
-      drawable.setColor(color);
-      return drawable;
-    }
-    const bgColor = isActive ? 0xff4285f4 : 0xff666666;
-    const textColor = isActive ? 0xffffffff : 0xffcccccc;
     const GradientDrawable = API.GradientDrawable;
 
-    button.setTextColor(textColor | 0);
-    button.setBackgroundDrawable(createRoundedBg(bgColor | 0));
+    // dp helper（如果当前文件里没有 dp(context, x)，用你已有的那个）
+    const ctx = button.getContext();
+
+    const radius = dp(ctx, 12); // 胶囊圆角
+    const strokeW = dp(ctx, 1);
+    const padH = dp(ctx, 12);
+    const padV = dp(ctx, 8);
+
+    // 基础字体/内边距（避免每处都散落 setTextSize）
+    try {
+      button.setAllCaps(false);
+    } catch (e) {}
+    button.setSingleLine(true);
+    button.setTextSize(2, DarkNeonTheme.textSp.body);
+    button.setPadding(padH, padV, padH, padV);
+
+    // 背景
+    const drawable = GradientDrawable.$new();
+    drawable.setCornerRadius(radius);
+
+    if (isActive) {
+      // ✅ 激活：accent 实心 + 白字
+      drawable.setColor(DarkNeonTheme.colors.accent);
+      button.setTextColor(0xffffffff | 0);
+      try {
+        button.setTypeface(null, 1); // bold
+      } catch (e) {}
+    } else {
+      // ✅ 未激活：透明底 + divider 描边 + 次级文字色
+      drawable.setColor(0x00000000);
+      drawable.setStroke(strokeW, DarkNeonTheme.colors.divider);
+      button.setTextColor(DarkNeonTheme.colors.subText);
+      try {
+        button.setTypeface(null, 0);
+      } catch (e) {}
+    }
+
+    button.setBackgroundDrawable(drawable);
+  }
+  private createTabContainer(context: any): void {
+    const ScrollView = API.ScrollView;
+    const LinearLayout = API.LinearLayout;
+    const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+    const LinearLayoutParams = API.LinearLayoutParams;
+    const View = API.View;
+
+    // ✅ wrapper：叠放每个 tab 的 root（每个 tab 一个 ScrollView）
+    const tabRootsWrapper = LinearLayout.$new(context);
+    tabRootsWrapper.setOrientation(LinearLayout.VERTICAL.value);
+    tabRootsWrapper.setLayoutParams(
+      ViewGroupLayoutParams.$new(
+        ViewGroupLayoutParams.MATCH_PARENT.value,
+        ViewGroupLayoutParams.WRAP_CONTENT.value,
+      ),
+    );
+
+    if (!this.tabs || this.tabs.size === 0) {
+      console.warn("[FloatMenu] tabs is empty, tab container will be blank.");
+    }
+
+    let firstTabId: string | null = null;
+    let firstTabInfo: any = null;
+
+    for (const [tabId, tabInfo] of this.tabs) {
+      if (!firstTabId) {
+        firstTabId = tabId;
+        firstTabInfo = tabInfo;
+      }
+
+      // ✅ 每个 tab 自己的 ScrollView
+      const sv = ScrollView.$new(context);
+      sv.setLayoutParams(
+        LinearLayoutParams.$new(
+          ViewGroupLayoutParams.MATCH_PARENT.value,
+          0,
+          1.0,
+        ),
+      );
+
+      try {
+        sv.setBackgroundColor(0x00000000);
+      } catch (e) {}
+      try {
+        sv.setFillViewport(true);
+        sv.setVerticalScrollBarEnabled(false);
+      } catch (e) {}
+
+      // ✅ 内容容器：LinearLayout（你 add row/card 都往这里加）
+      const tabContainer = LinearLayout.$new(context);
+      tabContainer.setOrientation(LinearLayout.VERTICAL.value);
+      tabContainer.setLayoutParams(
+        ViewGroupLayoutParams.$new(
+          ViewGroupLayoutParams.MATCH_PARENT.value,
+          ViewGroupLayoutParams.WRAP_CONTENT.value,
+        ),
+      );
+
+      // ✅ padding 建议放内容容器上（避免 wrapper padding 叠加）
+      tabContainer.setPadding(
+        dp(context, 10),
+        dp(context, 10),
+        dp(context, 10),
+        dp(context, 10),
+      );
+      tabContainer.setPadding(0, 0, 0, dp(context, 4)); // 你想保留底部间距就留
+
+      sv.addView(tabContainer);
+
+      // ✅ 显隐：切换的是 sv
+      if (tabId === this.activeTabId) {
+        sv.setVisibility(View.VISIBLE.value);
+        this.contentContainer = tabContainer;
+        this.scrollView = sv; // ✅ 当前活跃 tab 的滚动容器
+      } else {
+        sv.setVisibility(View.GONE.value);
+      }
+
+      // ✅ 写回 tabInfo（关键：保持 container = 内容容器）
+      tabInfo.container = tabContainer;
+      tabInfo.scrollView = sv;
+      tabInfo.root = sv;
+
+      tabRootsWrapper.addView(sv);
+    }
+
+    // ✅ activeTabId 没命中 -> 默认第一个
+    if (
+      (!this.contentContainer || !this.scrollView) &&
+      firstTabId &&
+      firstTabInfo
+    ) {
+      this.activeTabId = firstTabId;
+
+      if (firstTabInfo.root)
+        firstTabInfo.root.setVisibility(View.VISIBLE.value);
+      this.contentContainer = firstTabInfo.container;
+      this.scrollView = firstTabInfo.scrollView;
+    }
+
+    // ⚠️ 这里很重要：彻底方案下，不要再 this.scrollView.addView(wrapper)
+    // 你应该把 tabRootsWrapper 加到“内容区父容器”上（例如 this.rootLayout / this.mainContainer）
+    this.menuContainerView.addView(tabRootsWrapper); // <- 用你的真实父容器替换
   }
 
+  /**
+   * Create tab bar view with buttons for each tab
+   */
   /**
    * Create tab bar view with buttons for each tab
    */
@@ -793,48 +921,112 @@ export class FloatMenu {
     try {
       const LinearLayout = API.LinearLayout;
       const LinearLayoutParams = API.LinearLayoutParams;
-      const textView = API.TextView;
+      const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+      const TextView = API.TextView;
       const OnClickListener = API.OnClickListener;
       const JString = API.JString;
-      // 获取 HorizontalScrollView 类（如果 API 中没有，可以用 Java.use）
       const HorizontalScrollView = API.HorizontalScrollView;
+      const GradientDrawable = API.GradientDrawable;
+      const Gravity = API.Gravity || Java.use("android.view.Gravity");
+
       const self = this;
 
-      // 创建横向滚动视图作为外层容器
+      // ===== outer scroll view =====
       const scrollView = HorizontalScrollView.$new(context);
-      scrollView.setLayoutParams(
-        LinearLayoutParams.$new(
-          LinearLayoutParams.MATCH_PARENT.value, // 宽度填满父容器，以便显示滚动条
-          LinearLayoutParams.WRAP_CONTENT.value,
-        ),
+      scrollView.setHorizontalScrollBarEnabled(false);
+      scrollView.setScrollbarFadingEnabled(true);
+      scrollView.setFillViewport(true); // ✅ 让内容不足时也铺满，视觉更稳定
+
+      const scrollLp = LinearLayoutParams.$new(
+        ViewGroupLayoutParams.MATCH_PARENT.value,
+        ViewGroupLayoutParams.WRAP_CONTENT.value,
       );
-      scrollView.setHorizontalScrollBarEnabled(false); // 显示滚动条
-      scrollView.setScrollbarFadingEnabled(true); // 允许滚动条淡出
-      scrollView.setBackgroundColor(0xff333333 | 0);
-      // 创建内部的水平标签容器（原来的 tabView）
+      scrollView.setLayoutParams(scrollLp);
+
+      // ✅ 胶囊条背景（暗底 + 圆角 + 描边）
+      const bg = GradientDrawable.$new();
+      bg.setCornerRadius(dp(context, 14));
+      bg.setColor(DarkNeonTheme.colors.cardBg);
+      bg.setStroke(dp(context, 1), DarkNeonTheme.colors.divider);
+      scrollView.setBackgroundDrawable(bg);
+
+      // 内边距（让 tab 不贴边）
+      scrollView.setPadding(
+        dp(context, 8),
+        dp(context, 6),
+        dp(context, 8),
+        dp(context, 6),
+      );
+
+      // ===== inner container (tabs) =====
       const tabContainer = LinearLayout.$new(context);
       tabContainer.setOrientation(0); // HORIZONTAL
       tabContainer.setLayoutParams(
         LinearLayoutParams.$new(
-          LinearLayoutParams.WRAP_CONTENT.value, // 宽度根据内容自适应
-          LinearLayoutParams.WRAP_CONTENT.value,
+          ViewGroupLayoutParams.WRAP_CONTENT.value,
+          ViewGroupLayoutParams.WRAP_CONTENT.value,
         ),
       );
-      // 容器本身透明，圆角由按钮实现
 
-      // 遍历所有标签创建按钮
+      // 存引用，切换 tab 时更新样式
+      this.tabContainer = tabContainer;
+
+      // ===== helper: style tab item =====
+      const styleTab = (tv: any, active: boolean) => {
+        // 统一字体/对齐/内边距
+        tv.setAllCaps(false);
+        tv.setSingleLine(true);
+        tv.setGravity(Gravity.CENTER.value);
+        tv.setTextSize(2, DarkNeonTheme.textSp.body);
+        tv.setPadding(
+          dp(context, 12),
+          dp(context, 8),
+          dp(context, 12),
+          dp(context, 8),
+        );
+
+        // 背景：active -> 实心 accent；inactive -> 透明
+        const d = GradientDrawable.$new();
+        d.setCornerRadius(dp(context, 12));
+        if (active) {
+          d.setColor(DarkNeonTheme.colors.accent);
+          tv.setTextColor(0xffffffff | 0);
+        } else {
+          d.setColor(0x00000000);
+          tv.setTextColor(DarkNeonTheme.colors.subText);
+          // 给未选中一个轻描边（可选，想更干净就删掉这行）
+          d.setStroke(dp(context, 1), DarkNeonTheme.colors.divider);
+        }
+        tv.setBackgroundDrawable(d);
+
+        // 选中更醒目一点
+        try {
+          tv.setTypeface(null, active ? 1 : 0);
+        } catch (e) {}
+      };
+
+      // ===== create each tab =====
       for (const [tabId, tabInfo] of this.tabs) {
-        const tabText = textView.$new(context);
+        const tabText = TextView.$new(context);
         tabText.setText(JString.$new(tabInfo.label));
-        tabText.setAllCaps(false);
-        tabText.setPadding(4, 0, 10, 4);
-        tabText.setTextSize(14);
-        const Gravity = API.Gravity;
-        tabText.setGravity(Gravity.CENTER.value);
-        // 应用当前标签样式（激活/非激活）
-        this.updateTabStyle(tabText, tabId === this.activeTabId);
 
-        // 点击监听
+        // layout params：紧凑间距
+        const btnLp = LinearLayoutParams.$new(
+          ViewGroupLayoutParams.WRAP_CONTENT.value,
+          ViewGroupLayoutParams.WRAP_CONTENT.value,
+        );
+        btnLp.setMargins(
+          dp(context, 6),
+          dp(context, 2),
+          dp(context, 6),
+          dp(context, 2),
+        );
+        tabText.setLayoutParams(btnLp);
+
+        // 初始样式
+        styleTab(tabText, tabId === this.activeTabId);
+
+        // 点击切换
         const tabClickListener = Java.registerClass({
           name:
             "com.example.TabClickListener" +
@@ -844,31 +1036,24 @@ export class FloatMenu {
             tabId,
           implements: [OnClickListener],
           methods: {
-            onClick: function (view: any) {
+            onClick: function () {
               self.switchTab(tabId);
             },
           },
         });
+
         tabText.setOnClickListener(tabClickListener.$new());
-
-        // 按钮布局参数（宽度自适应，高度自适应）
-        const btnParams = LinearLayoutParams.$new(
-          LinearLayoutParams.WRAP_CONTENT.value,
-          LinearLayoutParams.WRAP_CONTENT.value,
-        );
-        btnParams.setMargins(16, 8, 16, 16);
-        tabText.setLayoutParams(btnParams);
-
         tabContainer.addView(tabText);
       }
 
-      // 将标签容器添加到滚动视图
+      // ✅ 把 tabs 放进 scrollView
       scrollView.addView(tabContainer);
 
-      // 将滚动视图赋值给 this.tabView（供外部添加到父布局）
+      // ✅ 对外暴露
       this.tabView = scrollView;
-      // 同时保留内部容器的引用，便于后续更新按钮样式（例如在 switchTab 中遍历子视图）
-      this.tabContainer = tabContainer;
+
+      // ✅ 你原来的 updateTabStyle 仍然能用，但建议直接在 switchTab 里调用下面这个刷新函数
+      // this.refreshTabsUI();  // 可选
     } catch (error) {
       console.trace("Failed to create tab view: " + error);
     }
@@ -879,51 +1064,35 @@ export class FloatMenu {
    * @param tabId ID of the tab to switch to
    */
   public switchTab(tabId: string): void {
-    if (!this.tabs.has(tabId) || tabId === this.activeTabId) {
-      return;
-    }
+    if (!this.tabs.has(tabId) || tabId === this.activeTabId) return;
 
     const oldTabId = this.activeTabId;
     this.activeTabId = tabId;
+    this.refreshTabsUI();
 
     Java.scheduleOnMainThread(() => {
       try {
         const View = API.View;
-        // Update tab containers visibility
+
         for (const [id, tabInfo] of this.tabs) {
-          if (tabInfo.container) {
-            if (id === tabId) {
-              tabInfo.container.setVisibility(View.VISIBLE.value);
-              // Update this.contentContainer reference for backward compatibility
-              this.contentContainer = tabInfo.container;
-            } else {
-              tabInfo.container.setVisibility(View.GONE.value);
-            }
+          const root = tabInfo.root; // ✅ 每个 tab 的 ScrollView
+          if (!root) continue;
+
+          if (id === tabId) {
+            root.setVisibility(View.VISIBLE.value);
+            this.contentContainer = tabInfo.container; // ✅ LinearLayout
+            this.scrollView = tabInfo.scrollView; // ✅ 当前 tab 的 ScrollView
+          } else {
+            root.setVisibility(View.GONE.value);
           }
         }
 
-        // Update tab button styles if tabView exists
         if (this.tabContainer) {
-          // Get all child buttons in tabView
-
+          const tabIds = Array.from(this.tabs.keys());
           const childCount = this.tabContainer.getChildCount();
-          for (let i = 0; i < childCount; i++) {
-            // const button = this.tabView.getChildAt(i);
-            const text = Java.cast(
-              this.tabContainer.getChildAt(i),
-              API.TextView,
-            );
-            const tabIds = Array.from(this.tabs.keys());
-            if (i < tabIds.length) {
-              const buttonTabId = tabIds[i];
-
-              // 使用时的代码
-              if (buttonTabId === tabId) {
-                this.updateTabStyle(text, true);
-              } else if (buttonTabId === oldTabId) {
-                this.updateTabStyle(text, false);
-              }
-            }
+          for (let i = 0; i < childCount && i < tabIds.length; i++) {
+            const tv = Java.cast(this.tabContainer.getChildAt(i), API.TextView);
+            this.updateTabStyle(tv, tabIds[i] === tabId);
           }
         }
 
@@ -979,57 +1148,230 @@ export class FloatMenu {
   //   }
   // }
 
+  // private createHeaderView(context: any): void {
+  //   try {
+  //     const LinearLayout = API.LinearLayout;
+  //     const LinearLayoutParams = API.LinearLayoutParams;
+  //     const TextView = API.TextView;
+  //     const Color = API.Color;
+  //     const JString = API.JString;
+  //     const GradientDrawable = API.GradientDrawable;
+  //     const Gravity = API.Gravity || Java.use("android.view.Gravity");
+
+  //     // 辅助函数：创建圆形按钮
+  //     function createRadiusBtn(
+  //       text: string,
+  //       bgColor: number,
+  //       textColor: number,
+  //     ) {
+  //       const button = TextView.$new(context);
+  //       button.setText(JString.$new(text));
+  //       button.setTextSize(16); // 符号大小
+  //       button.setTextColor(textColor);
+  //       button.setGravity(Gravity.CENTER.value);
+  //       button.setPadding(10, 10, 10, 10);
+
+  //       // 圆形背景
+  //       const drawable = GradientDrawable.$new();
+  //       drawable.setCornerRadius(50); // 圆角半径 = 宽/2 得到圆形
+  //       drawable.setColor(bgColor);
+  //       button.setBackgroundDrawable(drawable);
+  //       return button;
+  //     }
+
+  //     // 创建水平标题栏容器
+  //     this.headerView = LinearLayout.$new(context);
+  //     const headerLayoutParams = LinearLayoutParams.$new(
+  //       LinearLayoutParams.MATCH_PARENT.value,
+  //       LinearLayoutParams.WRAP_CONTENT.value,
+  //     );
+  //     this.headerView.setOrientation(0); // HORIZONTAL
+  //     this.headerView.setLayoutParams(headerLayoutParams);
+  //     this.headerView.setPadding(16, 8, 16, 8); // 垂直内边距减小
+  //     this.headerView.setBackgroundColor(0xff333333 | 0);
+  //     this.headerView.setGravity(Gravity.CENTER_VERTICAL.value); // 子视图垂直居中
+  //     const self = this;
+  //     // 左侧最小化按钮 (使用减号 "－")
+  //     const minButton = createRadiusBtn("小化", 0xff555555 | 0, 0xffffffff | 0);
+  //     minButton.setOnClickListener(
+  //       Java.registerClass({
+  //         name: "MinButtonClickListener" + Date.now(),
+  //         implements: [API.OnClickListener],
+  //         methods: {
+  //           onClick: function (view: any) {
+  //             self.isIconMode = true;
+  //             self.toggleView();
+  //           },
+  //         },
+  //       }).$new(),
+  //     );
+
+  //     // 标题（缩小字体，加粗）
+  //     const titleView = TextView.$new(context);
+  //     titleView.setText(JString.$new(this.options.title));
+  //     titleView.setPadding(10, 10, 10, 10);
+
+  //     titleView.setTextSize(16); // 从 18 缩小到 14
+  //     titleView.setTextColor(Color.WHITE.value);
+  //     titleView.setTypeface(null, 1); // BOLD
+  //     titleView.setGravity(Gravity.CENTER.value);
+  //     const drawable = GradientDrawable.$new();
+  //     drawable.setCornerRadius(50); // 圆角半径 = 宽/2 得到圆形
+  //     drawable.setColor(0xff555555 | 0);
+  //     titleView.setBackgroundDrawable(drawable);
+  //     // 标题占据剩余空间，实现居中
+  //     const titleParams = LinearLayoutParams.$new(
+  //       0,
+  //       LinearLayoutParams.WRAP_CONTENT.value,
+  //       1.0, // weight
+  //     );
+  //     titleParams.setMargins(40, 8, 40, 8);
+  //     titleView.setLayoutParams(titleParams);
+
+  //     // 右侧隐藏按钮 (使用黑色圆 "●")
+  //     const hideButton = createRadiusBtn(
+  //       "隐藏",
+  //       0xff555555 | 0,
+  //       0xffffffff | 0,
+  //     );
+  //     hideButton.setOnClickListener(
+  //       Java.registerClass({
+  //         name: "HideButtonClickListener" + Date.now(),
+  //         implements: [API.OnClickListener],
+  //         methods: {
+  //           onClick: function (view: any) {
+  //             self.isIconMode = true;
+  //             self.toggleView();
+  //             self.hide(); // Hide the floating window
+  //             self.toast("菜单已隐藏,单击原来位置显示");
+  //           },
+  //         },
+  //       }).$new(),
+  //     );
+
+  //     // 将所有视图添加到标题栏
+  //     this.headerView.addView(minButton);
+  //     this.headerView.addView(titleView);
+  //     this.headerView.addView(hideButton);
+
+  //     // 保留原有的拖动监听（如果需要调整事件冲突，可后续优化）
+  //     this.addDragListener(
+  //       this.headerView,
+  //       this.menuContainerView,
+  //       this.menuWindowParams,
+  //     );
+  //   } catch (error) {
+  //     console.trace("Failed to create header view: " + error);
+  //   }
+  // }
+
   private createHeaderView(context: any): void {
     try {
       const LinearLayout = API.LinearLayout;
       const LinearLayoutParams = API.LinearLayoutParams;
       const TextView = API.TextView;
-      const Color = API.Color;
       const JString = API.JString;
       const GradientDrawable = API.GradientDrawable;
       const Gravity = API.Gravity || Java.use("android.view.Gravity");
 
-      // 辅助函数：创建圆形按钮
-      function createRadiusBtn(
-        text: string,
-        bgColor: number,
-        textColor: number,
-      ) {
-        const button = TextView.$new(context);
-        button.setText(JString.$new(text));
-        button.setTextSize(16); // 符号大小
-        button.setTextColor(textColor);
-        button.setGravity(Gravity.CENTER.value);
-        button.setPadding(10, 10, 10, 10);
+      const self = this;
 
-        // 圆形背景
-        const drawable = GradientDrawable.$new();
-        drawable.setCornerRadius(50); // 圆角半径 = 宽/2 得到圆形
-        drawable.setColor(bgColor);
-        button.setBackgroundDrawable(drawable);
-        return button;
-      }
+      const PAD_H = dp(context, 10);
+      const PAD_V = dp(context, 8);
+      const BTN_SIZE = dp(context, 34);
+      const BTN_RADIUS = dp(context, 10);
 
-      // 创建水平标题栏容器
+      // 小按钮：字符 + 小方块描边（融入 header）
+      const createIconCharBtn = (ch: string, isDanger = false) => {
+        const btn = TextView.$new(context);
+        btn.setText(JString.$new(ch));
+        btn.setGravity(Gravity.CENTER.value);
+        btn.setSingleLine(true);
+
+        // 字体大小（符号稍大一点）
+        btn.setTextSize(2, DarkNeonTheme.textSp.title);
+        btn.setTextColor(
+          isDanger ? DarkNeonTheme.colors.accent : DarkNeonTheme.colors.text,
+        );
+
+        const lp = LinearLayoutParams.$new(BTN_SIZE, BTN_SIZE);
+        btn.setLayoutParams(lp);
+
+        // 背景：透明 + 描边 + 圆角
+        const d = GradientDrawable.$new();
+        d.setCornerRadius(BTN_RADIUS);
+        d.setColor(0x00000000);
+        d.setStroke(dp(context, 1), DarkNeonTheme.colors.divider);
+        btn.setBackgroundDrawable(d);
+
+        // 点击区域 padding（主要靠 BTN_SIZE）
+        btn.setPadding(
+          dp(context, 6),
+          dp(context, 6),
+          dp(context, 6),
+          dp(context, 6),
+        );
+        return btn;
+      };
+
+      // ===== header container =====
       this.headerView = LinearLayout.$new(context);
-      const headerLayoutParams = LinearLayoutParams.$new(
+      this.headerView.setOrientation(0); // HORIZONTAL
+      this.headerView.setGravity(Gravity.CENTER_VERTICAL.value);
+
+      const headerLp = LinearLayoutParams.$new(
         LinearLayoutParams.MATCH_PARENT.value,
         LinearLayoutParams.WRAP_CONTENT.value,
       );
-      this.headerView.setOrientation(0); // HORIZONTAL
-      this.headerView.setLayoutParams(headerLayoutParams);
-      this.headerView.setPadding(16, 8, 16, 8); // 垂直内边距减小
-      this.headerView.setBackgroundColor(0xff333333 | 0);
-      this.headerView.setGravity(Gravity.CENTER_VERTICAL.value); // 子视图垂直居中
-      const self = this;
-      // 左侧最小化按钮 (使用减号 "－")
-      const minButton = createRadiusBtn("小化", 0xff555555 | 0, 0xffffffff | 0);
+      this.headerView.setLayoutParams(headerLp);
+
+      this.headerView.setPadding(PAD_H, PAD_V, PAD_H, PAD_V);
+
+      // Header 背景：暗色圆角卡条
+      const bg = GradientDrawable.$new();
+      bg.setCornerRadius(dp(context, 14));
+      bg.setColor(DarkNeonTheme.colors.cardBg);
+      bg.setStroke(dp(context, 1), DarkNeonTheme.colors.divider);
+      this.headerView.setBackgroundDrawable(bg);
+
+      // ===== title (LEFT) =====
+      const titleView = TextView.$new(context);
+      titleView.setText(JString.$new(this.options.title));
+      titleView.setSingleLine(true);
+      titleView.setGravity(Gravity.CENTER_VERTICAL.value);
+      titleView.setTypeface(null, 1); // bold
+      titleView.setTextColor(DarkNeonTheme.colors.text);
+      titleView.setTextSize(2, DarkNeonTheme.textSp.title);
+
+      // 标题占据左侧剩余空间
+      const titleLp = LinearLayoutParams.$new(
+        0,
+        LinearLayoutParams.WRAP_CONTENT.value,
+        1.0,
+      );
+      titleView.setLayoutParams(titleLp);
+      titleView.setPadding(0, dp(context, 2), dp(context, 10), dp(context, 2));
+
+      // ===== right buttons container =====
+      const rightBox = LinearLayout.$new(context);
+      rightBox.setOrientation(0);
+      rightBox.setGravity(Gravity.CENTER_VERTICAL.value);
+
+      // 右侧按钮间距
+      const rightLp = LinearLayoutParams.$new(
+        LinearLayoutParams.WRAP_CONTENT.value,
+        LinearLayoutParams.WRAP_CONTENT.value,
+      );
+      rightBox.setLayoutParams(rightLp);
+
+      // 最小化：用 “—”
+      const minButton = createIconCharBtn("—", false);
       minButton.setOnClickListener(
         Java.registerClass({
           name: "MinButtonClickListener" + Date.now(),
           implements: [API.OnClickListener],
           methods: {
-            onClick: function (view: any) {
+            onClick: function () {
               self.isIconMode = true;
               self.toggleView();
             },
@@ -1037,55 +1379,36 @@ export class FloatMenu {
         }).$new(),
       );
 
-      // 标题（缩小字体，加粗）
-      const titleView = TextView.$new(context);
-      titleView.setText(JString.$new(this.options.title));
-      titleView.setPadding(10, 10, 10, 10);
-
-      titleView.setTextSize(16); // 从 18 缩小到 14
-      titleView.setTextColor(Color.WHITE.value);
-      titleView.setTypeface(null, 1); // BOLD
-      titleView.setGravity(Gravity.CENTER.value);
-      const drawable = GradientDrawable.$new();
-      drawable.setCornerRadius(50); // 圆角半径 = 宽/2 得到圆形
-      drawable.setColor(0xff555555 | 0);
-      titleView.setBackgroundDrawable(drawable);
-      // 标题占据剩余空间，实现居中
-      const titleParams = LinearLayoutParams.$new(
-        0,
-        LinearLayoutParams.WRAP_CONTENT.value,
-        1.0, // weight
-      );
-      titleParams.setMargins(40, 8, 40, 8);
-      titleView.setLayoutParams(titleParams);
-
-      // 右侧隐藏按钮 (使用黑色圆 "●")
-      const hideButton = createRadiusBtn(
-        "隐藏",
-        0xff555555 | 0,
-        0xffffffff | 0,
-      );
+      // 隐藏：字符按钮（这里用 👁，你想用 “×” 也可以）
+      const hideButton = createIconCharBtn("X", true);
       hideButton.setOnClickListener(
         Java.registerClass({
           name: "HideButtonClickListener" + Date.now(),
           implements: [API.OnClickListener],
           methods: {
-            onClick: function (view: any) {
+            onClick: function () {
               self.isIconMode = true;
               self.toggleView();
-              self.hide(); // Hide the floating window
+              self.hide();
               self.toast("菜单已隐藏,单击原来位置显示");
             },
           },
         }).$new(),
       );
 
-      // 将所有视图添加到标题栏
-      this.headerView.addView(minButton);
-      this.headerView.addView(titleView);
-      this.headerView.addView(hideButton);
+      // 给右侧两个按钮一点间距
+      const lpBtn = LinearLayoutParams.$new(BTN_SIZE, BTN_SIZE);
+      lpBtn.setMargins(0, 0, dp(context, 8), 0);
+      minButton.setLayoutParams(lpBtn);
 
-      // 保留原有的拖动监听（如果需要调整事件冲突，可后续优化）
+      rightBox.addView(minButton);
+      rightBox.addView(hideButton);
+
+      // ===== assemble =====
+      this.headerView.addView(titleView);
+      this.headerView.addView(rightBox);
+
+      // drag support
       this.addDragListener(
         this.headerView,
         this.menuContainerView,
