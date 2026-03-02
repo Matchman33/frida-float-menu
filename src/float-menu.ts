@@ -71,6 +71,7 @@ export class FloatMenu {
   private iconWindowParams: any;
   private iconContainerView: any;
   private tabContainer: any;
+  private menuPanelView: any;
   public get context(): any {
     if (this._context === null) {
       this._context = Java.use("android.app.ActivityThread")
@@ -291,51 +292,95 @@ export class FloatMenu {
     const LinearLayout = API.LinearLayout;
     const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
     const View = API.View;
+    const LayoutParams = API.LayoutParams;
 
     // --------------------
-    // 创建 menu 容器
+    // 创建 window root（透明根容器）
     // --------------------
     this.menuContainerView = LinearLayout.$new(this.context);
-
-    this.menuContainerView.setOrientation(1); // VERTICAL
-    const layoutParams = ViewGroupLayoutParams.$new(
-      ViewGroupLayoutParams.MATCH_PARENT.value,
-      ViewGroupLayoutParams.MATCH_PARENT.value,
+    this.menuContainerView.setOrientation(LinearLayout.VERTICAL.value);
+    this.menuContainerView.setLayoutParams(
+      ViewGroupLayoutParams.$new(
+        ViewGroupLayoutParams.MATCH_PARENT.value,
+        ViewGroupLayoutParams.MATCH_PARENT.value,
+      ),
     );
-    this.menuContainerView.setLayoutParams(layoutParams);
-    const LayoutParams = API.LayoutParams;
+
+    // root 保持透明，避免灰块叠加
+    try {
+      this.menuContainerView.setBackgroundColor(0x00000000);
+    } catch (e) {}
+
+    // --------------------
+    // 创建 panel（真正的面板壳：背景/圆角/阴影/内边距）
+    // --------------------
+    const panel = LinearLayout.$new(this.context);
+    panel.setOrientation(LinearLayout.VERTICAL.value);
+    panel.setLayoutParams(
+      ViewGroupLayoutParams.$new(
+        ViewGroupLayoutParams.MATCH_PARENT.value,
+        ViewGroupLayoutParams.MATCH_PARENT.value,
+      ),
+    );
+
+    // 用你 style.ts 的 overlay role 来统一风格
+    applyStyle(panel, "overlay", DarkNeonTheme);
+
+    // 可选：圆角裁剪/阴影更稳（失败就忽略）
+    try {
+      panel.setClipToOutline(true);
+    } catch (e) {}
+    try {
+      panel.setClipChildren(false);
+    } catch (e) {}
+    try {
+      panel.setClipToPadding(false);
+    } catch (e) {}
+
+    // 保存引用：以后内容都加到 panel
+    this.menuPanelView = panel;
+
+    // root -> panel
+    this.menuContainerView.addView(panel);
+
+    // --------------------
+    // Window 参数
+    // --------------------
     this.menuWindowParams = LayoutParams.$new(
       this.options.width,
       this.options.height,
       0,
       0,
       2038, // TYPE_APPLICATION_OVERLAY
-      // 必须添加FLAG_NOT_FOCUSABLE防止游戏卡死
       LayoutParams.FLAG_NOT_FOCUSABLE.value |
         LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
       1, // PixelFormat.TRANSLUCENT
     );
 
+    // --------------------
+    // 往 panel 里塞内容（别再塞到 menuContainerView）
+    // --------------------
     this.createHeaderView(this.context);
-    this.menuContainerView.addView(this.headerView);
+    this.menuPanelView.addView(this.headerView);
 
     // tab bar
     if (this.options.showTabs) {
       this.createTabView(this.context);
-
-      this.menuContainerView.addView(this.tabView);
+      this.menuPanelView.addView(this.tabView);
     }
 
+    // tab contents（你 createTabContainer 最后也要 add 到 menuPanelView）
     this.createTabContainer(this.context);
 
-    // this.menuContainerView.addView(this.scrollView);
-
-    // footer
+    // footer（如需要，也加到 menuPanelView）
     // if (this.options.showFooter) {
     //   this.createFooterView(this.context);
-    //   this.menuContainerView.addView(this.footerView);
+    //   this.menuPanelView.addView(this.footerView);
     // }
 
+    // --------------------
+    // attach window
+    // --------------------
     this.windowManager.addView(this.menuContainerView, this.menuWindowParams);
     this.menuContainerView.setVisibility(View.GONE.value);
   }
@@ -908,7 +953,7 @@ export class FloatMenu {
 
     // ⚠️ 这里很重要：彻底方案下，不要再 this.scrollView.addView(wrapper)
     // 你应该把 tabRootsWrapper 加到“内容区父容器”上（例如 this.rootLayout / this.mainContainer）
-    this.menuContainerView.addView(tabRootsWrapper); // <- 用你的真实父容器替换
+    this.menuPanelView.addView(tabRootsWrapper); // <- 用你的真实父容器替换
   }
 
   /**
