@@ -79,7 +79,7 @@ export class CheckBoxGroup extends UIComponent {
     trigger.setSingleLine(true);
 
     // 让它看起来像一个输入框（点击弹窗）
-    applyStyle(trigger, "inputTrigger", this.menu!.options.theme!);
+    applyStyle(trigger, "inputTrigger", this.menu.options.theme!);
 
     // 右侧加个小箭头（纯文本，免依赖图标）
     // 你也可以换成 "▾" 或 "▼"

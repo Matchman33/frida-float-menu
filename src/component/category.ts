@@ -20,7 +20,7 @@ export class Category extends UIComponent {
     this.view = TextView.$new(context);
     this.view.setText(String.$new(this.label));
 
-    applyStyle(this.view, "category", this.menu!.options.theme!);
+    applyStyle(this.view, "category", this.menu.options.theme!);
 
     this.view.setLayoutParams(
       LinearLayoutParams.$new(

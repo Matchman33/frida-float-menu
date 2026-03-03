@@ -16,7 +16,7 @@ export class Text extends UIComponent {
     const Html = API.Html;
 
     this.view = TextView.$new(context);
-    applyStyle(this.view, "text", this.menu!.options.theme!);
+    applyStyle(this.view, "text", this.menu.options.theme!);
     this.view.setText(Html.fromHtml(this.content));
   }
 

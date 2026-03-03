@@ -56,7 +56,7 @@ export class NumberInput extends UIComponent {
 
     this.view = Button.$new(context);
     this.view.setText(String.$new(`${this.text}: ${this.value}`));
-    applyStyle(this.view, "inputTrigger", this.menu!.options.theme!);
+    applyStyle(this.view, "inputTrigger", this.menu.options.theme!);
     const self = this;
 
     // 点击按钮弹窗
@@ -92,7 +92,7 @@ export class NumberInput extends UIComponent {
 
       // ---- Input
       const input = EditText.$new(context);
-      applyEditTextStyle(input, this.menu!.options.theme!);
+      applyEditTextStyle(input, this.menu.options.theme!);
       input.setHint(String.$new(this.hint));
       input.setText(
         String.$new(this.value + ""),
@@ -179,9 +179,9 @@ export class NumberInput extends UIComponent {
       // ---- Theme the dialog (background + buttons)
       try {
         const bg = API.GradientDrawable.$new();
-        bg.setColor(this.menu!.options.theme!.colors.cardBg);
+        bg.setColor(this.menu.options.theme!.colors.cardBg);
         bg.setCornerRadius(dp(context, 14));
-        bg.setStroke(dp(context, 1), this.menu!.options.theme!.colors.divider);
+        bg.setStroke(dp(context, 1), this.menu.options.theme!.colors.divider);
 
         const win = dialog.getWindow();
         if (win) {
@@ -206,7 +206,7 @@ export class NumberInput extends UIComponent {
 
         if (pos) {
           pos.setAllCaps(false);
-          pos.setTextColor(this.menu!.options.theme!.colors.accent);
+          pos.setTextColor(this.menu.options.theme!.colors.accent);
           pos.setPadding(
             dp(context, 10),
             dp(context, 8),
@@ -216,7 +216,7 @@ export class NumberInput extends UIComponent {
         }
         if (neg) {
           neg.setAllCaps(false);
-          neg.setTextColor(this.menu!.options.theme!.colors.subText);
+          neg.setTextColor(this.menu.options.theme!.colors.subText);
           neg.setPadding(
             dp(context, 10),
             dp(context, 8),
@@ -241,8 +241,8 @@ export class NumberInput extends UIComponent {
           if (tv) {
             const TextView = Java.use("android.widget.TextView");
             const t = Java.cast(tv, TextView);
-            t.setTextColor(this.menu!.options.theme!.colors.text);
-            // t.setTextSize(2, this.menu!.options.theme!.textSp.title);
+            t.setTextColor(this.menu.options.theme!.colors.text);
+            // t.setTextSize(2, this.menu.options.theme!.textSp.title);
           }
         }
       } catch (e) {
@@ -328,7 +328,7 @@ export class TextInput extends UIComponent {
     const String = API.JString;
 
     this.view = Button.$new(context);
-    applyStyle(this.view, "inputTrigger", this.menu!.options.theme!);
+    applyStyle(this.view, "inputTrigger", this.menu.options.theme!);
     this.view.setText(String.$new(`${this.text}: ${this.value}`));
     const self = this;
 
@@ -368,7 +368,7 @@ export class TextInput extends UIComponent {
       const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
       const input = EditText.$new(context);
       const LinearLayout = API.LinearLayout;
-      applyEditTextStyle(input, this.menu!.options.theme!);
+      applyEditTextStyle(input, this.menu.options.theme!);
       input.setHint(String.$new(this.hint));
       input.setText(String.$new(this.value), TextViewBufferType.NORMAL.value);
       builder.setTitle(String.$new(this.title));
@@ -420,12 +420,12 @@ export class TextInput extends UIComponent {
       const LayoutParams = API.LayoutParams;
       const dialog = builder.create();
 
-      // ✅ dialog 背景圆角 + 暗色（融入 this.menu!.options.theme!）
+      // ✅ dialog 背景圆角 + 暗色（融入 this.menu.options.theme!）
 
       const bg = API.GradientDrawable.$new();
-      bg.setColor(this.menu!.options.theme!.colors.cardBg);
+      bg.setColor(this.menu.options.theme!.colors.cardBg);
       bg.setCornerRadius(dp(context, 14));
-      bg.setStroke(dp(context, 1), this.menu!.options.theme!.colors.divider);
+      bg.setStroke(dp(context, 1), this.menu.options.theme!.colors.divider);
       // 关键步骤：修改对话框窗口的类型
       const window = dialog.getWindow();
       const BuildVERSION = Java.use("android.os.Build$VERSION");
@@ -465,7 +465,7 @@ export class TextInput extends UIComponent {
 
         if (pos) {
           pos.setAllCaps(false);
-          pos.setTextColor(this.menu!.options.theme!.colors.accent);
+          pos.setTextColor(this.menu.options.theme!.colors.accent);
           pos.setPadding(
             dp(context, 10),
             dp(context, 8),
@@ -475,7 +475,7 @@ export class TextInput extends UIComponent {
         }
         if (neg) {
           neg.setAllCaps(false);
-          neg.setTextColor(this.menu!.options.theme!.colors.subText);
+          neg.setTextColor(this.menu.options.theme!.colors.subText);
           neg.setPadding(
             dp(context, 10),
             dp(context, 8),
@@ -500,8 +500,8 @@ export class TextInput extends UIComponent {
           if (tv) {
             const TextView = Java.use("android.widget.TextView");
             const t = Java.cast(tv, TextView);
-            t.setTextColor(this.menu!.options.theme!.colors.text);
-            // t.setTextSize(2, this.menu!.options.theme!.textSp.title);
+            t.setTextColor(this.menu.options.theme!.colors.text);
+            // t.setTextSize(2, this.menu.options.theme!.textSp.title);
           }
         }
       } catch (e) {

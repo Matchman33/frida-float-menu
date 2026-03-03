@@ -31,11 +31,11 @@ export class Switch extends UIComponent {
     const row = LinearLayout.$new(context);
     row.setOrientation(LinearLayout.HORIZONTAL.value);
     row.setGravity(Gravity.CENTER_VERTICAL.value);
-    applyStyle(row, "row", this.menu!.options.theme!);
+    applyStyle(row, "row", this.menu.options.theme!);
 
     const label = TextView.$new(context);
     label.setText(String.$new(this.label));
-    applyStyle(label, "text", this.menu!.options.theme!);
+    applyStyle(label, "text", this.menu.options.theme!);
     label.setLayoutParams(
       LinearLayoutParams.$new(0, ViewGroupLayoutParams.WRAP_CONTENT.value, 1),
     );

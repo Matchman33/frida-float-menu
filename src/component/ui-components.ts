@@ -9,7 +9,7 @@ export abstract class UIComponent {
   protected value: any;
   protected id: string;
 
-  protected menu?: FloatMenu;
+  protected menu!: FloatMenu;
 
   constructor(id: string) {
     this.id = id;

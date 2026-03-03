@@ -21,7 +21,7 @@ export class Button extends UIComponent {
     applyStyle(
       this.view,
       this.kind === "danger" ? "dangerButton" : "primaryButton",
-      this.menu!.options.theme!,
+      this.menu.options.theme!,
     );
 
     const OnClickListener = API.OnClickListener;
