@@ -1,6 +1,5 @@
 import { API } from "../api";
 import { applyStyle } from "./style/style";
-import { DarkNeonTheme } from "./style/theme";
 import { UIComponent } from "./ui-components";
 
 export class Switch extends UIComponent {
@@ -32,11 +31,11 @@ export class Switch extends UIComponent {
     const row = LinearLayout.$new(context);
     row.setOrientation(LinearLayout.HORIZONTAL.value);
     row.setGravity(Gravity.CENTER_VERTICAL.value);
-    applyStyle(row, "row", DarkNeonTheme);
+    applyStyle(row, "row", this.menu!.options.theme!);
 
     const label = TextView.$new(context);
     label.setText(String.$new(this.label));
-    applyStyle(label, "text", DarkNeonTheme);
+    applyStyle(label, "text", this.menu!.options.theme!);
     label.setLayoutParams(
       LinearLayoutParams.$new(0, ViewGroupLayoutParams.WRAP_CONTENT.value, 1),
     );

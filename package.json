@@ -13,9 +13,9 @@
     "example.js"
   ],
   "scripts": {
-    "dev": "frida-compile example.ts -o example-compiled.js -w",
-    "frida": "frida -UF -l example-compiled.js",
-    "build": "frida-compile example.ts -o example-compiled.js",
+    "dev": "frida-compile example.ts -o example.js -w",
+    "frida": "frida -UF -l example.js",
+    "build": "frida-compile example.ts -o example.js",
     "dev:demo": "frida-compile demo-new-components.ts -o demo-new-components-compiled.js -w",
     "build:demo": "frida-compile demo-new-components.ts -o demo-new-components-compiled.js",
     "frida:demo": "frida -UF -l demo-new-components-compiled.js",

@@ -13,7 +13,8 @@ import {
 } from "./src/index";
 import { NumberInput, TextInput } from "./src/component/input";
 import { CheckBoxGroup } from "./src/component/checkBox";
-import { ImageView, LayoutParamsEnum } from "./src/component/image";
+import { ImageView } from "./src/component/image";
+import { DarkNeonTheme } from "./src/component/style/theme";
 
 // Optional: attach to global for easier access in Frida REPL
 // import { attachToGlobal } from './src/index';
@@ -29,6 +30,7 @@ Java.perform(() => {
     height: 1400,
     x: -100,
     y: 0,
+    theme: DarkNeonTheme,
     iconWidth: 200,
     iconHeight: 200,
     showLogs: false,
@@ -86,7 +88,12 @@ Java.perform(() => {
     menu.setComponentValue("name_display", "Hello, <b>Anonymous</b>!");
   });
   menu.addComponent(clearTextButton, "inputs");
-  const imageView = new ImageView("image", iconBase64, 1400, 1400);
+  const imageView = new ImageView(
+    "image",
+    iconBase64,
+    800,
+    ImageView.LayoutParamsEnum.MATCH_PARENT,
+  );
   menu.addComponent(imageView, "layout");
   // TextInput component (multiline)
   const multiInput = new TextInput(

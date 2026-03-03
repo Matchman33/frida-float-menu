@@ -1,6 +1,5 @@
 import { API } from "../api";
 import { applyStyle } from "./style/style";
-import { DarkNeonTheme } from "./style/theme";
 import { UIComponent } from "./ui-components";
 
 // 选项类型定义
@@ -80,7 +79,7 @@ export class CheckBoxGroup extends UIComponent {
     trigger.setSingleLine(true);
 
     // 让它看起来像一个输入框（点击弹窗）
-    applyStyle(trigger, "inputTrigger", DarkNeonTheme);
+    applyStyle(trigger, "inputTrigger", this.menu!.options.theme!);
 
     // 右侧加个小箭头（纯文本，免依赖图标）
     // 你也可以换成 "▾" 或 "▼"

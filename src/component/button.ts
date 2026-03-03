@@ -1,6 +1,5 @@
 import { API } from "../api";
 import { applyStyle } from "./style/style";
-import { DarkNeonTheme } from "./style/theme";
 import { UIComponent } from "./ui-components";
 
 export class Button extends UIComponent {
@@ -22,7 +21,7 @@ export class Button extends UIComponent {
     applyStyle(
       this.view,
       this.kind === "danger" ? "dangerButton" : "primaryButton",
-      DarkNeonTheme,
+      this.menu!.options.theme!,
     );
 
     const OnClickListener = API.OnClickListener;

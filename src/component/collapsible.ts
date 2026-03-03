@@ -1,7 +1,6 @@
 import { API } from "../api";
 import { UIComponent } from "./ui-components";
 import { applyStyle, dp } from "./style/style";
-import { DarkNeonTheme } from "./style/theme";
 
 export class Collapsible extends UIComponent {
   private title: string;
@@ -37,7 +36,7 @@ export class Collapsible extends UIComponent {
     );
 
     // ✅ 外层卡片风格
-    applyStyle(container, "card", DarkNeonTheme);
+    applyStyle(container, "card", this.menu!.options.theme!);
 
     // ===== Title row (row) =====
     const titleRow = LinearLayout.$new(context);
@@ -51,7 +50,7 @@ export class Collapsible extends UIComponent {
     );
 
     // ✅ 标题行用 row，融入整体
-    applyStyle(titleRow, "row", DarkNeonTheme);
+    applyStyle(titleRow, "row", this.menu!.options.theme!);
 
     // 标题行内边距微调（row 已有 padding，这里可按你口味微调）
     // titleRow.setPadding(
@@ -66,7 +65,7 @@ export class Collapsible extends UIComponent {
     const arrowTextView = TextView.$new(context);
     arrowTextView.setText(String.$new(arrowText));
     arrowTextView.setSingleLine(true);
-    applyStyle(arrowTextView, "caption", DarkNeonTheme);
+    applyStyle(arrowTextView, "caption", this.menu!.options.theme!);
     arrowTextView.setPadding(0, 0, dp(context, 8), 0);
 
     this.arrowView = arrowTextView;
@@ -75,7 +74,7 @@ export class Collapsible extends UIComponent {
     const titleView = TextView.$new(context);
     titleView.setText(String.$new(this.title));
     titleView.setSingleLine(true);
-    applyStyle(titleView, "text", DarkNeonTheme);
+    applyStyle(titleView, "text", this.menu!.options.theme!);
     titleView.setTypeface(null, 1); // BOLD
     titleView.setLayoutParams(
       LinearLayoutParams.$new(0, ViewGroupLayoutParams.WRAP_CONTENT.value, 1.0),

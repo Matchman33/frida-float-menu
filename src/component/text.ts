@@ -1,6 +1,5 @@
 import { API } from "../api";
 import { applyStyle } from "./style/style";
-import { DarkNeonTheme } from "./style/theme";
 import { UIComponent } from "./ui-components";
 
 export class Text extends UIComponent {
@@ -17,7 +16,7 @@ export class Text extends UIComponent {
     const Html = API.Html;
 
     this.view = TextView.$new(context);
-    applyStyle(this.view, "text", DarkNeonTheme);
+    applyStyle(this.view, "text", this.menu!.options.theme!);
     this.view.setText(Html.fromHtml(this.content));
   }
 

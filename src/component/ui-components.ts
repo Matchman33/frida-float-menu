@@ -1,4 +1,5 @@
 import { EventEmitter } from "../event-emitter";
+import { FloatMenu } from "../float-menu";
 import { applyStyle } from "./style/style";
 
 export abstract class UIComponent {
@@ -8,8 +9,14 @@ export abstract class UIComponent {
   protected value: any;
   protected id: string;
 
+  protected menu?: FloatMenu;
+
   constructor(id: string) {
     this.id = id;
+  }
+
+  public setMenu(menu: FloatMenu) {
+    this.menu = menu;
   }
   // 可选：给后续写通用样式留口子
   public apply(role: any, theme: any) {

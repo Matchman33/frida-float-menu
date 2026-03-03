@@ -3,7 +3,7 @@ import { UIComponent } from "./component/ui-components";
 import { Logger, LogLevel } from "./logger";
 import { API } from "./api";
 import { dp, applyStyle } from "./component/style/style";
-import { DarkNeonTheme } from "./component/style/theme";
+import { DarkNeonTheme, Theme } from "./component/style/theme";
 
 export interface TabDefinition {
   id: string;
@@ -20,6 +20,7 @@ export interface FloatMenuOptions {
   iconBase64?: string; // base64 encoded icon for floating window
   showLogs?: boolean; // whether to show log panel
   logMaxLines?: number;
+  theme?: Theme;
   title?: string; // Main title text (default: "Frida Float Menu")
   showFooter?: boolean; // Whether to show footer (default: true)
   tabs?: TabDefinition[]; // Tab definitions (optional)
@@ -28,7 +29,7 @@ export interface FloatMenuOptions {
 }
 
 export class FloatMenu {
-  private options: FloatMenuOptions;
+  public options: FloatMenuOptions;
   private menuContainerView: any; // Outer layout containing header, scrollable content and footer
   private contentContainer: any; // Scrollable content area (LinearLayout inside ScrollView)
   private scrollView: any; // ScrollView wrapping contentContainer
@@ -104,6 +105,7 @@ export class FloatMenu {
       showLogs: false,
       logMaxLines: 100,
       title: "Frida Float Menu",
+      theme: DarkNeonTheme,
       showFooter: true,
       tabs: undefined,
       activeTab: undefined,
@@ -222,6 +224,7 @@ export class FloatMenu {
       right: this.screenWidth - this.options.iconWidth!,
       bottom: this.screenHeight - this.options.iconHeight!,
     };
+    
     let isDragging = false;
     const self = this;
 
@@ -324,7 +327,7 @@ export class FloatMenu {
     );
 
     // 用你 style.ts 的 overlay role 来统一风格
-    applyStyle(panel, "overlay", DarkNeonTheme);
+    applyStyle(panel, "overlay", this.options.theme!);
 
     // 可选：圆角裁剪/阴影更稳（失败就忽略）
     try {
@@ -401,92 +404,86 @@ export class FloatMenu {
     // 刷新
   }
   private createIconWindow(): void {
-    try {
-      const ImageView = API.ImageView;
-      const ImageView$ScaleType = API.ImageViewScaleType;
-      const FrameLayoutParams = API.FrameLayoutParams;
-      const OnClickListener = API.OnClickListener;
-      const Gravity = API.Gravity;
-      const LayoutParams = API.LayoutParams;
-      const BitmapFactory = API.BitmapFactory;
-      const Base64 = API.Base64;
-      const FrameLayout = API.FrameLayout;
+    const ImageView = API.ImageView;
+    const ImageView$ScaleType = API.ImageViewScaleType;
+    const FrameLayoutParams = API.FrameLayoutParams;
+    const OnClickListener = API.OnClickListener;
+    const Gravity = API.Gravity;
+    const LayoutParams = API.LayoutParams;
+    const BitmapFactory = API.BitmapFactory;
+    const Base64 = API.Base64;
+    const FrameLayout = API.FrameLayout;
 
-      this.iconView = ImageView.$new(this.context);
+    this.iconView = ImageView.$new(this.context);
 
-      // icon 图片或默认圆
-      if (this.options.iconBase64) {
-        const decoded = Base64.decode(
-          this.options.iconBase64,
-          Base64.DEFAULT.value,
-        );
-        const bitmap = BitmapFactory.decodeByteArray(
-          decoded,
-          0,
-          decoded.length,
-        );
-        this.iconView.setImageBitmap(bitmap);
-      } else {
-        this.iconView.setBackgroundColor(0xff4285f4 | 0);
-        try {
-          this.iconView.setClipToOutline(true);
-        } catch {}
-      }
+    // icon 图片或默认圆
+    if (this.options.iconBase64) {
+      const decoded = Base64.decode(
+        this.options.iconBase64,
+        Base64.DEFAULT.value,
+      );
+      const bitmap = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
+      this.iconView.setImageBitmap(bitmap);
+    } else {
+      this.iconView.setBackgroundColor(0xff4285f4 | 0);
+      try {
+        this.iconView.setClipToOutline(true);
+      } catch {}
+    }
 
-      this.iconView.setScaleType(ImageView$ScaleType.FIT_CENTER.value);
+    this.iconView.setScaleType(ImageView$ScaleType.FIT_CENTER.value);
 
-      const { x, y } = this.logicalToWindow(this.options.x!, this.options.y!);
-      // icon window
-      this.iconWindowParams = LayoutParams.$new(
+    const { x, y } = this.logicalToWindow(this.options.x!, this.options.y!);
+    // icon window
+    this.iconWindowParams = LayoutParams.$new(
+      this.options.iconWidth,
+      this.options.iconHeight,
+      x,
+      y,
+      2038,
+      LayoutParams.FLAG_NOT_FOCUSABLE.value |
+        LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
+      1,
+    );
+
+    this.iconContainerView = FrameLayout.$new(this.context);
+    this.iconContainerView.setLayoutParams(
+      FrameLayoutParams.$new(
         this.options.iconWidth,
         this.options.iconHeight,
-        x,
-        y,
-        2038,
-        LayoutParams.FLAG_NOT_FOCUSABLE.value |
-          LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
-        1,
-      );
+        Gravity.CENTER.value,
+      ),
+    );
+    this.iconContainerView.addView(this.iconView);
 
-      this.iconContainerView = FrameLayout.$new(this.context);
-      this.iconContainerView.setLayoutParams(
-        FrameLayoutParams.$new(
-          this.options.iconWidth,
-          this.options.iconHeight,
-          Gravity.CENTER.value,
-        ),
-      );
-      this.iconContainerView.addView(this.iconView);
+    // Java.scheduleOnMainThread(() => {
+    // // 添加到 window manager
+    this.windowManager.addView(this.iconContainerView, this.iconWindowParams);
+    // });
 
-      // 添加到 window manager
-      this.windowManager.addView(this.iconContainerView, this.iconWindowParams);
+    const self = this;
+    // // 点击切换 menu
 
-      const self = this;
-      // 点击切换 menu
+    const clickListener = Java.registerClass({
+      name: "com.frida.IconClickListener" + Date.now(),
+      implements: [OnClickListener],
+      methods: {
+        onClick: function () {
+          self.isIconMode = false;
 
-      const clickListener = Java.registerClass({
-        name: "com.frida.IconClickListener" + Date.now(),
-        implements: [OnClickListener],
-        methods: {
-          onClick: function () {
-            self.isIconMode = false;
+          // 再次被点击以后设置为不透明
+          self.iconContainerView.setAlpha(1);
 
-            // 再次被点击以后设置为不透明
-            self.iconContainerView.setAlpha(1);
-
-            self.toggleView();
-          },
+          self.toggleView();
         },
-      });
-      this.iconContainerView.setOnClickListener(clickListener.$new());
-      this.addDragListener(
-        this.iconContainerView,
-        this.iconContainerView,
-        this.iconWindowParams,
-      );
-    } catch (error) {
-      console.trace("Failed to create icon view: " + error);
-    }
+      },
+    });
+    this.iconContainerView.setOnClickListener(clickListener.$new());
+    this.addDragListener(
+      this.iconContainerView,
+      this.iconContainerView,
+      this.iconWindowParams,
+    );
   }
 
   /**
@@ -510,6 +507,12 @@ export class FloatMenu {
    */
   public show(): void {
     Java.scheduleOnMainThread(() => {
+      const Settings = Java.use("android.provider.Settings");
+      if (!Settings.canDrawOverlays(this.context)) {
+        this.toast("进程没有悬浮窗权限!");
+        console.error("Draw overlays permission not granted");
+        return;
+      }
       try {
         // Create icon view
         this.createIconWindow();
@@ -518,7 +521,7 @@ export class FloatMenu {
         // Add any pending components that were added before window was shown
         this.processPendingComponents(this.context);
       } catch (error) {
-        console.trace("Failed to show floating window: " + error);
+        console.error("Failed to show floating window: ", error);
       }
     });
   }
@@ -568,7 +571,7 @@ export class FloatMenu {
           this.eventEmitter.emit("component:" + id + ":click", data);
         });
       } catch (error) {
-        console.trace(`Failed to add pending component ${id}: ` + error);
+        console.error(`Failed to add pending component ${id}: ` + error);
       }
     }
     // Clear pending components
@@ -624,6 +627,7 @@ export class FloatMenu {
 
     // Store component with tab information
     this.uiComponents.set(id, component);
+    component.setMenu(this);
 
     // Record component ID in tab's component set
     tabInfo.components.add(id);
@@ -792,15 +796,15 @@ export class FloatMenu {
         const d = GradientDrawable.$new();
         d.setCornerRadius(dp(this.context, 12));
         if (active) {
-          d.setColor(DarkNeonTheme.colors.accent);
+          d.setColor(this.options.theme!.colors.accent);
           tv.setTextColor(0xffffffff | 0);
           try {
             tv.setTypeface(null, 1);
           } catch (e) {}
         } else {
           d.setColor(0x00000000);
-          d.setStroke(dp(this.context, 1), DarkNeonTheme.colors.divider);
-          tv.setTextColor(DarkNeonTheme.colors.subText);
+          d.setStroke(dp(this.context, 1), this.options.theme!.colors.divider);
+          tv.setTextColor(this.options.theme!.colors.subText);
           try {
             tv.setTypeface(null, 0);
           } catch (e) {}
@@ -825,7 +829,7 @@ export class FloatMenu {
       button.setAllCaps(false);
     } catch (e) {}
     button.setSingleLine(true);
-    button.setTextSize(2, DarkNeonTheme.textSp.body);
+    button.setTextSize(2, this.options.theme!.textSp.body);
     button.setPadding(padH, padV, padH, padV);
 
     // 背景
@@ -834,7 +838,7 @@ export class FloatMenu {
 
     if (isActive) {
       // ✅ 激活：accent 实心 + 白字
-      drawable.setColor(DarkNeonTheme.colors.accent);
+      drawable.setColor(this.options.theme!.colors.accent);
       button.setTextColor(0xffffffff | 0);
       try {
         button.setTypeface(null, 1); // bold
@@ -842,8 +846,8 @@ export class FloatMenu {
     } else {
       // ✅ 未激活：透明底 + divider 描边 + 次级文字色
       drawable.setColor(0x00000000);
-      drawable.setStroke(strokeW, DarkNeonTheme.colors.divider);
-      button.setTextColor(DarkNeonTheme.colors.subText);
+      drawable.setStroke(strokeW, this.options.theme!.colors.divider);
+      button.setTextColor(this.options.theme!.colors.subText);
       try {
         button.setTypeface(null, 0);
       } catch (e) {}
@@ -991,8 +995,8 @@ export class FloatMenu {
       // ✅ 胶囊条背景（暗底 + 圆角 + 描边）
       const bg = GradientDrawable.$new();
       bg.setCornerRadius(dp(context, 14));
-      bg.setColor(DarkNeonTheme.colors.cardBg);
-      bg.setStroke(dp(context, 1), DarkNeonTheme.colors.divider);
+      bg.setColor(this.options.theme!.colors.cardBg);
+      bg.setStroke(dp(context, 1), this.options.theme!.colors.divider);
       scrollView.setBackgroundDrawable(bg);
 
       // 内边距（让 tab 不贴边）
@@ -1022,7 +1026,7 @@ export class FloatMenu {
         tv.setAllCaps(false);
         tv.setSingleLine(true);
         tv.setGravity(Gravity.CENTER.value);
-        tv.setTextSize(2, DarkNeonTheme.textSp.body);
+        tv.setTextSize(2, this.options.theme!.textSp.body);
         tv.setPadding(
           dp(context, 12),
           dp(context, 8),
@@ -1034,13 +1038,13 @@ export class FloatMenu {
         const d = GradientDrawable.$new();
         d.setCornerRadius(dp(context, 12));
         if (active) {
-          d.setColor(DarkNeonTheme.colors.accent);
+          d.setColor(this.options.theme!.colors.accent);
           tv.setTextColor(0xffffffff | 0);
         } else {
           d.setColor(0x00000000);
-          tv.setTextColor(DarkNeonTheme.colors.subText);
+          tv.setTextColor(this.options.theme!.colors.subText);
           // 给未选中一个轻描边（可选，想更干净就删掉这行）
-          d.setStroke(dp(context, 1), DarkNeonTheme.colors.divider);
+          d.setStroke(dp(context, 1), this.options.theme!.colors.divider);
         }
         tv.setBackgroundDrawable(d);
 
@@ -1100,7 +1104,7 @@ export class FloatMenu {
       // ✅ 你原来的 updateTabStyle 仍然能用，但建议直接在 switchTab 里调用下面这个刷新函数
       // this.refreshTabsUI();  // 可选
     } catch (error) {
-      console.trace("Failed to create tab view: " + error);
+      console.error("Failed to create tab view: " + error);
     }
   }
 
@@ -1143,7 +1147,7 @@ export class FloatMenu {
 
         this.eventEmitter.emit("tabChanged", tabId, oldTabId);
       } catch (error) {
-        console.trace(`Failed to switch to tab ${tabId}:`, error);
+        console.error(`Failed to switch to tab ${tabId}:`, error);
       }
     });
   }
@@ -1189,7 +1193,7 @@ export class FloatMenu {
   //       this.menuWindowParams,
   //     );
   //   } catch (error) {
-  //     console.trace("Failed to create header view: " + error);
+  //     console.error("Failed to create header view: " + error);
   //   }
   // }
 
@@ -1306,7 +1310,7 @@ export class FloatMenu {
   //       this.menuWindowParams,
   //     );
   //   } catch (error) {
-  //     console.trace("Failed to create header view: " + error);
+  //     console.error("Failed to create header view: " + error);
   //   }
   // }
 
@@ -1334,9 +1338,9 @@ export class FloatMenu {
         btn.setSingleLine(true);
 
         // 字体大小（符号稍大一点）
-        btn.setTextSize(2, DarkNeonTheme.textSp.title);
+        btn.setTextSize(2, this.options.theme!.textSp.title);
         btn.setTextColor(
-          isDanger ? DarkNeonTheme.colors.accent : DarkNeonTheme.colors.text,
+          isDanger ? this.options.theme!.colors.accent : this.options.theme!.colors.text,
         );
 
         const lp = LinearLayoutParams.$new(BTN_SIZE, BTN_SIZE);
@@ -1346,7 +1350,7 @@ export class FloatMenu {
         const d = GradientDrawable.$new();
         d.setCornerRadius(BTN_RADIUS);
         d.setColor(0x00000000);
-        d.setStroke(dp(context, 1), DarkNeonTheme.colors.divider);
+        d.setStroke(dp(context, 1), this.options.theme!.colors.divider);
         btn.setBackgroundDrawable(d);
 
         // 点击区域 padding（主要靠 BTN_SIZE）
@@ -1375,8 +1379,8 @@ export class FloatMenu {
       // Header 背景：暗色圆角卡条
       const bg = GradientDrawable.$new();
       bg.setCornerRadius(dp(context, 14));
-      bg.setColor(DarkNeonTheme.colors.cardBg);
-      bg.setStroke(dp(context, 1), DarkNeonTheme.colors.divider);
+      bg.setColor(this.options.theme!.colors.cardBg);
+      bg.setStroke(dp(context, 1), this.options.theme!.colors.divider);
       this.headerView.setBackgroundDrawable(bg);
 
       // ===== title (LEFT) =====
@@ -1385,8 +1389,8 @@ export class FloatMenu {
       titleView.setSingleLine(true);
       titleView.setGravity(Gravity.CENTER_VERTICAL.value);
       titleView.setTypeface(null, 1); // bold
-      titleView.setTextColor(DarkNeonTheme.colors.text);
-      titleView.setTextSize(2, DarkNeonTheme.textSp.title);
+      titleView.setTextColor(this.options.theme!.colors.text);
+      titleView.setTextSize(2, this.options.theme!.textSp.title);
 
       // 标题占据左侧剩余空间
       const titleLp = LinearLayoutParams.$new(
@@ -1460,7 +1464,7 @@ export class FloatMenu {
         this.menuWindowParams,
       );
     } catch (error) {
-      console.trace("Failed to create header view: " + error);
+      console.error("Failed to create header view: " + error);
     }
   }
   /**
@@ -1548,7 +1552,7 @@ export class FloatMenu {
   //     this.footerView.addView(minimizeBtn);
   //     this.footerView.addView(hideBtn);
   //   } catch (error) {
-  //     console.trace("Failed to create footer view: " + error);
+  //     console.error("Failed to create footer view: " + error);
   //   }
   // }
 

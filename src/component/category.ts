@@ -1,6 +1,5 @@
 import { API } from "../api";
 import { applyStyle } from "./style/style";
-import { DarkNeonTheme } from "./style/theme";
 import { UIComponent } from "./ui-components";
 
 export class Category extends UIComponent {
@@ -21,7 +20,7 @@ export class Category extends UIComponent {
     this.view = TextView.$new(context);
     this.view.setText(String.$new(this.label));
 
-    applyStyle(this.view, "category", DarkNeonTheme);
+    applyStyle(this.view, "category", this.menu!.options.theme!);
 
     this.view.setLayoutParams(
       LinearLayoutParams.$new(

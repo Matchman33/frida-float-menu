@@ -1,18 +1,15 @@
 import { API } from "../api";
 import { UIComponent } from "./ui-components";
 
-export const LayoutParamsEnum = {
-  WRAP_CONTENT: API.ViewGroupLayoutParams.WRAP_CONTENT.value as number,
-  MATCH_PARENT: API.ViewGroupLayoutParams.MATCH_PARENT.value as number,
-} as const;
-
-// 提取类型：值为 -1 或 -2 的联合类型
-export type LayoutParamValue =
-  (typeof LayoutParamsEnum)[keyof typeof LayoutParamsEnum];
 export class ImageView extends UIComponent {
   private source: string | number; // Base64 字符串或资源 ID
   private width: number;
   private height: number;
+
+  public static LayoutParamsEnum = {
+    WRAP_CONTENT: API.ViewGroupLayoutParams.WRAP_CONTENT.value as number,
+    MATCH_PARENT: API.ViewGroupLayoutParams.MATCH_PARENT.value as number,
+  } as const;
 
   /**
    * @param id 组件唯一标识
@@ -23,8 +20,12 @@ export class ImageView extends UIComponent {
   constructor(
     id: string,
     source: string | number,
-    width: LayoutParamValue,
-    height: LayoutParamValue,
+    width:
+      | (typeof ImageView.LayoutParamsEnum)[keyof typeof ImageView.LayoutParamsEnum]
+      | number,
+    height:
+      | (typeof ImageView.LayoutParamsEnum)[keyof typeof ImageView.LayoutParamsEnum]
+      | number,
   ) {
     super(id);
     this.source = source;
@@ -34,13 +35,13 @@ export class ImageView extends UIComponent {
   }
 
   protected createView(context: any): void {
-    const button = API.ImageView;
-    const button$ScaleType = API.ImageViewScaleType;
+    const imageView = API.ImageView;
+    const imageViewScaleType = API.ImageViewScaleType;
     const Color = API.Color;
     const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
 
-    this.view = button.$new(context);
-    this.view.setScaleType(button$ScaleType.FIT_CENTER.value);
+    this.view = imageView.$new(context);
+    this.view.setScaleType(imageViewScaleType.FIT_CENTER.value);
     this.view.setBackgroundColor(Color.TRANSPARENT.value);
 
     // 设置自定义尺寸
@@ -63,7 +64,7 @@ export class ImageView extends UIComponent {
         );
         this.view.setImageBitmap(bitmap);
       } catch (error) {
-        console.trace(`[Image:${this.id}] Failed to load image:`, error);
+        console.error(`[Image:${this.id}] Failed to load image:`, error);
       }
     });
   }
