@@ -4,6 +4,7 @@ import { Logger, LogLevel } from "./logger";
 import { API } from "./api";
 import { dp, applyStyle } from "./component/style/style";
 import { DarkNeonTheme, Theme } from "./component/style/theme";
+import { LogView as LogViewWindow } from "./component/views/log-view";
 
 export interface TabDefinition {
   id: string;
@@ -18,7 +19,6 @@ export interface FloatMenuOptions {
   iconWidth?: number;
   iconHeight?: number;
   iconBase64?: string; // base64 encoded icon for floating window
-  showLogs?: boolean; // whether to show log panel
   logMaxLines?: number;
   theme?: Theme;
   title?: string; // Main title text (default: "Frida Float Menu")
@@ -34,7 +34,6 @@ export class FloatMenu {
   private contentContainer: any; // Scrollable content area (LinearLayout inside ScrollView)
   private scrollView: any; // ScrollView wrapping contentContainer
   private headerView: any; // Header area with title and subtitle
-  private footerView: any; // Footer area with buttons
   private iconView: any; // ImageView for icon
   private uiComponents: Map<string, UIComponent> = new Map();
   private pendingComponents: Array<{
@@ -42,9 +41,7 @@ export class FloatMenu {
     component: UIComponent;
     tabId: string;
   }> = [];
-  private logView: any; // TextView or ListView for logs
   private eventEmitter: EventEmitter = new EventEmitter();
-  private logger: Logger;
   private isIconMode: boolean = true; // Whether currently showing icon or menu
 
   // Tab management
@@ -64,8 +61,6 @@ export class FloatMenu {
   private _context: any = null;
   private lastTouchX: any;
   private lastTouchY: any;
-  private initialWindowX: any;
-  private initialWindowY: any;
   private screenWidth: any;
   private screenHeight: any;
   private menuWindowParams: any;
@@ -73,6 +68,13 @@ export class FloatMenu {
   private iconContainerView: any;
   private tabContainer: any;
   private menuPanelView: any;
+  logPanelView: any;
+  isLogPanelVisible: boolean = false;
+  logDrawerMask: any;
+  logDrawerPanel: any;
+  isLogDrawerOpen: boolean = false;
+  _loggerUnsub: any;
+  logger: Logger;
   public get context(): any {
     if (this._context === null) {
       this._context = Java.use("android.app.ActivityThread")
@@ -102,7 +104,6 @@ export class FloatMenu {
       y: 0,
       iconWidth: 200,
       iconHeight: 200,
-      showLogs: false,
       logMaxLines: 100,
       title: "Frida Float Menu",
       theme: DarkNeonTheme,
@@ -125,12 +126,12 @@ export class FloatMenu {
     });
     console.log("屏幕尺寸:", this.screenWidth, this.screenHeight);
 
-    this.logger = new Logger(this.options.showLogs ? "debug" : "none");
-    if (this.options.showLogs) {
-      this.logger.on("log", (level: LogLevel, message: string) => {
-        this.addLogToView(level, message);
-      });
-    }
+    this.logger = Logger.instance;
+    setInterval(() => {
+      Logger.instance.info(
+        "Logger initialized with level: " + "123" ? "debug" : "none",
+      );
+    }, 1000);
 
     // Initialize tabs
     this.initializeTabs();
@@ -419,6 +420,11 @@ export class FloatMenu {
       this.menuPanelView.addView(this.tabView);
     }
 
+    // 在 createMenuContainerWindow() 里，this.createTabContainer(this.context); 之后插入
+    // const logPanel = this.createLogView(this.context);
+    // 推荐：直接加到当前 active tab 的内容容器里
+    // if (this.menuPanelView) this.menuPanelView.addView(logPanel);
+
     // tab contents（你 createTabContainer 最后也要 add 到 menuPanelView）
     this.createTabContainer(this.context);
 
@@ -449,11 +455,11 @@ export class FloatMenu {
 
     // 刷新
   }
+
   private createIconWindow(): void {
     const ImageView = API.ImageView;
     const ImageView$ScaleType = API.ImageViewScaleType;
     const FrameLayoutParams = API.FrameLayoutParams;
-    const OnClickListener = API.OnClickListener;
     const Gravity = API.Gravity;
     const LayoutParams = API.LayoutParams;
     const BitmapFactory = API.BitmapFactory;
@@ -1281,6 +1287,33 @@ export class FloatMenu {
       );
       rightBox.setLayoutParams(rightLp);
 
+      // 日志：用 “L” 或 “📝”，建议用简单字符避免字体缺失
+      const logView = new LogViewWindow(
+        context,
+        this.options.width!,
+        this.options.theme!,
+        this.options.logMaxLines,
+      );
+      const logButton = createIconCharBtn("L", false);
+      logButton.setOnClickListener(
+        Java.registerClass({
+          name: "LogButtonClickListener" + Date.now(),
+          implements: [API.OnClickListener],
+          methods: {
+            onClick: function () {
+              // 开合
+              if (logView.isLogDrawerOpen) {
+                logView.closeLogDrawer();
+                logButton.setText(API.JString.$new("L"));
+              } else {
+                logView.openLogDrawer();
+                logButton.setText(API.JString.$new("←"));
+              }
+            },
+          },
+        }).$new(),
+      );
+
       // 最小化：用 “—”
       const minButton = createIconCharBtn("—", false);
       minButton.setOnClickListener(
@@ -1316,12 +1349,15 @@ export class FloatMenu {
       // 给右侧两个按钮一点间距
       const lpBtn = LinearLayoutParams.$new(BTN_SIZE, BTN_SIZE);
       lpBtn.setMargins(0, 0, dp(context, 8), 0);
+      logButton.setLayoutParams(lpBtn);
       minButton.setLayoutParams(lpBtn);
 
+      rightBox.addView(logButton);
       rightBox.addView(minButton);
       rightBox.addView(hideButton);
 
       // ===== assemble =====
+
       this.headerView.addView(titleView);
       this.headerView.addView(rightBox);
 
@@ -1334,125 +1370,6 @@ export class FloatMenu {
     } catch (error) {
       console.error("Failed to create header view: " + error);
     }
-  }
-  /**
-   * Create footer view with buttons
-   */
-  // private createFooterView(context: any): void {
-  //   try {
-  //     const LinearLayout = API.LinearLayout;
-  //     const LinearLayoutParams = API.LinearLayoutParams;
-  //     const Button = API.Button;
-  //     const Color = API.Color;
-  //     const OnClickListener = API.OnClickListener;
-
-  //     // Create footer container (horizontal LinearLayout)
-  //     this.footerView = LinearLayout.$new(context);
-  //     this.footerView.setOrientation(0); // HORIZONTAL
-  //     this.footerView.setLayoutParams(
-  //       LinearLayoutParams.$new(
-  //         LinearLayoutParams.MATCH_PARENT.value,
-  //         LinearLayoutParams.WRAP_CONTENT.value,
-  //       ),
-  //     );
-  //     this.footerView.setPadding(8, 8, 8, 8);
-  //     this.footerView.setBackgroundColor(0xff444444 | 0); // Medium gray background
-
-  //     const JString = API.JString;
-  //     // Minimize button (switch to icon mode)
-  //     const minimizeBtn = Button.$new(context);
-  //     minimizeBtn.setText(JString.$new("最小化"));
-  //     minimizeBtn.setTextColor(Color.WHITE.value);
-  //     minimizeBtn.setBackgroundColor(0xff555555 | 0);
-  //     minimizeBtn.setPadding(16, 8, 16, 8);
-
-  //     const self = this;
-  //     const minimizeListener = Java.registerClass({
-  //       name:
-  //         "com.example.MinimizeClickListener" +
-  //         Date.now() +
-  //         Math.random().toString(36).substring(6),
-  //       implements: [OnClickListener],
-  //       methods: {
-  //         onClick: function (view: any) {
-  //           self.isIconMode = true;
-  //           self.toggleView();
-  //         },
-  //       },
-  //     });
-  //     minimizeBtn.setOnClickListener(minimizeListener.$new());
-
-  //     // Hide button
-  //     const hideBtn = Button.$new(context);
-  //     hideBtn.setText(JString.$new("隐藏"));
-  //     hideBtn.setTextColor(Color.WHITE.value);
-  //     hideBtn.setBackgroundColor(0xff555555 | 0);
-  //     hideBtn.setPadding(16, 8, 16, 8);
-
-  //     const hideListener = Java.registerClass({
-  //       name:
-  //         "com.example.HideClickListener" +
-  //         Date.now() +
-  //         Math.random().toString(36).substring(6),
-  //       implements: [OnClickListener],
-  //       methods: {
-  //         onClick: function (view: any) {
-  //           self.isIconMode = true;
-  //           self.toggleView();
-  //           self.hide(); // Hide the floating window
-  //           self.toast("菜单已隐藏,单击原来位置显示");
-  //         },
-  //       },
-  //     });
-  //     hideBtn.setOnClickListener(hideListener.$new());
-
-  //     // Layout params for buttons
-  //     const btnParams = LinearLayoutParams.$new(
-  //       0, // width will be set by weight
-  //       LinearLayoutParams.WRAP_CONTENT.value,
-  //       1.0, // weight = 1, buttons share space equally
-  //     );
-  //     btnParams.setMargins(4, 0, 4, 100);
-
-  //     minimizeBtn.setLayoutParams(btnParams);
-  //     hideBtn.setLayoutParams(btnParams);
-
-  //     this.footerView.addView(minimizeBtn);
-  //     this.footerView.addView(hideBtn);
-  //   } catch (error) {
-  //     console.error("Failed to create footer view: " + error);
-  //   }
-  // }
-
-  /**
-   * Add log message to log view
-   */
-  private addLogToView(level: LogLevel, message: string): void {
-    const logView = this.logView;
-    if (!logView) return;
-    const logMaxLines = this.options.logMaxLines || 100;
-    Java.scheduleOnMainThread(() => {
-      const currentText = logView.getText().toString();
-      const newLine = `[${level}] ${message}`;
-      const lines = currentText.split("\n");
-      if (lines.length >= logMaxLines) {
-        lines.shift();
-      }
-      lines.push(newLine);
-      const String = API.JString;
-      logView.setText(String.$new(lines.join("\n")));
-    });
-  }
-
-  /**
-   * Clear log view
-   */
-  public clearLogs(): void {
-    if (!this.logView) return;
-    Java.scheduleOnMainThread(() => {
-      const String = API.JString;
-      this.logView.setText(String.$new(""));
-    });
   }
 
   /**

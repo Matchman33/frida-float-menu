@@ -34,7 +34,6 @@ Java.perform(() => {
     theme: DarkNeonTheme,
     iconWidth: 200,
     iconHeight: 200,
-    showLogs: false,
     logMaxLines: 50,
     iconBase64: iconBase64,
     title: "这是我的易游",
