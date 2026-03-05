@@ -188,11 +188,11 @@ export class FloatMenu {
   private logicalToWindow(lx: number, ly: number) {
     const sw = this.screenWidth;
     const sh = this.screenHeight;
-    const iw = this.options.iconWidth!;
-    const ih = this.options.iconHeight!;
+    const w = this.isIconMode ? this.options.iconWidth! : this.options.width!;
+    const h = this.isIconMode ? this.options.iconHeight! : this.options.height!;
     return {
-      x: Math.round(lx - (sw - iw) / 2),
-      y: Math.round(ly - (sh - ih) / 2),
+      x: Math.round(lx - (sw - w) / 2),
+      y: Math.round(ly - (sh - h) / 2),
     };
   }
 
@@ -205,31 +205,39 @@ export class FloatMenu {
   private windowToLogical(wx: number, wy: number) {
     const sw = this.screenWidth;
     const sh = this.screenHeight;
-    const iw = this.options.iconWidth!;
-    const ih = this.options.iconHeight!;
+    const w = this.isIconMode ? this.options.iconWidth! : this.options.width!;
+    const h = this.isIconMode ? this.options.iconHeight! : this.options.height!;
     return {
-      x: Math.round(wx + (sw - iw) / 2),
-      y: Math.round(wy + (sh - ih) / 2),
+      x: Math.round(wx + (sw - w) / 2),
+      y: Math.round(wy + (sh - h) / 2),
     };
   }
 
   private addDragListener(targetView: any, window: any, winParams: any) {
     const OnTouchListener = API.OnTouchListener;
     const MotionEvent = API.MotionEvent;
+
     targetView.setClickable(true);
-    // 拖动
-    const bounds = {
-      left: 0,
-      top: 0,
-      right: this.screenWidth - this.options.iconWidth!,
-      bottom: this.screenHeight - this.options.iconHeight!,
+    const getBounds = () => {
+      const w = this.isIconMode ? this.options.iconWidth! : this.options.width!;
+      const h = this.isIconMode
+        ? this.options.iconHeight!
+        : this.options.height!;
+      return {
+        left: 0,
+        top: -40,
+        right: this.screenWidth - w,
+        bottom: this.screenHeight - h,
+      };
     };
-    
-    let isDragging = false;
     const self = this;
 
-    const DRAG_THRESHOLD = 5; // 阈值，小于 5px 不算拖动
+    let isDragging = false;
+    const DRAG_THRESHOLD = 5;
 
+    // 在 addDragListener 里加两个局部变量（闭包变量）
+    let touchOffsetX = 0;
+    let touchOffsetY = 0;
     const touchListener = Java.registerClass({
       name:
         "com.frida.FloatDragListener" +
@@ -241,53 +249,92 @@ export class FloatMenu {
           const action = event.getAction();
 
           switch (action) {
-            case MotionEvent.ACTION_DOWN.value:
+            case MotionEvent.ACTION_DOWN.value: {
               isDragging = false;
 
-              self.lastTouchX = event.getRawX();
-              self.lastTouchY = event.getRawY();
+              const rawX = event.getRawX();
+              const rawY = event.getRawY();
 
-              self.initialWindowX = winParams.x.value;
-              self.initialWindowY = winParams.y.value;
+              // 当前窗口位置（注意：这里的 winParams.x/y 是“window坐标”）
+              const startWx = winParams.x.value;
+              const startWy = winParams.y.value;
 
-              return false;
+              // 记录手指按下点相对窗口左上角的偏移（window坐标系内）
+              touchOffsetX = rawX - startWx;
+              touchOffsetY = rawY - startWy;
+
+              // 记录 down 时的位置，用于阈值判断
+              self.lastTouchX = rawX;
+              self.lastTouchY = rawY;
+
+              return true;
+            }
+
             case MotionEvent.ACTION_MOVE.value: {
-              const dx = event.getRawX() - self.lastTouchX;
-              const dy = event.getRawY() - self.lastTouchY;
+              const rawX = event.getRawX();
+              const rawY = event.getRawY();
 
+              const dx = rawX - self.lastTouchX;
+              const dy = rawY - self.lastTouchY;
               if (
-                Math.abs(dx) > DRAG_THRESHOLD ||
-                Math.abs(dy) > DRAG_THRESHOLD
+                !isDragging &&
+                (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
               ) {
                 isDragging = true;
+              }
 
-                let newX = self.initialWindowX + dx;
-                let newY = self.initialWindowY + dy;
+              if (isDragging) {
+                // 直接由手指位置反推窗口左上角（不会积累漂移）
+                let wx = rawX - touchOffsetX;
+                let wy = rawY - touchOffsetY;
 
-                // window → logical
-                const { x, y } = self.windowToLogical(newX, newY);
-                newX = x;
-                newY = y;
+                // window → logical（如果你当前还在用 logical 做边界）
+                const p = self.windowToLogical(wx, wy);
+                let newX = p.x;
+                let newY = p.y;
 
-                // 边界限制（logical 坐标）
+                const bounds = getBounds();
                 newX = Math.max(bounds.left, Math.min(bounds.right, newX));
                 newY = Math.max(bounds.top, Math.min(bounds.bottom, newY));
 
-                // 同步更新icon + menu 坐标
                 self.updatePosition(window, winParams, { x: newX, y: newY });
               }
 
-              return isDragging;
+              return true;
             }
 
             case MotionEvent.ACTION_UP.value:
-              return isDragging; // 拖动时消耗事件，避免触发点击
-          }
+            case MotionEvent.ACTION_CANCEL.value: {
+              // 没拖动则当点击处理（否则你 return true 会吃掉 click）
+              if (!isDragging) {
+                try {
+                  self.isIconMode = false;
 
-          return false;
+                  // 再次被点击以后设置为不透明
+                  self.iconContainerView.setAlpha(1);
+
+                  self.toggleView();
+                } catch {}
+              }
+              return true;
+            }
+          }
+          // if (
+          //   action === MotionEvent.ACTION_UP.value ||
+          //   action === MotionEvent.ACTION_CANCEL.value
+          // ) {
+          //   // ✅ 如果你需要“点击”功能，这里判断：
+          //   if (!isDragging) {
+
+          //   }
+          //   return true;
+          // }
+
+          // return false;
         },
       },
     });
+
     targetView.setOnTouchListener(touchListener.$new());
   }
 
@@ -302,12 +349,12 @@ export class FloatMenu {
     // --------------------
     this.menuContainerView = LinearLayout.$new(this.context);
     this.menuContainerView.setOrientation(LinearLayout.VERTICAL.value);
-    this.menuContainerView.setLayoutParams(
-      ViewGroupLayoutParams.$new(
-        ViewGroupLayoutParams.MATCH_PARENT.value,
-        ViewGroupLayoutParams.MATCH_PARENT.value,
-      ),
+    const layoutParams = ViewGroupLayoutParams.$new(
+      ViewGroupLayoutParams.MATCH_PARENT.value,
+      ViewGroupLayoutParams.MATCH_PARENT.value,
     );
+    layoutParams.gravity = API.Gravity.TOP.value | API.Gravity.START.value;
+    this.menuContainerView.setLayoutParams(layoutParams);
 
     // root 保持透明，避免灰块叠加
     try {
@@ -392,7 +439,6 @@ export class FloatMenu {
     winParams: any,
     newPos: { x: number; y: number },
   ): void {
-    // icon
     const { x: wx, y: wy } = this.logicalToWindow(newPos.x, newPos.y);
     winParams.x.value = wx | 0;
     winParams.y.value = wy | 0;
@@ -461,24 +507,6 @@ export class FloatMenu {
     this.windowManager.addView(this.iconContainerView, this.iconWindowParams);
     // });
 
-    const self = this;
-    // // 点击切换 menu
-
-    const clickListener = Java.registerClass({
-      name: "com.frida.IconClickListener" + Date.now(),
-      implements: [OnClickListener],
-      methods: {
-        onClick: function () {
-          self.isIconMode = false;
-
-          // 再次被点击以后设置为不透明
-          self.iconContainerView.setAlpha(1);
-
-          self.toggleView();
-        },
-      },
-    });
-    this.iconContainerView.setOnClickListener(clickListener.$new());
     this.addDragListener(
       this.iconContainerView,
       this.iconContainerView,
@@ -976,7 +1004,7 @@ export class FloatMenu {
       const JString = API.JString;
       const HorizontalScrollView = API.HorizontalScrollView;
       const GradientDrawable = API.GradientDrawable;
-      const Gravity = API.Gravity ;
+      const Gravity = API.Gravity;
 
       const self = this;
 
@@ -1152,7 +1180,6 @@ export class FloatMenu {
     });
   }
 
-
   private createHeaderView(context: any): void {
     try {
       const LinearLayout = API.LinearLayout;
@@ -1179,7 +1206,9 @@ export class FloatMenu {
         // 字体大小（符号稍大一点）
         btn.setTextSize(2, this.options.theme!.textSp.title);
         btn.setTextColor(
-          isDanger ? this.options.theme!.colors.accent : this.options.theme!.colors.text,
+          isDanger
+            ? this.options.theme!.colors.accent
+            : this.options.theme!.colors.text,
         );
 
         const lp = LinearLayoutParams.$new(BTN_SIZE, BTN_SIZE);
