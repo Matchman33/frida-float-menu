@@ -9,6 +9,7 @@ export class Button extends UIComponent {
   constructor(id: string, label: string, kind: "primary" | "danger" = "primary") {
     super(id);
     this.label = label;
+    this.kind = kind;
     this.value = null; // Buttons don't have a value
   }
 

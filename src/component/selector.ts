@@ -17,6 +17,10 @@ export class Selector extends UIComponent {
     this.value = items[selectedIndex];
   }
 
+  public getValue(): { lable: string; [key: string]: any } {
+    return this.value;
+  }
+
   protected createView(context: any): void {
     const Spinner = API.Spinner;
     const ArrayAdapter = API.ArrayAdapter;

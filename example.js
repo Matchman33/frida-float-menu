@@ -1,5 +1,5 @@
 📦
-109319 /example.js
+133209 /example.js
 ✄
 // icon.ts
 var iconBase64 = "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";
@@ -421,7 +421,7 @@ function applyStyle(view, role, theme) {
     case "category": {
       const bg = theme.colors.accentSoft ?? withAlpha(theme.colors.accent, 34);
       const stroke = theme.colors.accentStroke ?? theme.colors.controlStroke;
-      rounded(bg, theme.radiusDp.card, { c: stroke, wDp: 2 });
+      rounded(bg, 1, { c: stroke, wDp: 2 });
       view.setPadding(dpx(14), dpx(10), dpx(14), dpx(10));
       const tv = asTextView();
       if (tv) {
@@ -687,6 +687,7 @@ var Button = class extends UIComponent {
   constructor(id, label, kind = "primary") {
     super(id);
     this.label = label;
+    this.kind = kind;
     this.value = null;
   }
   createView(context) {
@@ -962,6 +963,9 @@ var NumberInput = class extends UIComponent {
       this.view.setText(String2.$new(`${this.text}: ${this.value}`));
     });
   }
+  getValue() {
+    return this.value;
+  }
   createView(context) {
     const Button2 = API.Button;
     const String2 = API.JString;
@@ -1183,7 +1187,7 @@ var TextInput = class extends UIComponent {
         methods: {
           onClick: function(dialog2, which) {
             const text = Java.cast(input.getText(), Java.use("java.lang.CharSequence")).toString() + "";
-            self.value = text;
+            self.value = text.trim();
             self.view.setText(String2.$new(`${self.text}: ${self.value}`));
             self.emit("valueChanged", text);
             if (self.handler)
@@ -1257,6 +1261,255 @@ var TextInput = class extends UIComponent {
         this.view.setText(String2.$new(text));
       });
     }
+  }
+};
+
+// src/component/selector.ts
+var Selector = class extends UIComponent {
+  items;
+  selectedIndex;
+  handler;
+  constructor(id, items, selectedIndex = 0) {
+    super(id);
+    this.items = items;
+    this.selectedIndex = selectedIndex;
+    this.value = items[selectedIndex];
+  }
+  getValue() {
+    return this.value;
+  }
+  createView(context) {
+    const Spinner = API.Spinner;
+    const ArrayAdapter = API.ArrayAdapter;
+    const String2 = API.JString;
+    const R_layout = API.R_layout;
+    this.view = Spinner.$new(context);
+    this.view.setBackgroundColor(4283782485 | 0);
+    const javaItems = this.items.map((item) => String2.$new(item.lable));
+    const adapter = ArrayAdapter.$new(context, R_layout.simple_spinner_item.value, Java.array("java.lang.CharSequence", javaItems));
+    adapter.setDropDownViewResource(R_layout.simple_spinner_dropdown_item.value);
+    this.view.setAdapter(adapter);
+    this.view.setSelection(this.selectedIndex);
+    try {
+      this.view.setPopupBackgroundResource(4281545523);
+    } catch (e) {
+    }
+    const AdapterViewOnItemSelectedListener = API.AdapterViewOnItemSelectedListener;
+    const self = this;
+    const itemSelectedListener = Java.registerClass({
+      name: "com.frida.MyItemSelectedListener" + Date.now() + Math.random().toString(36).substring(6),
+      implements: [AdapterViewOnItemSelectedListener],
+      methods: {
+        onItemSelected: function(parent, view, position, id) {
+          self.selectedIndex = position;
+          self.value = self.items[position];
+          self.emit("valueChanged", self.value);
+          if (self.handler)
+            setImmediate(() => self.handler(self.value));
+        },
+        onNothingSelected: function(parent) {
+        }
+      }
+    });
+    this.view.setOnItemSelectedListener(itemSelectedListener.$new());
+  }
+  onValueChange(handler) {
+    this.handler = handler;
+  }
+  updateView() {
+    if (!this.view) {
+      console.warn(`[Selector:${this.id}] Cannot update view - view not initialized`);
+      return;
+    }
+    const index = this.items.findIndex((value) => value.lable == this.value.lable);
+    if (index !== -1) {
+      Java.scheduleOnMainThread(() => {
+        this.view.setSelection(index);
+      });
+    }
+  }
+  setItems(items) {
+    this.items = items;
+    if (!this.view) {
+      console.warn(`[Selector:${this.id}] Cannot set items - view not initialized`);
+      return;
+    }
+    Java.scheduleOnMainThread(() => {
+      try {
+        const ArrayAdapter = API.ArrayAdapter;
+        const context = this.view.getContext();
+        const R_layout = API.R_layout;
+        const String2 = API.JString;
+        const javaItems = items.map((item) => String2.$new(item.lable));
+        const adapter = ArrayAdapter.$new(context, R_layout.simple_spinner_item.value, Java.array("java.lang.CharSequence", javaItems));
+        adapter.setDropDownViewResource(R_layout.simple_spinner_dropdown_item.value);
+        this.view.setAdapter(adapter);
+      } catch (error) {
+        console.error(`[Selector:${this.id}] Failed to set items:`, error);
+      }
+    });
+  }
+  getSelectedIndex() {
+    return this.selectedIndex;
+  }
+};
+
+// src/component/slider.ts
+var Slider = class extends UIComponent {
+  min;
+  max;
+  step;
+  label;
+  handler;
+  constructor(id, label, min, max, initialValue = min, step = 1) {
+    super(id);
+    this.label = label;
+    this.min = min;
+    this.max = max;
+    this.step = step;
+    this.value = this.clampToStep(initialValue);
+  }
+  createView(context) {
+    const LinearLayout = API.LinearLayout;
+    const TextView2 = API.TextView;
+    const SeekBar = API.SeekBar;
+    const Color = API.Color;
+    const String2 = API.JString;
+    const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+    const LinearLayoutParams = API.LinearLayoutParams;
+    const container = LinearLayout.$new(context);
+    container.setOrientation(0);
+    container.setLayoutParams(LinearLayoutParams.$new(ViewGroupLayoutParams.MATCH_PARENT.value, ViewGroupLayoutParams.WRAP_CONTENT.value));
+    container.setPadding(16, 8, 16, 8);
+    const labelView = TextView2.$new(context);
+    labelView.setText(String2.$new(this.label));
+    labelView.setTextColor(Color.WHITE.value);
+    labelView.setTextSize(14);
+    labelView.setLayoutParams(LinearLayoutParams.$new(
+      0,
+      // width will be set by weight
+      ViewGroupLayoutParams.WRAP_CONTENT.value,
+      1
+    ));
+    const valueView = TextView2.$new(context);
+    valueView.setText(String2.$new(this.value.toString()));
+    valueView.setTextColor(Color.WHITE.value);
+    valueView.setTextSize(14);
+    valueView.setLayoutParams(LinearLayoutParams.$new(ViewGroupLayoutParams.WRAP_CONTENT.value, ViewGroupLayoutParams.WRAP_CONTENT.value));
+    container.addView(labelView);
+    container.addView(valueView);
+    const seekBar = SeekBar.$new(context);
+    seekBar.setMax(this.calculateSeekBarMax());
+    seekBar.setProgress(this.valueToProgress(this.value));
+    seekBar.setLayoutParams(LinearLayoutParams.$new(ViewGroupLayoutParams.MATCH_PARENT.value, ViewGroupLayoutParams.WRAP_CONTENT.value));
+    const verticalLayout = LinearLayout.$new(context);
+    verticalLayout.setOrientation(1);
+    verticalLayout.setLayoutParams(LinearLayoutParams.$new(ViewGroupLayoutParams.MATCH_PARENT.value, ViewGroupLayoutParams.WRAP_CONTENT.value));
+    verticalLayout.addView(container);
+    verticalLayout.addView(seekBar);
+    this.view = verticalLayout;
+    this.view.seekBar = seekBar;
+    this.view.valueView = valueView;
+    this.view.labelView = labelView;
+    this.view.container = container;
+    const SeekBarOnSeekBarChangeListener = API.SeekBarOnSeekBarChangeListener;
+    const self = this;
+    const changeListener = Java.registerClass({
+      name: "com.frida.MySeekBarChangeListener" + Date.now() + Math.random().toString(36).substring(6),
+      implements: [SeekBarOnSeekBarChangeListener],
+      methods: {
+        onProgressChanged: function(seekBar2, progress, fromUser) {
+          if (fromUser) {
+            const newValue = self.progressToValue(progress);
+            self.value = newValue;
+            Java.scheduleOnMainThread(() => {
+              const valueView2 = self.view.valueView;
+              if (valueView2) {
+                valueView2.setText(String2.$new(newValue.toString()));
+              }
+            });
+            self.emit("valueChanged", newValue);
+            if (self.handler)
+              setImmediate(() => self.handler(newValue));
+          }
+        },
+        onStartTrackingTouch: function(seekBar2) {
+        },
+        onStopTrackingTouch: function(seekBar2) {
+        }
+      }
+    });
+    seekBar.setOnSeekBarChangeListener(changeListener.$new());
+  }
+  setOnValueChange(handler) {
+    this.handler = handler;
+  }
+  updateView() {
+    if (!this.view) {
+      console.warn(`[Slider:${this.id}] Cannot update view - view not initialized`);
+      return;
+    }
+    Java.scheduleOnMainThread(() => {
+      const seekBar = this.view.seekBar;
+      const valueView = this.view.valueView;
+      if (seekBar) {
+        seekBar.setProgress(this.valueToProgress(this.value));
+      }
+      if (valueView) {
+        const String2 = API.JString;
+        valueView.setText(String2.$new(this.value.toString()));
+      }
+    });
+  }
+  setLabel(label) {
+    this.label = label;
+    if (!this.view) {
+      console.warn(`[Slider:${this.id}] Cannot set label - view not initialized`);
+      return;
+    }
+    Java.scheduleOnMainThread(() => {
+      const labelView = this.view.labelView;
+      if (labelView) {
+        const String2 = API.JString;
+        labelView.setText(String2.$new(label));
+      }
+    });
+  }
+  setRange(min, max, step = 1) {
+    this.min = min;
+    this.max = max;
+    this.step = step;
+    this.value = this.clampToStep(this.value);
+    if (!this.view) {
+      console.warn(`[Slider:${this.id}] Cannot set range - view not initialized`);
+      return;
+    }
+    Java.scheduleOnMainThread(() => {
+      const seekBar = this.view.seekBar;
+      if (seekBar) {
+        seekBar.setMax(this.calculateSeekBarMax());
+        seekBar.setProgress(this.valueToProgress(this.value));
+      }
+    });
+    this.updateView();
+  }
+  calculateSeekBarMax() {
+    return Math.round((this.max - this.min) / this.step);
+  }
+  valueToProgress(value) {
+    return Math.round((value - this.min) / this.step);
+  }
+  progressToValue(progress) {
+    const value = this.min + progress * this.step;
+    return this.clampToStep(value);
+  }
+  clampToStep(value) {
+    let clamped = Math.max(this.min, Math.min(this.max, value));
+    if (this.step > 0) {
+      const steps = Math.round((clamped - this.min) / this.step);
+      clamped = this.min + steps * this.step;
+    }
+    return clamped;
   }
 };
 
@@ -2734,7 +2987,7 @@ var ImageView = class extends UIComponent {
 
 // example.ts
 Java.perform(() => {
-  console.log("Java runtime ready, creating floating menu with new components...");
+  console.log("\u5F00\u59CB\u521B\u5EFA\u7EFC\u5408\u6D4B\u8BD5\u7528\u4F8B\uFF0C\u6DB5\u76D6\u6240\u6709\u7EC4\u4EF6...");
   const options = {
     width: 1200,
     height: 1400,
@@ -2745,95 +2998,375 @@ Java.perform(() => {
     iconHeight: 200,
     logMaxLines: 50,
     iconBase64,
-    title: "\u8FD9\u662F\u6211\u7684\u6613\u6E38",
+    title: "\u7EFC\u5408\u6D4B\u8BD5\u7528\u4F8B",
     tabs: [
-      { id: "controls", label: "\u63A7\u5236\u53F01" },
-      { id: "inputs", label: "\u606D\u559C" },
-      { id: "layout", label: "\u771F\u4E0D\u680B" },
-      { id: "controls1", label: "\u753B\u753B\u55E8\u55E8\u55E8" },
-      { id: "inputs1", label: "Inputs" },
-      { id: "layout1", label: "Layout" }
+      { id: "basic", label: "\u57FA\u7840\u7EC4\u4EF6" },
+      { id: "form", label: "\u8868\u5355\u7EC4\u4EF6" },
+      { id: "selection", label: "\u9009\u62E9\u7EC4\u4EF6" },
+      { id: "layout", label: "\u5E03\u5C40\u7EC4\u4EF6" },
+      { id: "interactive", label: "\u4EA4\u4E92\u6F14\u793A" }
     ]
   };
   const menu = new FloatMenu(options);
   menu.show();
-  const catInputs = new TextView("inputs_cat", "Input Components");
-  menu.addComponent(catInputs, "inputs");
-  const textInput = new TextInput("name_input", "John Doe", "Enter your name");
-  textInput.on("valueChanged", (value) => {
-    console.log(`TextInput changed: "${value}"`);
-    menu.setComponentValue("name_display", `Hello, <b>${value || "Anonymous"}</b>!`);
+  console.log("\u60AC\u6D6E\u7A97\u5DF2\u521B\u5EFA\uFF0C\u5F00\u59CB\u6DFB\u52A0\u7EC4\u4EF6...");
+  const basicCategory = new Category("basic_category", "\u57FA\u7840\u7EC4\u4EF6");
+  menu.addComponent(basicCategory, "basic");
+  const textComponent = new TextView("basic_text", "\u8FD9\u662F\u4E00\u4E2A\u6587\u672C\u7EC4\u4EF6\uFF0C\u7528\u4E8E\u663E\u793A\u9759\u6001\u6216\u52A8\u6001\u7684\u6587\u672C\u5185\u5BB9\u3002");
+  menu.addComponent(textComponent, "basic");
+  const richText = new TextView("rich_text", "HTML <b>\u5BCC\u6587\u672C</b> \u652F\u6301\uFF1A<br/>- <b>\u7C97\u4F53</b><br/>- <i>\u659C\u4F53</i><br/>- <u>\u4E0B\u5212\u7EBF</u>");
+  menu.addComponent(richText, "basic");
+  const dynamicText = new TextView("dynamic_text", "\u52A8\u6001\u6587\u672C\uFF1A\u70B9\u51FB\u6309\u94AE\u66F4\u65B0");
+  menu.addComponent(dynamicText, "basic");
+  const primaryButton = new Button("primary_button", "\u4E3B\u8981\u6309\u94AE", "primary");
+  primaryButton.setOnClick(() => {
+    console.log("\u4E3B\u8981\u6309\u94AE\u88AB\u70B9\u51FB");
+    menu.toast("\u4E3B\u8981\u6309\u94AE\u88AB\u70B9\u51FB\uFF01");
+    menu.setComponentValue("dynamic_text", `\u52A8\u6001\u6587\u672C\uFF1A\u6700\u540E\u66F4\u65B0\u4E8E ${(/* @__PURE__ */ new Date()).toLocaleTimeString()}`);
   });
-  menu.addComponent(textInput, "inputs");
-  const collapsible = new Collapsible("collapsible", "Collapsible");
-  const switch1 = new Switch("switch1", "Switch");
-  menu.addComponent(switch1, "inputs");
-  const nameDisplay = new TextView("name_display", "Hello, <b>John Doe</b>!");
-  menu.addComponent(nameDisplay, "inputs");
-  const category = new Category("category", "Category");
-  menu.addComponent(category, "inputs");
-  collapsible.addChild(switch1);
-  collapsible.addChild(nameDisplay);
-  menu.addComponent(collapsible, "inputs");
-  const clearTextButton = new Button("clear_text_button", "Clear Name");
-  clearTextButton.setOnClick(() => {
-    menu.setComponentValue("name_display", "Hello, <b>Anonymous</b>!");
+  menu.addComponent(primaryButton, "basic");
+  const dangerButton = new Button("danger_button", "\u5371\u9669\u64CD\u4F5C", "danger");
+  dangerButton.setOnClick(() => {
+    console.log("\u5371\u9669\u6309\u94AE\u88AB\u70B9\u51FB");
+    menu.toast("\u8FD9\u662F\u4E00\u4E2A\u5371\u9669\u64CD\u4F5C\uFF01", 1);
   });
-  menu.addComponent(clearTextButton, "inputs");
-  const imageView = new ImageView("image", iconBase64, 800, ImageView.LayoutParamsEnum.MATCH_PARENT);
-  menu.addComponent(imageView, "layout");
-  const multiInput = new TextInput("notes_input", "", "Enter notes here...", "notes here");
-  multiInput.setOnValueChange((value) => {
-    console.log(`Notes changed (${value.length} characters)`);
-    const lines = value.split("\n").length;
+  menu.addComponent(dangerButton, "basic");
+  const section1 = new Category("section1", "\u5206\u7C7B\u6807\u98981");
+  menu.addComponent(section1, "basic");
+  const formCategory = new Category("form_category", "\u8868\u5355\u7EC4\u4EF6");
+  menu.addComponent(formCategory, "form");
+  const usernameInput = new TextInput("username", "", "\u7528\u6237\u540D", "\u8BF7\u8F93\u5165\u7528\u6237\u540D", "\u8F93\u5165\u7528\u6237\u540D");
+  usernameInput.setOnValueChange((value) => {
+    console.log(`\u7528\u6237\u540D\u8F93\u5165: ${value}`);
+    menu.toast(`\u7528\u6237\u540D\u8BBE\u7F6E\u4E3A: ${value}`);
+    menu.setComponentValue("username_display", `\u5F53\u524D\u7528\u6237\u540D\uFF1A<b>${value || "\u672A\u8BBE\u7F6E"}</b>`);
+  });
+  menu.addComponent(usernameInput, "form");
+  const usernameDisplay = new TextView("username_display", "\u5F53\u524D\u7528\u6237\u540D\uFF1A<b>\u672A\u8BBE\u7F6E</b>");
+  menu.addComponent(usernameDisplay, "form");
+  const passwordInput = new TextInput("password", "", "\u5BC6\u7801", "\u8BF7\u8F93\u5165\u5BC6\u7801", "\u8F93\u5165\u5BC6\u7801");
+  passwordInput.setOnValueChange((value) => {
+    console.log(`\u5BC6\u7801\u8F93\u5165: ${value.length} \u4E2A\u5B57\u7B26`);
+  });
+  menu.addComponent(passwordInput, "form");
+  const notesInput = new TextInput("notes", "", "\u5907\u6CE8", "\u8BF7\u8F93\u5165\u5907\u6CE8\u4FE1\u606F...", "\u8F93\u5165\u5907\u6CE8");
+  notesInput.setOnValueChange((value) => {
     const chars = value.length;
-    menu.setComponentValue("notes_stats", `Lines: ${lines}, Characters: ${chars}`);
+    const lines = value.split("\n").length;
+    menu.setComponentValue("notes_stats", `\u5907\u6CE8\u7EDF\u8BA1\uFF1A<br/>- \u5B57\u7B26\u6570: ${chars}<br/>- \u884C\u6570: ${lines}`);
   });
-  menu.addComponent(multiInput, "inputs");
-  const numberInput = new NumberInput(
-    "age_input",
+  menu.addComponent(notesInput, "form");
+  const notesStats = new TextView("notes_stats", "\u5907\u6CE8\u7EDF\u8BA1\uFF1A<br/>- \u5B57\u7B26\u6570: 0<br/>- \u884C\u6570: 0");
+  menu.addComponent(notesStats, "form");
+  const ageInput = new NumberInput(
+    "age",
     25,
     0,
-    // min
-    120
+    // 最小值
+    120,
+    // 最大值
+    "\u5E74\u9F84\uFF1A",
+    "\u8BF7\u8F93\u5165\u5E74\u9F84",
+    "\u8F93\u5165\u5E74\u9F84"
   );
-  numberInput.on("valueChanged", (value) => {
-    console.log(`Age changed: ${value}`);
-    let category2 = "";
+  ageInput.setOnValueChange((value) => {
+    console.log(`\u5E74\u9F84\u8BBE\u7F6E\u4E3A: ${value}`);
+    let category = "";
     if (value < 13)
-      category2 = "Child";
+      category = "\u513F\u7AE5";
     else if (value < 20)
-      category2 = "Teenager";
+      category = "\u9752\u5C11\u5E74";
     else if (value < 65)
-      category2 = "Adult";
+      category = "\u6210\u5E74\u4EBA";
     else
-      category2 = "Senior";
-    menu.setComponentValue("age_category", `Age category: <b>${category2}</b>`);
+      category = "\u8001\u5E74\u4EBA";
+    menu.setComponentValue("age_display", `\u5E74\u9F84\u6BB5\uFF1A<b>${category}</b>`);
   });
-  menu.addComponent(numberInput, "inputs");
-  const genderGroup = new CheckBoxGroup("gender", [
-    { id: "male", label: "\u7537", test: 123 },
-    { id: "female", label: "\u5973" },
-    { id: "other", label: "\u5176\u4ED6" },
-    { id: "controls1", label: "Controls" },
-    { id: "inputs1", label: "Inputs" },
-    { id: "layout1", label: "Layout" },
-    { id: "controls2", label: "Controls" },
-    { id: "inputs2", label: "Inputs" },
-    { id: "layout2", label: "Layout" }
-  ], ["male"]);
-  const selected = genderGroup.getCheckedValues();
-  console.log(JSON.stringify(selected), "selected");
-  genderGroup.setChecked("female", true);
-  genderGroup.setCheckedValues(["other"]);
-  menu.addComponent(genderGroup, "controls");
+  menu.addComponent(ageInput, "form");
+  const ageDisplay = new TextView("age_display", "\u5E74\u9F84\u6BB5\uFF1A<b>\u6210\u5E74\u4EBA</b>");
+  menu.addComponent(ageDisplay, "form");
+  const quantityInput = new NumberInput("quantity", 10, 0, 100, "\u6570\u91CF\uFF1A", "\u8BF7\u8F93\u5165\u6570\u91CF", "\u8F93\u5165\u6570\u91CF");
+  quantityInput.setOnValueChange((value) => {
+    const price = 99.99;
+    const total = (value * price).toFixed(2);
+    menu.setComponentValue("total_price", `\u5355\u4EF7: \xA5${price}<br/>\u603B\u8BA1: \xA5${total}`);
+  });
+  menu.addComponent(quantityInput, "form");
+  const totalPrice = new TextView("total_price", "\u5355\u4EF7: \xA599.99<br/>\u603B\u8BA1: \xA5999.90");
+  menu.addComponent(totalPrice, "form");
+  const soundSwitch = new Switch("sound_switch", "\u97F3\u6548");
+  soundSwitch.on("valueChanged", (value) => {
+    console.log(`\u97F3\u6548\u5F00\u5173: ${value}`);
+    menu.toast(`\u97F3\u6548\u5DF2${value ? "\u5F00\u542F" : "\u5173\u95ED"}`);
+  });
+  menu.addComponent(soundSwitch, "form");
+  const notificationSwitch = new Switch("notification_switch", "\u901A\u77E5");
+  notificationSwitch.on("valueChanged", (value) => {
+    console.log(`\u901A\u77E5\u5F00\u5173: ${value}`);
+    menu.toast(`\u901A\u77E5\u5DF2${value ? "\u5F00\u542F" : "\u5173\u95ED"}`);
+  });
+  menu.addComponent(notificationSwitch, "form");
+  const hobbiesGroup = new CheckBoxGroup("hobbies", [
+    { id: "reading", label: "\u9605\u8BFB" },
+    { id: "music", label: "\u97F3\u4E50" },
+    { id: "sports", label: "\u8FD0\u52A8" },
+    { id: "travel", label: "\u65C5\u884C" },
+    { id: "gaming", label: "\u6E38\u620F" }
+  ], ["reading"]);
+  hobbiesGroup.on("valueChanged", (values) => {
+    console.log(`\u9009\u4E2D\u7684\u7231\u597D: ${JSON.stringify(values)}`);
+    menu.setComponentValue("hobbies_display", `\u9009\u4E2D\u7684\u7231\u597D\uFF1A<b>${values.map((v) => v.label).join(", ") || "\u65E0"}</b>`);
+  });
+  menu.addComponent(hobbiesGroup, "form");
+  const hobbiesDisplay = new TextView("hobbies_display", "\u9009\u4E2D\u7684\u7231\u597D\uFF1A<b>\u9605\u8BFB</b>");
+  menu.addComponent(hobbiesDisplay, "form");
+  const selectionCategory = new Category("selection_category", "\u9009\u62E9\u7EC4\u4EF6");
+  menu.addComponent(selectionCategory, "selection");
+  const citySelector = new Selector("city_selector", [
+    { lable: "\u5317\u4EAC", code: "BJ" },
+    { lable: "\u4E0A\u6D77", code: "SH" },
+    { lable: "\u5E7F\u5DDE", code: "GZ" },
+    { lable: "\u6DF1\u5733", code: "SZ" },
+    { lable: "\u676D\u5DDE", code: "HZ" },
+    { lable: "\u6210\u90FD", code: "CD" }
+  ], 0);
+  citySelector.on("valueChanged", (value) => {
+    console.log(`\u9009\u62E9\u7684\u57CE\u5E02: ${value.lable} (${value.code})`);
+    menu.setComponentValue("city_display", `\u5F53\u524D\u57CE\u5E02\uFF1A<b>${value.lable}</b>`);
+  });
+  menu.addComponent(citySelector, "selection");
+  const cityDisplay = new TextView("city_display", "\u5F53\u524D\u57CE\u5E02\uFF1A<b>\u5317\u4EAC</b>");
+  menu.addComponent(cityDisplay, "selection");
+  const colorSelector = new Selector("color_selector", [
+    { lable: "\u7EA2\u8272", color: "#FF0000" },
+    { lable: "\u7EFF\u8272", color: "#00FF00" },
+    { lable: "\u84DD\u8272", color: "#0000FF" },
+    { lable: "\u9EC4\u8272", color: "#FFFF00" },
+    { lable: "\u7D2B\u8272", color: "#FF00FF" }
+  ], 0);
+  colorSelector.on("valueChanged", (value) => {
+    console.log(`\u9009\u62E9\u7684\u989C\u8272: ${value.lable} (${value.color})`);
+    menu.toast(`\u989C\u8272\u8BBE\u7F6E\u4E3A: ${value.lable}`);
+  });
+  menu.addComponent(colorSelector, "selection");
+  const languageSelector = new Selector("language_selector", [
+    { lable: "\u7B80\u4F53\u4E2D\u6587", lang: "zh-CN" },
+    { lable: "\u7E41\u9AD4\u4E2D\u6587", lang: "zh-TW" },
+    { lable: "English", lang: "en-US" },
+    { lable: "\u65E5\u672C\u8A9E", lang: "ja-JP" },
+    { lable: "\uD55C\uAD6D\uC5B4", lang: "ko-KR" }
+  ], 0);
+  languageSelector.on("valueChanged", (value) => {
+    console.log(`\u9009\u62E9\u7684\u8BED\u8A00: ${value.lable}`);
+    menu.toast(`\u8BED\u8A00\u8BBE\u7F6E\u4E3A: ${value.lable}`);
+  });
+  menu.addComponent(languageSelector, "selection");
+  const volumeSlider = new Slider(
+    "volume_slider",
+    "\u97F3\u91CF\u63A7\u5236",
+    0,
+    // 最小值
+    100,
+    // 最大值
+    50,
+    // 初始值
+    1
+  );
+  volumeSlider.on("valueChanged", (value) => {
+    console.log(`\u97F3\u91CF: ${value}%`);
+    menu.setComponentValue("volume_display", `\u5F53\u524D\u97F3\u91CF\uFF1A<b>${value}%</b>`);
+  });
+  menu.addComponent(volumeSlider, "selection");
+  const volumeDisplay = new TextView("volume_display", "\u5F53\u524D\u97F3\u91CF\uFF1A<b>50%</b>");
+  menu.addComponent(volumeDisplay, "selection");
+  const brightnessSlider = new Slider("brightness_slider", "\u4EAE\u5EA6\u63A7\u5236", 0, 100, 75, 5);
+  brightnessSlider.on("valueChanged", (value) => {
+    console.log(`\u4EAE\u5EA6: ${value}%`);
+    menu.setComponentValue("brightness_display", `\u5F53\u524D\u4EAE\u5EA6\uFF1A<b>${value}%</b>`);
+  });
+  menu.addComponent(brightnessSlider, "selection");
+  const brightnessDisplay = new TextView("brightness_display", "\u5F53\u524D\u4EAE\u5EA6\uFF1A<b>75%</b>");
+  menu.addComponent(brightnessDisplay, "selection");
+  const progressSlider = new Slider("progress_slider", "\u8FDB\u5EA6\u63A7\u5236", 0, 1e3, 0, 10);
+  progressSlider.on("valueChanged", (value) => {
+    console.log(`\u8FDB\u5EA6: ${value}`);
+    const percentage = (value / 1e3 * 100).toFixed(1);
+    menu.setComponentValue("progress_display", `\u5F53\u524D\u8FDB\u5EA6\uFF1A<b>${value}</b> / 1000 (${percentage}%)`);
+  });
+  menu.addComponent(progressSlider, "selection");
+  const progressDisplay = new TextView("progress_display", "\u5F53\u524D\u8FDB\u5EA6\uFF1A<b>0</b> / 1000 (0.0%)");
+  menu.addComponent(progressDisplay, "selection");
+  const layoutCategory = new Category("layout_category", "\u5E03\u5C40\u7EC4\u4EF6");
+  menu.addComponent(layoutCategory, "layout");
+  const userSettingsCollapsible = new Collapsible("user_settings", "\u7528\u6237\u8BBE\u7F6E", true);
+  const usernameInput2 = new TextInput("username2", "admin", "\u7528\u6237\u540D", "\u8BF7\u8F93\u5165\u7528\u6237\u540D", "\u4FEE\u6539\u7528\u6237\u540D");
+  usernameInput2.setOnValueChange((value) => {
+    console.log(`\u7528\u6237\u540D\u4FEE\u6539: ${value}`);
+    menu.toast(`\u7528\u6237\u540D\u5DF2\u4FEE\u6539\u4E3A: ${value}`);
+  });
+  const emailInput = new TextInput("email", "admin@example.com", "\u90AE\u7BB1", "\u8BF7\u8F93\u5165\u90AE\u7BB1\u5730\u5740", "\u4FEE\u6539\u90AE\u7BB1");
+  emailInput.setOnValueChange((value) => {
+    console.log(`\u90AE\u7BB1\u4FEE\u6539: ${value}`);
+    menu.toast(`\u90AE\u7BB1\u5DF2\u4FEE\u6539\u4E3A: ${value}`);
+  });
+  const roleSelector = new Selector("role_selector", [
+    { lable: "\u7BA1\u7406\u5458", role: "admin" },
+    { lable: "\u666E\u901A\u7528\u6237", role: "user" },
+    { lable: "\u8BBF\u5BA2", role: "guest" }
+  ], 0);
+  userSettingsCollapsible.addChildren([
+    usernameInput2,
+    emailInput,
+    roleSelector
+  ]);
+  menu.addComponent(userSettingsCollapsible, "layout");
+  const systemConfigCollapsible = new Collapsible("system_config", "\u7CFB\u7EDF\u914D\u7F6E", false);
+  const logLevelSelector = new Selector("log_level", [
+    { lable: "\u8C03\u8BD5 (DEBUG)", level: 0 },
+    { lable: "\u4FE1\u606F (INFO)", level: 1 },
+    { lable: "\u8B66\u544A (WARN)", level: 2 },
+    { lable: "\u9519\u8BEF (ERROR)", level: 3 }
+  ], 1);
+  const cacheSizeInput = new NumberInput("cache_size", 100, 10, 1e3, "\u7F13\u5B58\u5927\u5C0F", "\u8BF7\u8F93\u5165\u7F13\u5B58\u5927\u5C0F(MB)", "\u8BBE\u7F6E\u7F13\u5B58\u5927\u5C0F");
+  const autoUpdateSwitch = new Switch("auto_update", "\u81EA\u52A8\u66F4\u65B0");
+  systemConfigCollapsible.addChildren([
+    logLevelSelector,
+    cacheSizeInput,
+    autoUpdateSwitch
+  ]);
+  menu.addComponent(systemConfigCollapsible, "layout");
+  const imageView = new ImageView(
+    "logo_image",
+    iconBase64,
+    400,
+    // 宽度
+    400
+  );
+  menu.addComponent(imageView, "layout");
+  const interactiveCategory = new Category("interactive_category", "\u4EA4\u4E92\u6F14\u793A");
+  menu.addComponent(interactiveCategory, "interactive");
+  const demoDescription = new TextView("demo_description", "\u6B64\u9875\u9762\u6F14\u793A\u7EC4\u4EF6\u4E4B\u95F4\u7684\u4EA4\u4E92\u548C\u8054\u52A8\u6548\u679C");
+  menu.addComponent(demoDescription, "interactive");
+  const ratingCollapsible = new Collapsible("rating_system", "\u7528\u6237\u8BC4\u5206\u7CFB\u7EDF", true);
+  const raterInput = new TextInput("rater_name", "", "\u8BC4\u5206\u4EBA", "\u8BF7\u8F93\u5165\u59D3\u540D", "\u8F93\u5165\u59D3\u540D");
+  const ratingSlider = new Slider("rating_slider", "\u8BC4\u5206 (1-10)", 1, 10, 8, 1);
+  ratingSlider.on("valueChanged", (value) => {
+    let ratingText = "";
+    if (value <= 3)
+      ratingText = "\u4E0D\u6EE1\u610F";
+    else if (value <= 6)
+      ratingText = "\u4E00\u822C";
+    else if (value <= 8)
+      ratingText = "\u6EE1\u610F";
+    else
+      ratingText = "\u975E\u5E38\u6EE1\u610F";
+    menu.setComponentValue("rating_display", `${ratingText}`);
+  });
+  const ratingDisplay = new TextView("rating_display", "\u6EE1\u610F");
+  const tagsGroup = new CheckBoxGroup("rating_tags", [
+    { id: "fast", label: "\u54CD\u5E94\u5FEB" },
+    { id: "stable", label: "\u7A33\u5B9A" },
+    { id: "easy_use", label: "\u6613\u7528" },
+    { id: "beautiful", label: "\u7F8E\u89C2" }
+  ], []);
+  const commentInput = new TextInput("rating_comment", "", "\u8BC4\u8BBA", "\u8BF7\u8F93\u5165\u60A8\u7684\u8BC4\u8BBA...", "\u6DFB\u52A0\u8BC4\u8BBA");
+  const submitRatingButton = new Button("submit_rating", "\u63D0\u4EA4\u8BC4\u5206", "primary");
+  submitRatingButton.setOnClick(() => {
+    const rater = menu.getComponent("rater_name")?.getValue() || "";
+    const rating = menu.getComponent("rating_slider")?.getValue();
+    const tags = menu.getComponent("rating_tags")?.getCheckedValues() || [];
+    const comment = menu.getComponent("rating_comment")?.getValue() || "";
+    console.log("\u63D0\u4EA4\u8BC4\u5206:", {
+      rater,
+      rating,
+      tags,
+      comment
+    });
+    menu.toast(`\u8BC4\u5206\u5DF2\u63D0\u4EA4\uFF01
+\u8BC4\u5206\u4EBA: ${rater}
+\u5F97\u5206: ${rating}
+\u6807\u7B7E: ${tags.join(", ")}
+\u8BC4\u8BBA: ${comment}`, 1);
+  });
+  const ratingDisplayText = new TextView("rating_result", "\u70B9\u51FB\u63D0\u4EA4\u6309\u94AE\u67E5\u770B\u7ED3\u679C");
+  ratingCollapsible.addChildren([
+    raterInput,
+    ratingSlider,
+    ratingDisplay,
+    tagsGroup,
+    commentInput,
+    submitRatingButton,
+    ratingDisplayText
+  ]);
+  menu.addComponent(ratingCollapsible, "interactive");
+  const cartCollapsible = new Collapsible("shopping_cart", "\u8D2D\u7269\u8F66", false);
+  const productSelector = new Selector("product_selector", [
+    { lable: "\u7B14\u8BB0\u672C\u7535\u8111", price: 5999 },
+    { lable: "\u9F20\u6807", price: 99 },
+    { lable: "\u952E\u76D8", price: 299 },
+    { lable: "\u663E\u793A\u5668", price: 1999 },
+    { lable: "\u8033\u673A", price: 399 }
+  ], 0);
+  productSelector.on("valueChanged", (value) => {
+    const quantity = menu.getComponent("cart_quantity")?.getValue() || 1;
+    const total = (value.price * quantity).toFixed(2);
+    menu.setComponentValue("cart_total", `\u603B\u4EF7: \xA5${total}`);
+  });
+  const quantitySelector = new NumberInput("cart_quantity", 1, 1, 10, "\u6570\u91CF", "\u8BF7\u8F93\u5165\u6570\u91CF", "\u4FEE\u6539\u6570\u91CF");
+  quantitySelector.setOnValueChange((value) => {
+    const product = menu.getComponent("product_selector")?.getValue();
+    if (product) {
+      const total = (product.price * value).toFixed(2);
+      menu.setComponentValue("cart_total", `\u603B\u4EF7: \xA5${total}`);
+    }
+  });
+  const shippingSelector = new Selector("shipping_selector", [
+    { lable: "\u666E\u901A\u5FEB\u9012 (\xA510)", fee: 10 },
+    { lable: "\u52A0\u6025\u5FEB\u9012 (\xA520)", fee: 20 },
+    { lable: "\u987A\u4E30\u901F\u8FD0 (\xA525)", fee: 25 }
+  ], 0);
+  shippingSelector.on("valueChanged", (value) => {
+    const product = menu.getComponent("product_selector")?.getValue();
+    const quantity = menu.getComponent("cart_quantity")?.getValue() || 1;
+    const subtotal = product ? product.price * quantity : 0;
+    const total = (subtotal + value.fee).toFixed(2);
+    menu.setComponentValue("cart_total", `\u5546\u54C1\u603B\u4EF7: \xA5${subtotal.toFixed(2)}<br/>\u8FD0\u8D39: \xA5${value.fee}<br/>\u603B\u8BA1: \xA5${total}`);
+  });
+  const cartTotal = new TextView("cart_total", "\u603B\u4EF7: \xA55999");
+  menu.addComponent(cartTotal, "interactive");
+  cartCollapsible.addChildren([
+    productSelector,
+    quantitySelector,
+    shippingSelector
+  ]);
+  menu.addComponent(cartCollapsible, "interactive");
+  const addToCartButton = new Button("add_to_cart", "\u6DFB\u52A0\u5230\u8D2D\u7269\u8F66", "primary");
+  addToCartButton.setOnClick(() => {
+    const product = menu.getComponent("product_selector")?.getValue();
+    const quantity = menu.getComponent("cart_quantity")?.getValue() || 1;
+    const shipping = menu.getComponent("shipping_selector")?.getValue();
+    if (!product || !shipping) {
+      menu.toast("\u8BF7\u5148\u9009\u62E9\u5546\u54C1\u548C\u914D\u9001\u65B9\u5F0F", 1);
+      return;
+    }
+    const subtotal = product.price * quantity;
+    const total = subtotal + shipping.fee;
+    menu.toast(`\u5DF2\u6DFB\u52A0\u5230\u8D2D\u7269\u8F66\uFF01
+\u5546\u54C1: ${product.lable}
+\u6570\u91CF: ${quantity}
+\u914D\u9001: ${shipping.lable}
+\u603B\u8BA1: \xA5${total.toFixed(2)}`, 1);
+  });
+  menu.addComponent(addToCartButton, "interactive");
+  menu.on("component:username:valueChanged", (value) => {
+    console.log(`[\u5168\u5C40\u76D1\u542C] \u7528\u6237\u540D\u6539\u53D8: ${value}`);
+  });
   menu.on("component:volume_slider:valueChanged", (value) => {
-    console.log(`[Global] Volume slider changed to ${value}`);
+    console.log(`[\u5168\u5C40\u76D1\u542C] \u97F3\u91CF\u6539\u53D8: ${value}%`);
   });
-  menu.on("component:name_input:valueChanged", (value) => {
-    console.log(`[Global] Name input changed to "${value}"`);
+  menu.on("component:sound_switch:valueChanged", (value) => {
+    console.log(`[\u5168\u5C40\u76D1\u542C] \u97F3\u6548\u5F00\u5173: ${value}`);
   });
-  menu.on("component:age_input:valueChanged", (value) => {
-    console.log(`[Global] Age input changed to ${value}`);
-  });
+  console.log("\u6240\u6709\u7EC4\u4EF6\u5DF2\u6DFB\u52A0\u5B8C\u6210\uFF01");
+  menu.toast("\u7EFC\u5408\u6D4B\u8BD5\u7528\u4F8B\u5DF2\u52A0\u8F7D\u5B8C\u6210");
 });

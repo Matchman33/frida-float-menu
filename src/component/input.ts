@@ -50,6 +50,9 @@ export class NumberInput extends UIComponent {
     });
   }
 
+  public getValue(): number {
+    return this.value as number;
+  }
   protected createView(context: any): void {
     const Button = API.Button;
     const String = API.JString;
@@ -407,7 +410,8 @@ export class TextInput extends UIComponent {
                   input.getText(),
                   Java.use("java.lang.CharSequence"),
                 ).toString() + "";
-              self.value = text;
+              // 去除换行和空白字符
+              self.value = text.trim();
               self.view.setText(String.$new(`${self.text}: ${self.value}`));
               self.emit("valueChanged", text);
               if (self.handler) self.handler(text);

@@ -81,7 +81,7 @@ export function applyStyle(view: any, role: StyleRole, theme: Theme) {
       const bg =
         theme.colors.accentSoft ?? withAlpha(theme.colors.accent, 0x22);
       const stroke = theme.colors.accentStroke ?? theme.colors.controlStroke;
-      rounded(bg, theme.radiusDp.card, { c: stroke, wDp: 2 });
+      rounded(bg, 1, { c: stroke, wDp: 2 });
       view.setPadding(dpx(14), dpx(10), dpx(14), dpx(10));
       const tv = asTextView();
       if (tv) {
