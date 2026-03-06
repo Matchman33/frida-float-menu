@@ -4,7 +4,7 @@ import { UIComponent } from "./ui-components";
 
 export class Button extends UIComponent {
   private label: string;
-  private onClick: (() => void) | null = null;
+  private handler: (() => void) | null = null;
   private kind: "primary" | "danger" = "primary";
   constructor(id: string, label: string, kind: "primary" | "danger" = "primary") {
     super(id);
@@ -36,8 +36,8 @@ export class Button extends UIComponent {
       methods: {
         onClick: function (v) {
           self.emit("click");
-          if (self.onClick) {
-            setImmediate(self.onClick);
+          if (self.handler) {
+            setImmediate(self.handler);
           }
         },
       },
@@ -70,6 +70,6 @@ export class Button extends UIComponent {
    * Set click handler
    */
   public setOnClick(handler: () => void): void {
-    this.onClick = handler;
+    this.handler = handler;
   }
 }

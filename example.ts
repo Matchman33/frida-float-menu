@@ -15,12 +15,10 @@ import { NumberInput, TextInput } from "./src/component/input";
 import { CheckBoxGroup } from "./src/component/checkBox";
 import { ImageView } from "./src/component/image";
 import { DarkNeonTheme } from "./src/component/style/theme";
-import { TextView } from "./src/component/text";
 import { Selector } from "./src/component/selector";
 import { Slider } from "./src/component/slider";
 
 Java.perform(() => {
-  console.log("开始创建综合测试用例，涵盖所有组件...");
 
   const options: FloatMenuOptions = {
     width: 1200,
@@ -44,8 +42,9 @@ Java.perform(() => {
 
   const menu = new FloatMenu(options);
   menu.show();
+  menu.logger.info("开始创建综合测试用例，涵盖所有组件...");
 
-  console.log("悬浮窗已创建，开始添加组件...");
+  menu.logger.info("悬浮窗已创建，开始添加组件...");
 
   // ============================================
   // 标签页1: 基础组件 (Basic Components)
@@ -75,7 +74,7 @@ Java.perform(() => {
   // Primary Button
   const primaryButton = new Button("primary_button", "主要按钮", "primary");
   primaryButton.setOnClick(() => {
-    console.log("主要按钮被点击");
+    menu.logger.info("主要按钮被点击");
     menu.toast("主要按钮被点击！");
     // 动态更新文本
     menu.setComponentValue("dynamic_text", `动态文本：最后更新于 ${new Date().toLocaleTimeString()}`);
@@ -85,7 +84,7 @@ Java.perform(() => {
   // Danger Button
   const dangerButton = new Button("danger_button", "危险操作", "danger");
   dangerButton.setOnClick(() => {
-    console.log("危险按钮被点击");
+    menu.logger.info("危险按钮被点击");
     menu.toast("这是一个危险操作！", 1);
   });
   menu.addComponent(dangerButton, "basic");
@@ -110,7 +109,7 @@ Java.perform(() => {
     "输入用户名"
   );
   usernameInput.setOnValueChange((value: string) => {
-    console.log(`用户名输入: ${value}`);
+    menu.logger.info(`用户名输入: ${value}`);
     menu.toast(`用户名设置为: ${value}`);
     // 更新显示文本
     menu.setComponentValue("username_display", `当前用户名：<b>${value || "未设置"}</b>`);
@@ -130,7 +129,7 @@ Java.perform(() => {
     "输入密码"
   );
   passwordInput.setOnValueChange((value: string) => {
-    console.log(`密码输入: ${value.length} 个字符`);
+    menu.logger.info(`密码输入: ${value.length} 个字符`);
   });
   menu.addComponent(passwordInput, "form");
 
@@ -167,7 +166,7 @@ Java.perform(() => {
     "输入年龄"
   );
   ageInput.setOnValueChange((value: number) => {
-    console.log(`年龄设置为: ${value}`);
+    menu.logger.info(`年龄设置为: ${value}`);
     let category = "";
     if (value < 13) category = "儿童";
     else if (value < 20) category = "青少年";
@@ -208,7 +207,7 @@ Java.perform(() => {
   // Switch - 音效开关
   const soundSwitch = new Switch("sound_switch", "音效");
   soundSwitch.on("valueChanged", (value: boolean) => {
-    console.log(`音效开关: ${value}`);
+    menu.logger.info(`音效开关: ${value}`);
     menu.toast(`音效已${value ? "开启" : "关闭"}`);
   });
   menu.addComponent(soundSwitch, "form");
@@ -216,7 +215,7 @@ Java.perform(() => {
   // Switch - 通知开关
   const notificationSwitch = new Switch("notification_switch", "通知");
   notificationSwitch.on("valueChanged", (value: boolean) => {
-    console.log(`通知开关: ${value}`);
+    menu.logger.info(`通知开关: ${value}`);
     menu.toast(`通知已${value ? "开启" : "关闭"}`);
   });
   menu.addComponent(notificationSwitch, "form");
@@ -234,7 +233,7 @@ Java.perform(() => {
     ["reading"] // 初始选中阅读
   );
   hobbiesGroup.on("valueChanged", (values: any[]) => {
-    console.log(`选中的爱好: ${JSON.stringify(values)}`);
+    menu.logger.info(`选中的爱好: ${JSON.stringify(values)}`);
     // menu.toast(`选中的爱好: ${values.join(", ")}`);
     menu.setComponentValue("hobbies_display", `选中的爱好：<b>${values.map((v) => v.label).join(", ") || "无"}</b>`);
   });
@@ -265,7 +264,7 @@ Java.perform(() => {
     0 // 默认选中第一个
   );
   citySelector.on("valueChanged", (value: any) => {
-    console.log(`选择的城市: ${value.lable} (${value.code})`);
+    menu.logger.info(`选择的城市: ${value.lable} (${value.code})`);
     menu.setComponentValue("city_display", `当前城市：<b>${value.lable}</b>`);
   });
   menu.addComponent(citySelector, "selection");
@@ -287,7 +286,7 @@ Java.perform(() => {
     0
   );
   colorSelector.on("valueChanged", (value: any) => {
-    console.log(`选择的颜色: ${value.lable} (${value.color})`);
+    menu.logger.info(`选择的颜色: ${value.lable} (${value.color})`);
     menu.toast(`颜色设置为: ${value.lable}`);
   });
   menu.addComponent(colorSelector, "selection");
@@ -305,7 +304,7 @@ Java.perform(() => {
     0
   );
   languageSelector.on("valueChanged", (value: any) => {
-    console.log(`选择的语言: ${value.lable}`);
+    menu.logger.info(`选择的语言: ${value.lable}`);
     menu.toast(`语言设置为: ${value.lable}`);
   });
   menu.addComponent(languageSelector, "selection");
@@ -320,7 +319,7 @@ Java.perform(() => {
     1    // 步进
   );
   volumeSlider.on("valueChanged", (value: number) => {
-    console.log(`音量: ${value}%`);
+    menu.logger.info(`音量: ${value}%`);
     menu.setComponentValue("volume_display", `当前音量：<b>${value}%</b>`);
   });
   menu.addComponent(volumeSlider, "selection");
@@ -339,7 +338,7 @@ Java.perform(() => {
     5
   );
   brightnessSlider.on("valueChanged", (value: number) => {
-    console.log(`亮度: ${value}%`);
+    menu.logger.info(`亮度: ${value}%`);
     menu.setComponentValue("brightness_display", `当前亮度：<b>${value}%</b>`);
   });
   menu.addComponent(brightnessSlider, "selection");
@@ -358,7 +357,7 @@ Java.perform(() => {
     10
   );
   progressSlider.on("valueChanged", (value: number) => {
-    console.log(`进度: ${value}`);
+    menu.logger.info(`进度: ${value}`);
     const percentage = ((value / 1000) * 100).toFixed(1);
     menu.setComponentValue(
       "progress_display",
@@ -390,7 +389,7 @@ Java.perform(() => {
     "修改用户名"
   );
   usernameInput2.setOnValueChange((value: string) => {
-    console.log(`用户名修改: ${value}`);
+    menu.logger.info(`用户名修改: ${value}`);
     menu.toast(`用户名已修改为: ${value}`);
   });
 
@@ -402,7 +401,7 @@ Java.perform(() => {
     "修改邮箱"
   );
   emailInput.setOnValueChange((value: string) => {
-    console.log(`邮箱修改: ${value}`);
+    menu.logger.info(`邮箱修改: ${value}`);
     menu.toast(`邮箱已修改为: ${value}`);
   });
 
@@ -543,7 +542,7 @@ Java.perform(() => {
     const tags = menu.getComponent<CheckBoxGroup>("rating_tags")?.getCheckedValues() || [];
     const comment = menu.getComponent<TextInput>("rating_comment")?.getValue() || "";
     
-    console.log("提交评分:", {
+    menu.logger.info("提交评分:", {
       rater,
       rating,
       tags,
@@ -673,18 +672,18 @@ Java.perform(() => {
   // ============================================
   
   menu.on("component:username:valueChanged", (value: string) => {
-    console.log(`[全局监听] 用户名改变: ${value}`);
+    menu.logger.info(`[全局监听] 用户名改变: ${value}`);
   });
 
   menu.on("component:volume_slider:valueChanged", (value: number) => {
-    console.log(`[全局监听] 音量改变: ${value}%`);
+    menu.logger.info(`[全局监听] 音量改变: ${value}%`);
   });
 
   menu.on("component:sound_switch:valueChanged", (value: boolean) => {
-    console.log(`[全局监听] 音效开关: ${value}`);
+    menu.logger.info(`[全局监听] 音效开关: ${value}`);
   });
 
-  console.log("所有组件已添加完成！");
+  menu.logger.info("所有组件已添加完成！");
   menu.toast("综合测试用例已加载完成");
 });
 

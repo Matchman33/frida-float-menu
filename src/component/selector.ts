@@ -1,4 +1,5 @@
 import { API } from "../api";
+import { applyStyle } from "./style/style";
 import { UIComponent } from "./ui-components";
 
 export class Selector extends UIComponent {
@@ -28,6 +29,7 @@ export class Selector extends UIComponent {
     const R_layout = API.R_layout;
     this.view = Spinner.$new(context);
     this.view.setBackgroundColor(0xff555555 | 0); // gray background
+    // applyStyle(this.view, 'inputTrigger', this.menu.options.theme!);
 
     // Convert JavaScript strings to Java strings
     const javaItems = this.items.map((item) => String.$new(item.lable));
@@ -45,7 +47,7 @@ export class Selector extends UIComponent {
 
     // Try to set text color (may not work on all Android versions)
     try {
-      this.view.setPopupBackgroundResource(0xff333333);
+      this.view.setPopupBackgroundResource(0xff333333 | 0);
     } catch (e) {
       // ignore
     }
