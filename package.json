@@ -5,8 +5,8 @@
   "license": "MIT",
   "private": false,
   "type": "module",
-  "main": "src/index.js",
-  "types": "src/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "files": [
     "lib",
     "README.md"

@@ -79,8 +79,8 @@ export class FloatMenu {
 
   constructor(options: FloatMenuOptions = {}) {
     this.options = {
-      width: 1000,
-      height: 900,
+      width: 1200,
+      height: 1400,
       x: 0,
       y: 0,
       iconWidth: 200,
