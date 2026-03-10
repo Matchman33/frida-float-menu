@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2020",
     "module": "commonjs",
-    "declaration": true,
+    // "declaration": true,
     "allowJs": true,
     "strict": true,
     "rootDir": "./src",
