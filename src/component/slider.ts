@@ -1,4 +1,5 @@
 import { API } from "../api";
+import { Logger } from "../logger";
 import { UIComponent } from "./ui-components";
 
 export class Slider extends UIComponent {
@@ -151,7 +152,7 @@ export class Slider extends UIComponent {
 
   protected updateView(): void {
     if (!this.view) {
-      console.warn(
+      Logger.instance.warn(
         `[Slider:${this.id}] Cannot update view - view not initialized`,
       );
       return;
@@ -175,7 +176,7 @@ export class Slider extends UIComponent {
   public setLabel(label: string): void {
     this.label = label;
     if (!this.view) {
-      console.warn(
+      Logger.instance.warn(
         `[Slider:${this.id}] Cannot set label - view not initialized`,
       );
       return;
@@ -198,7 +199,7 @@ export class Slider extends UIComponent {
     this.step = step;
     this.value = this.clampToStep(this.value); // Re-clamp current value
     if (!this.view) {
-      console.warn(
+      Logger.instance.warn(
         `[Slider:${this.id}] Cannot set range - view not initialized`,
       );
       return;

@@ -486,7 +486,7 @@ export class FloatMenu {
       const Settings = Java.use("android.provider.Settings");
       if (!Settings.canDrawOverlays(this.context)) {
         this.toast("进程没有悬浮窗权限!");
-        console.error("Draw overlays permission not granted");
+        Logger.instance.error("Draw overlays permission not granted");
         return;
       }
       try {
@@ -497,7 +497,7 @@ export class FloatMenu {
         // Add any pending components that were added before window was shown
         this.processPendingComponents(this.context);
       } catch (error) {
-        console.error("Failed to show floating window: ", error);
+        Logger.instance.error("Failed to show floating window: ", error);
       }
     });
   }
@@ -546,7 +546,7 @@ export class FloatMenu {
           this.eventEmitter.emit("component:" + id + ":click", data);
         });
       } catch (error) {
-        console.error(`Failed to add pending component ${id}: ` + error);
+        Logger.instance.error(`Failed to add pending component ${id}: ` + error);
       }
     }
     // Clear pending components
@@ -565,7 +565,7 @@ export class FloatMenu {
           this.iconWindowParams,
         );
       } catch (error) {
-        console.error("Failed to hide floating window: " + error);
+        Logger.instance.error("Failed to hide floating window: " + error);
       }
     });
   }
@@ -594,7 +594,7 @@ export class FloatMenu {
     const targetTabId = tabId || this.tabsView.activeTabId;
     const tabInfo = this.tabsView.tabs.get(targetTabId);
     if (!tabInfo) {
-      console.error(
+      Logger.instance.error(
         `Cannot add component ${id} - tab ${targetTabId} not found`,
       );
       return;
@@ -610,7 +610,7 @@ export class FloatMenu {
     if (!this.menuPanelView) {
       // Window not shown yet, queue component with tab info
       this.pendingComponents.push({ id, component, tabId: targetTabId });
-      console.debug(
+      Logger.instance.debug(
         `Component ${id} queued for tab ${targetTabId} (window not shown)`,
       );
       return;
@@ -628,7 +628,7 @@ export class FloatMenu {
         tabInfo.container.addView(view);
       } else {
         // Fallback to contentContainer (should not happen if tab container was created)
-        console.warn(
+        Logger.instance.warn(
           `Tab container for ${targetTabId} not found, using contentContainer`,
         );
         this.tabsView.currentContentContainer.addView(view);
@@ -645,7 +645,7 @@ export class FloatMenu {
         this.eventEmitter.emit("component:" + id + ":click", data);
       });
     });
-    // console.debug(`Component ${id} added to tab ${targetTabId}`);
+    // Logger.instance.debug(`Component ${id} added to tab ${targetTabId}`);
   }
 
   /**
@@ -705,7 +705,7 @@ export class FloatMenu {
           }
         } else if (this.menuContainerWin) {
           this.menuContainerWin.removeView(view);
-        } else console.error("error");
+        } else Logger.instance.error("error");
       }
     });
 
@@ -718,7 +718,7 @@ export class FloatMenu {
     }
 
     this.uiComponents.delete(id);
-    console.debug(
+    Logger.instance.debug(
       `Component ${id} removed${targetTabId ? ` from tab ${targetTabId}` : ""}`,
     );
   }
@@ -939,7 +939,7 @@ export class FloatMenu {
         this.menuWindowParams,
       );
     } catch (error) {
-      console.error("Failed to create header view: " + error);
+      Logger.instance.error("Failed to create header view: " + error);
     }
   }
 }

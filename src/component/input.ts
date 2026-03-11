@@ -1,4 +1,5 @@
 import { API } from "../api";
+import { Logger } from "../logger";
 import { applyEditTextStyle, applyStyle, dp } from "./style/style";
 import { UIComponent } from "./ui-components";
 
@@ -40,7 +41,7 @@ export class NumberInput extends UIComponent {
 
   protected updateView(): void {
     if (!this.view) {
-      console.warn(
+      Logger.instance.warn(
         `[Switch:${this.id}] Cannot update view - view not initialized`,
       );
       return;
@@ -267,7 +268,7 @@ export class NumberInput extends UIComponent {
           }
         }
       } catch (e) {
-        console.error(e);
+        Logger.instance.error(e);
       }
     });
   }
@@ -335,7 +336,7 @@ export class TextInput extends UIComponent {
   }
   protected updateView(): void {
     if (!this.view) {
-      console.warn(
+      Logger.instance.warn(
         `[Switch:${this.id}] Cannot update view - view not initialized`,
       );
       return;
@@ -490,7 +491,7 @@ export class TextInput extends UIComponent {
           dp(context, 12),
         );
       } catch (e) {
-        console.error(e);
+        Logger.instance.error(e);
       }
 
       // ✅ 按钮主题化
@@ -525,7 +526,7 @@ export class TextInput extends UIComponent {
           );
         }
       } catch (e) {
-        console.error(e);
+        Logger.instance.error(e);
       }
       // ✅ 标题文字主题化（有的系统能拿到 id，有的拿不到，拿不到也不影响）
       try {
@@ -546,7 +547,7 @@ export class TextInput extends UIComponent {
           }
         }
       } catch (e) {
-        console.error(e);
+        Logger.instance.error(e);
       }
     });
   }

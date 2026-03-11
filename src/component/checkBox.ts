@@ -1,4 +1,5 @@
 import { API } from "../api";
+import { Logger } from "../logger";
 import { applyStyle } from "./style/style";
 import { UIComponent } from "./ui-components";
 
@@ -247,7 +248,7 @@ export class CheckBoxGroup extends UIComponent {
 
   public setChecked(id: string, checked: boolean): void {
     if (!this.optionsMap.has(id)) {
-      console.warn(
+      Logger.instance.warn(
         `[CheckBoxGroup:${this.id}] Option with id "${id}" not found`,
       );
       return;

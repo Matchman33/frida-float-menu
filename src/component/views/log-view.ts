@@ -129,7 +129,7 @@ export class LogView {
 
   public createViewOnce(parentView: any) {
     if (!parentView) {
-      console.error("LogView: parentView is null");
+      Logger.instance.error("LogView: parentView is null");
       return;
     }
     this.parentView = parentView;
@@ -218,7 +218,7 @@ export class LogView {
           panel.bringToFront();
         } catch {}
       } catch (e) {
-        console.error("ensureLogDrawer failed: " + e);
+        Logger.instance.error("ensureLogDrawer failed: " + e);
       }
     });
 
@@ -329,7 +329,7 @@ export class LogView {
       sv.setVerticalScrollBarEnabled(false);
       sv.setBackgroundColor(0x00000000);
     } catch (e) {
-      console.error("createLogView setFillViewport failed: " + e);
+      Logger.instance.error("createLogView setFillViewport failed: " + e);
     }
 
     // 内容：TextView

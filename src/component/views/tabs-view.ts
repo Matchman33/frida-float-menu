@@ -224,7 +224,7 @@ export class TabsView {
 
         this.eventEmitter.emit("tabChanged", tabId, oldTabId);
       } catch (error) {
-        console.error(`Failed to switch to tab ${tabId}:`, error);
+        Logger.instance.error(`Failed to switch to tab ${tabId}:`, error);
       }
     });
   }
@@ -360,7 +360,7 @@ export class TabsView {
       ),
     );
     if (!this.tabs || this.tabs.size === 0) {
-      console.warn("[FloatMenu] tabs is empty, tab container will be blank.");
+      Logger.instance.warn("[FloatMenu] tabs is empty, tab container will be blank.");
     }
 
     let firstTabId: string | null = null;

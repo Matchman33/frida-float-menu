@@ -1,6 +1,7 @@
 import { API } from "../api";
 import { UIComponent } from "./ui-components";
 import { applyStyle, dp } from "./style/style";
+import { Logger } from "../logger";
 
 export class Collapsible extends UIComponent {
   private title: string;
@@ -125,7 +126,7 @@ export class Collapsible extends UIComponent {
 
           if (v) this.contentContainer.addView(v);
         } catch (e) {
-          console.error(
+          Logger.instance.error(
             `[Collapsible:${this.id}] addChild: ${c.getId()} - ${e}`,
           );
         }
@@ -160,7 +161,7 @@ export class Collapsible extends UIComponent {
 
   protected updateView(): void {
     if (!this.view) {
-      console.warn(
+      Logger.instance.warn(
         `[Collapsible:${this.id}] Cannot update view - view not initialized`,
       );
       return;
@@ -212,7 +213,7 @@ export class Collapsible extends UIComponent {
   public setTitle(title: string): void {
     this.title = title;
     if (!this.view) {
-      console.warn(
+      Logger.instance.warn(
         `[Collapsible:${this.id}] Cannot set title - view not initialized`,
       );
       return;
@@ -243,7 +244,7 @@ export class Collapsible extends UIComponent {
         const v = component.getView();
         if (v) this.contentContainer.addView(v);
       } catch (e) {
-        console.error(`[Collapsible:${this.id}] addChild error: ${e}`);
+        Logger.instance.error(`[Collapsible:${this.id}] addChild error: ${e}`);
       }
     });
   }

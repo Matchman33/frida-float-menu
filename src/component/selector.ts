@@ -1,4 +1,5 @@
 import { API } from "../api";
+import { Logger } from "../logger";
 import { applyStyle } from "./style/style";
 import { UIComponent } from "./ui-components";
 
@@ -22,7 +23,6 @@ export class Selector extends UIComponent {
   }
 
   public getValue(): { lable: string; [key: string]: any } {
-    console.log(JSON.stringify(this.value));
     return this.value;
   }
 
@@ -48,7 +48,6 @@ export class Selector extends UIComponent {
     );
     // Convert JavaScript strings to Java strings
     const javaItems = this.items.map((item) => String.$new(item.lable));
-    console.log(javaItems, itemLayout);
     const adapter = ArrayAdapter.$new(
       context,
       itemLayout,
@@ -100,7 +99,7 @@ export class Selector extends UIComponent {
 
   protected updateView(): void {
     if (!this.view) {
-      console.warn(
+      Logger.instance.warn(
         `[Selector:${this.id}] Cannot update view - view not initialized`,
       );
       return;
@@ -123,7 +122,7 @@ export class Selector extends UIComponent {
   public setItems(items: { lable: string; [key: string]: any }[]): void {
     this.items = items;
     if (!this.view) {
-      console.warn(
+      Logger.instance.warn(
         `[Selector:${this.id}] Cannot set items - view not initialized`,
       );
       return;
@@ -157,7 +156,7 @@ export class Selector extends UIComponent {
         );
         this.view.setAdapter(adapter);
       } catch (error) {
-        console.error(`[Selector:${this.id}] Failed to set items:`, error);
+        Logger.instance.error(`[Selector:${this.id}] Failed to set items:`, error);
       }
     });
   }

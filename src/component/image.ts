@@ -1,4 +1,5 @@
 import { API } from "../api";
+import { Logger } from "../logger";
 import { UIComponent } from "./ui-components";
 
 export class ImageView extends UIComponent {
@@ -64,14 +65,14 @@ export class ImageView extends UIComponent {
         );
         this.view.setImageBitmap(bitmap);
       } catch (error) {
-        console.error(`[Image:${this.id}] Failed to load image:`, error);
+        Logger.instance.error(`[Image:${this.id}] Failed to load image:`, error);
       }
     });
   }
 
   protected updateView(): void {
     if (!this.view) {
-      console.warn(
+      Logger.instance.warn(
         `[Image:${this.id}] Cannot update view - view not initialized`,
       );
       return;

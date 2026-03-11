@@ -1,4 +1,5 @@
 import { API } from "../api";
+import { Logger } from "../logger";
 import { applyStyle } from "./style/style";
 import { UIComponent } from "./ui-components";
 
@@ -61,7 +62,7 @@ export class Button extends UIComponent {
   public setLabel(label: string): void {
     this.label = label;
     if (!this.view) {
-      console.warn(
+      Logger.instance.warn(
         `[Button:${this.id}] Cannot set label - view not initialized`,
       );
       return;

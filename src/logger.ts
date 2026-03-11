@@ -193,9 +193,20 @@ export class Logger {
       message: msg,
     };
 
-    // 控制台输出（你也可以按需关掉），添加事件，只要时分秒
-    const formatted = `[${level.toUpperCase()} ${new Date(item.ts).toTimeString().substring(0, 8)}] ${msg}`;
-    console.log(formatted);
+    switch (level) {
+      case "debug":
+        console.debug(msg);
+        break;
+      case "info":
+        console.info(msg);
+        break;
+      case "warn":
+        console.warn(msg);
+        break;
+      case "error":
+        console.error(msg);
+        break;
+    }
 
     // 写入环形缓冲
     this.pushToBuffer(item);
