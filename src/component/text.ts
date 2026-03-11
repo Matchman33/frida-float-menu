@@ -3,12 +3,10 @@ import { applyStyle } from "./style/style";
 import { UIComponent } from "./ui-components";
 
 export class TextView extends UIComponent {
-  private content: string;
   private size: number;
 
   constructor(id: string, content: string, size: number = 16) {
     super(id);
-    this.content = content;
     this.value = content;
     this.size = size;
   }
@@ -21,7 +19,7 @@ export class TextView extends UIComponent {
     applyStyle(this.view, "text", this.menu.options.theme!);
     this.view.setTextSize(this.size);
 
-    this.view.setText(Html.fromHtml(this.content));
+    this.view.setText(Html.fromHtml(this.value));
   }
 
   protected updateView(): void {
@@ -33,8 +31,8 @@ export class TextView extends UIComponent {
   }
 
   public setText(content: string): void {
-    this.content = content;
     this.value = content;
     this.updateView();
   }
+
 }
