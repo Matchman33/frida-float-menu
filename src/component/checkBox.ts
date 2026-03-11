@@ -28,7 +28,6 @@ export class CheckBoxGroup extends UIComponent {
     id: string,
     options: CheckBoxOption[],
     initialChecked: string[] = [],
-    _columns: number = 3, // 保留参数不破坏外部调用，但不再使用
   ) {
     super(id);
     for (const opt of options) {

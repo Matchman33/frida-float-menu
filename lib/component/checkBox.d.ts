@@ -10,7 +10,7 @@ export declare class CheckBoxGroup extends UIComponent {
     private valueChangeHandler?;
     private triggerText;
     private maxDisplayCount;
-    constructor(id: string, options: CheckBoxOption[], initialChecked?: string[], _columns?: number);
+    constructor(id: string, options: CheckBoxOption[], initialChecked?: string[]);
     onChangeHandler(handler: (value: CheckBoxOption[], item?: {
         id: string;
         checked: boolean;
