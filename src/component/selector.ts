@@ -6,6 +6,7 @@ export class Selector extends UIComponent {
   private items: { lable: string; [key: string]: any }[];
   private selectedIndex: number;
   private handler?: (value: any) => {};
+  private context: any;
 
   constructor(
     id: string,
@@ -26,6 +27,7 @@ export class Selector extends UIComponent {
   }
 
   protected createView(context: any): void {
+    this.context = context;
     const Spinner = API.Spinner;
     const ArrayAdapter = API.ArrayAdapter;
     const String = API.JString;
@@ -53,7 +55,6 @@ export class Selector extends UIComponent {
       Java.array("java.lang.String", javaItems),
     );
     adapter.setDropDownViewResource(dropLayout);
-    console.log(adapter);
     this.view.setAdapter(adapter);
     this.view.setSelection(this.selectedIndex);
 
@@ -82,7 +83,6 @@ export class Selector extends UIComponent {
         ) {
           self.selectedIndex = position;
           self.value = self.items[position];
-          console.log(JSON.stringify(self.value));
           self.emit("valueChanged", self.value);
           if (self.handler) setImmediate(() => self.handler!(self.value));
         },
@@ -132,19 +132,28 @@ export class Selector extends UIComponent {
     Java.scheduleOnMainThread(() => {
       try {
         const ArrayAdapter = API.ArrayAdapter;
-        const context = this.view.getContext();
-        const R_layout = API.R_layout;
         const String = API.JString;
         // Convert JavaScript strings to Java strings
         const javaItems = items.map((item) => String.$new(item.lable));
 
+        const res = this.context.getResources();
+        const itemLayout = res.getIdentifier(
+          "simple_spinner_item",
+          "layout",
+          "android",
+        );
+        const dropLayout = res.getIdentifier(
+          "simple_spinner_dropdown_item",
+          "layout",
+          "android",
+        );
         const adapter = ArrayAdapter.$new(
-          context,
-          R_layout.simple_spinner_item.value,
+          this.context,
+          itemLayout,
           Java.array("java.lang.CharSequence", javaItems),
         );
         adapter.setDropDownViewResource(
-          R_layout.simple_spinner_dropdown_item.value,
+          dropLayout,
         );
         this.view.setAdapter(adapter);
       } catch (error) {
