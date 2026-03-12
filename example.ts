@@ -110,7 +110,7 @@ Java.perform(() => {
     "请输入用户名",
     "输入用户名",
   );
-  usernameInput.setOnValueChange((value: string) => {
+  usernameInput.onValueChange((value: string) => {
     menu.logger.info(`用户名输入: ${value}`);
     menu.toast(`用户名设置为: ${value}`);
     // 更新显示文本
@@ -136,7 +136,7 @@ Java.perform(() => {
     "请输入密码",
     "输入密码",
   );
-  passwordInput.setOnValueChange((value: string) => {
+  passwordInput.onValueChange((value: string) => {
     menu.logger.info(`密码输入: ${value.length} 个字符`);
   });
   menu.addComponent(passwordInput, "form");
@@ -149,7 +149,7 @@ Java.perform(() => {
     "请输入备注信息...",
     "输入备注",
   );
-  notesInput.setOnValueChange((value: string) => {
+  notesInput.onValueChange((value: string) => {
     const chars = value.length;
     const lines = value.split("\n").length;
     menu.setComponentValue(
@@ -176,7 +176,7 @@ Java.perform(() => {
     "请输入年龄",
     "输入年龄",
   );
-  ageInput.setOnValueChange((value: number) => {
+  ageInput.onValueChange((value: number) => {
     menu.logger.info(`年龄设置为: ${value}`);
     let category = "";
     if (value < 13) category = "儿童";
@@ -201,7 +201,7 @@ Java.perform(() => {
     "请输入数量",
     "输入数量",
   );
-  quantityInput.setOnValueChange((value: number) => {
+  quantityInput.onValueChange((value: number) => {
     const price = 99.99;
     const total = (value * price).toFixed(2);
     menu.setComponentValue(
@@ -412,7 +412,7 @@ Java.perform(() => {
     "请输入用户名",
     "修改用户名",
   );
-  usernameInput2.setOnValueChange((value: string) => {
+  usernameInput2.onValueChange((value: string) => {
     menu.logger.info(`用户名修改: ${value}`);
     menu.toast(`用户名已修改为: ${value}`);
   });
@@ -424,7 +424,7 @@ Java.perform(() => {
     "请输入邮箱地址",
     "修改邮箱",
   );
-  emailInput.setOnValueChange((value: string) => {
+  emailInput.onValueChange((value: string) => {
     menu.logger.info(`邮箱修改: ${value}`);
     menu.toast(`邮箱已修改为: ${value}`);
   });
@@ -628,7 +628,7 @@ Java.perform(() => {
     "请输入数量",
     "修改数量",
   );
-  quantitySelector.setOnValueChange((value: number) => {
+  quantitySelector.onValueChange((value: number) => {
     const product = menu.getComponent<Selector>("product_selector")?.getValue();
     if (product) {
       const total = (product.price * value).toFixed(2);

@@ -273,7 +273,7 @@ export class NumberInput extends UIComponent {
     });
   }
 
-  public setOnValueChange(handler: (value: number) => void) {
+  public onValueChange(handler: (value: number) => void) {
     this.handler = handler;
   }
   private applyConstraints(): void {
@@ -378,7 +378,7 @@ export class TextInput extends UIComponent {
     this.emit("valueChanged", value);
   }
 
-  public setOnValueChange(handler: (value: string) => void) {
+  public onValueChange(handler: (value: string) => void) {
     this.handler = handler;
   }
 

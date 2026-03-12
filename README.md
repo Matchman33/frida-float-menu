@@ -51,7 +51,7 @@ Java.perform(() => {
 
     // 添加按钮组件
     const button = new Button('myButton', '点击我', 'primary');
-    button.setOnClick(() => {
+    button.onClick(() => {
         console.log('按钮被点击了！');
         menu.toast('按钮被点击！');
     });
@@ -101,7 +101,7 @@ menu.addComponent(richText);
 const primaryButton = new Button('btn1', '主要按钮', 'primary');
 const dangerButton = new Button('btn2', '危险操作', 'danger');
 
-primaryButton.setOnClick(() => {
+primaryButton.onClick(() => {
     menu.toast('主要按钮被点击！');
 });
 menu.addComponent(primaryButton);

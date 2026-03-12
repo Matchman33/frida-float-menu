@@ -12,7 +12,7 @@ export declare class NumberInput extends UIComponent {
     getValue(): number;
     protected createView(context: any): void;
     private showDialog;
-    setOnValueChange(handler: (value: number) => void): void;
+    onValueChange(handler: (value: number) => void): void;
     private applyConstraints;
     setHint(hint: string): void;
     setConstraints(min: number | null, max: number | null): void;
@@ -29,7 +29,7 @@ export declare class TextInput extends UIComponent {
     protected updateView(): void;
     protected createView(context: any): void;
     protected emitValue(value: any): void;
-    setOnValueChange(handler: (value: string) => void): void;
+    onValueChange(handler: (value: string) => void): void;
     private showDialog;
     setText(text: string): void;
 }
