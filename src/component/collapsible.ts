@@ -236,6 +236,7 @@ export class Collapsible extends UIComponent {
 
     Java.scheduleOnMainThread(() => {
       try {
+        // 必须添加，不然无法通过id取得组件
         this.menu.uiComponents.set(component.getId(), component);
         component.setMenu(this.menu);
 
