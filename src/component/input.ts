@@ -165,10 +165,15 @@ export class NumberInput extends BaseInputButton {
 
         const input = EditText.$new(context);
         input.setHint(JString.$new(this.hint));
-        input.setText(
-          JString.$new(String(this.value ?? "")),
-          TextViewBufferType.NORMAL.value,
-        );
+        const text =
+          this.value === null ||
+          this.value === undefined ||
+          isNaN(this.value as number)
+            ? ""
+            : String(this.value);
+
+        input.setText(JString.$new(text), TextViewBufferType.NORMAL.value);
+
         // applyStyle(input, "inputField", this.menu.options.theme!);
         try {
           input.setInputType(
