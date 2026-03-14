@@ -26,6 +26,24 @@ export class Collapsible extends UIComponent {
     const View = API.View;
     const Gravity = API.Gravity;
 
+    const GradientDrawable = Java.use(
+      "android.graphics.drawable.GradientDrawable",
+    );
+
+    const createRoundedCard = (
+      bgColor: number,
+      cornerDp: number,
+      strokeColor: number,
+      strokeDp: number,
+    ) => {
+      const drawable = GradientDrawable.$new();
+      drawable.setShape(GradientDrawable.RECTANGLE.value);
+      drawable.setColor(bgColor | 0);
+      drawable.setCornerRadius(dp(context, cornerDp));
+      drawable.setStroke(dp(context, strokeDp), strokeColor | 0);
+      return drawable;
+    };
+
     // ===== Main container (card) =====
     const container = LinearLayout.$new(context);
     container.setOrientation(LinearLayout.VERTICAL.value);
@@ -36,8 +54,13 @@ export class Collapsible extends UIComponent {
       ),
     );
 
-    // ✅ 外层卡片风格
-    applyStyle(container, "card", this.menu.options.theme!);
+    const theme = this.menu.options.theme!;
+    const borderColor = theme.colors.divider;
+    const cardBg = theme.colors.rowBg ?? theme.colors.cardBg;
+
+    container.setBackground(createRoundedCard(cardBg, 10, borderColor, 1));
+    container.setPadding(0, 0, 0, 0);
+    container.setElevation(dp(context, 2));
 
     // ===== Title row (row) =====
     const titleRow = LinearLayout.$new(context);
@@ -50,24 +73,23 @@ export class Collapsible extends UIComponent {
       ),
     );
 
-    // ✅ 标题行用 row，融入整体
-    applyStyle(titleRow, "row", this.menu.options.theme!);
-
-    // 标题行内边距微调（row 已有 padding，这里可按你口味微调）
-    // titleRow.setPadding(
-    //   dp(context, 12),
-    //   dp(context, 10),
-    //   dp(context, 12),
-    //   dp(context, 10),
-    // );
+    titleRow.setPadding(
+      dp(context, 14),
+      dp(context, 12),
+      dp(context, 14),
+      dp(context, 12),
+    );
+    titleRow.setMinimumHeight(dp(context, 48));
 
     // Arrow (TextView)
-    const arrowText = this.expanded ? "▼" : "▶";
+    const arrowText = this.expanded ? "⌃" : "›";
     const arrowTextView = TextView.$new(context);
     arrowTextView.setText(String.$new(arrowText));
     arrowTextView.setSingleLine(true);
-    applyStyle(arrowTextView, "caption", this.menu.options.theme!);
-    arrowTextView.setPadding(0, 0, dp(context, 8), 0);
+    arrowTextView.setTextColor(theme.colors.subText);
+    arrowTextView.setTextSize(2, 20);
+    arrowTextView.setGravity(Gravity.CENTER.value);
+    arrowTextView.setPadding(dp(context, 12), 0, 0, 0);
 
     this.arrowView = arrowTextView;
 
@@ -77,12 +99,26 @@ export class Collapsible extends UIComponent {
     titleView.setSingleLine(true);
     applyStyle(titleView, "text", this.menu.options.theme!);
     titleView.setTypeface(null, 1); // BOLD
+    titleView.setTextSize(2, 16);
     titleView.setLayoutParams(
       LinearLayoutParams.$new(0, ViewGroupLayoutParams.WRAP_CONTENT.value, 1.0),
     );
 
-    titleRow.addView(this.arrowView);
     titleRow.addView(titleView);
+    titleRow.addView(this.arrowView);
+
+    const divider = View.$new(context);
+    divider.setLayoutParams(
+      LinearLayoutParams.$new(
+        ViewGroupLayoutParams.MATCH_PARENT.value,
+        dp(context, 1),
+      ),
+    );
+    divider.setBackgroundColor(borderColor);
+
+    if (!this.expanded) {
+      divider.setVisibility(View.GONE.value);
+    }
 
     // ===== Content container =====
     this.contentContainer = LinearLayout.$new(context);
@@ -94,12 +130,11 @@ export class Collapsible extends UIComponent {
     // lp.setMargins(0, 0, 0, dp(context, 10));
     this.contentContainer.setLayoutParams(lp);
 
-    // ✅ 内容区缩进 + 间距（比你之前更像设置分组）
     this.contentContainer.setPadding(
-      dp(context, 2),
-      dp(context, 2),
-      dp(context, 2),
-      dp(context, 4),
+      dp(context, 10),
+      dp(context, 10),
+      dp(context, 10),
+      dp(context, 10),
     );
 
     if (this.expanded) {
@@ -109,6 +144,7 @@ export class Collapsible extends UIComponent {
     }
 
     container.addView(titleRow);
+    container.addView(divider);
     container.addView(this.contentContainer);
 
     this.view = container;
@@ -137,6 +173,7 @@ export class Collapsible extends UIComponent {
     (this.view as any).titleRow = titleRow;
     (this.view as any).titleView = titleView;
     (this.view as any).contentContainer = this.contentContainer;
+    (this.view as any).divider = divider;
 
     // ===== Click listener =====
     const OnClickListener = API.OnClickListener;
@@ -173,6 +210,7 @@ export class Collapsible extends UIComponent {
       const String = API.JString;
 
       const contentContainer = (this.view as any).contentContainer;
+      const divider = (this.view as any).divider;
 
       if (contentContainer) {
         contentContainer.setVisibility(
@@ -180,8 +218,14 @@ export class Collapsible extends UIComponent {
         );
       }
 
+      if (divider) {
+        divider.setVisibility(
+          this.expanded ? View.VISIBLE.value : View.GONE.value,
+        );
+      }
+
       if (this.arrowView) {
-        const arrowText = this.expanded ? "▼" : "▶";
+        const arrowText = this.expanded ? "⌃" : "›";
         this.arrowView.setText(String.$new(arrowText));
       }
     });
