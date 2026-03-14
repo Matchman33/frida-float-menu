@@ -13,6 +13,7 @@ export type StyleRole =
   | "noteText"
   | "infoCard"
   | "noteCard"
+  | "inputButton"
   | "inputTrigger"
   | "primaryButton"
   | "dangerButton"
@@ -97,7 +98,28 @@ export function applyStyle(view: any, role: StyleRole, theme: Theme) {
       );
       view.setPadding(dpx(14), dpx(12), dpx(14), dpx(12));
       break;
+    case "inputButton": {
+      const bg = theme.colors.rowBg ?? withAlpha(theme.colors.controlBg, 0x26);
+      const stroke = theme.colors.accentStroke ?? theme.colors.controlStroke;
+      rounded(bg, 14, { c: withAlpha(stroke, 0xaa), wDp: 1 });
 
+      view.setPadding(dpx(14), dpx(12), dpx(14), dpx(12));
+      view.setMinimumHeight(dp(ctx, 48));
+
+      const tv = asTextView();
+      if (tv) {
+        tv.setTextColor(theme.colors.text);
+        tv.setTextSize(2, 14);
+        tv.setAllCaps(false);
+        tv.setGravity(
+          API.Gravity.LEFT.value | API.Gravity.CENTER_VERTICAL.value,
+        );
+        try {
+          tv.setTypeface(null, 1);
+        } catch (_e) {}
+      }
+      break;
+    }
     case "noteCard":
       rounded(
         theme.colors.noteCardBg ?? withAlpha(theme.colors.accent, 0x18),

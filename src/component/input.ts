@@ -1,274 +1,258 @@
 import { API } from "../api";
 import { Logger } from "../logger";
-import {  applyStyle, dp } from "./style/style";
+import { applyStyle, dp } from "./style/style";
 import { UIComponent } from "./ui-components";
 
-export class NumberInput extends UIComponent {
-  private text: string;
-  private hint: string;
-  private min: number | null;
-  private max: number | null;
-  private handler?: (value: number) => void;
-  private title: string;
-  private isShowDialog: boolean = false;
+function setDialogOverlayType(dialog: any) {
+  try {
+    const window = dialog.getWindow();
+    if (!window) return;
 
-  /**
-   *
-   * @param id 组件唯一id
-   * @param initialValue 初始值
-   * @param min 限定最小值
-   * @param max 限定最大值
-   * @param text 按钮提示文本
-   * @param hint 输入框提示文本
-   */
-  constructor(
-    id: string,
-    initialValue: number = 0,
-    min: number | null = null,
-    max: number | null = null,
-    text: string = "单击输入数值",
-    hint: string = "请输入数值",
-    title: string = "请输入",
-  ) {
+    const LayoutParams = API.LayoutParams;
+    const BuildVERSION = API.BuildVERSION;
+
+    if (BuildVERSION.SDK_INT.value >= 26) {
+      window.setType(LayoutParams.TYPE_APPLICATION_OVERLAY.value);
+    } else {
+      window.setType(LayoutParams.TYPE_PHONE.value);
+    }
+  } catch (e) {
+    Logger.instance.warn(`[Input] Failed to set dialog overlay type: ${e}`);
+  }
+}
+
+abstract class BaseInputButton extends UIComponent {
+  protected title: string;
+  protected hint: string;
+  protected isShowDialog: boolean = false;
+
+  protected buttonView: any;
+  protected buttonLabelView: any;
+  protected buttonIconView: any;
+
+  constructor(id: string, title: string, hint: string) {
     super(id);
-    this.value = initialValue;
-    this.text = text;
-    this.hint = hint;
-    this.min = min;
-    this.max = max;
     this.title = title;
+    this.hint = hint;
   }
 
-  protected updateView(): void {
-    if (!this.view) {
-      Logger.instance.warn(
-        `[Switch:${this.id}] Cannot update view - view not initialized`,
-      );
-      return;
-    }
+  protected createBaseView(context: any): void {
+    const LinearLayout = API.LinearLayout;
+    const LinearLayoutParams = API.LinearLayoutParams;
+    const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+    const TextView = API.TextView;
+    const Gravity = API.Gravity;
+    const String = API.JString;
+
+    const root = LinearLayout.$new(context);
+    root.setOrientation(LinearLayout.HORIZONTAL.value);
+    root.setGravity(Gravity.CENTER_VERTICAL.value);
+    applyStyle(root, "inputButton", this.menu.options.theme!);
+
+    const labelView = TextView.$new(context);
+    labelView.setText(String.$new(this.buildDisplayText()));
+    applyStyle(labelView, "text", this.menu.options.theme!);
+    labelView.setTextSize(2, 14);
+    try {
+      labelView.setTypeface(null, 1);
+    } catch (_e) {}
+    labelView.setSingleLine(true);
+    labelView.setGravity(Gravity.LEFT.value | Gravity.CENTER_VERTICAL.value);
+    labelView.setLayoutParams(
+      LinearLayoutParams.$new(0, ViewGroupLayoutParams.WRAP_CONTENT.value, 1.0),
+    );
+
+    const iconView = TextView.$new(context);
+    iconView.setText(String.$new("✎"));
+    iconView.setTextColor(this.menu.options.theme!.colors.accent);
+    iconView.setTextSize(2, 16);
+    iconView.setGravity(Gravity.CENTER.value);
+
+    const iconLp = LinearLayoutParams.$new(
+      ViewGroupLayoutParams.WRAP_CONTENT.value,
+      ViewGroupLayoutParams.WRAP_CONTENT.value,
+    );
+    iconLp.leftMargin = dp(context, 12);
+    iconView.setLayoutParams(iconLp);
+
+    root.addView(labelView);
+    root.addView(iconView);
+
+    this.view = root;
+    this.buttonView = root;
+    this.buttonLabelView = labelView;
+    this.buttonIconView = iconView;
+  }
+
+  protected refreshButtonText(): void {
+    if (!this.buttonLabelView) return;
+
     Java.scheduleOnMainThread(() => {
       const String = API.JString;
-      this.view.setText(String.$new(`${this.text}: ${this.value}`));
+      this.buttonLabelView.setText(String.$new(this.buildDisplayText()));
     });
   }
 
-  public getValue(): number {
-    return this.value as number;
+  protected abstract buildDisplayText(): string;
+}
+
+export class NumberInput extends BaseInputButton {
+  private min: number | null = null;
+  private max: number | null = null;
+  private handler?: (value: number) => void;
+
+  constructor(
+    id: string,
+    initialValue: number = 0,
+    title: string = "请输入数值",
+    hint: string = "请输入数值",
+  ) {
+    super(id, title, hint);
+    this.value = initialValue;
   }
+
+  protected buildDisplayText(): string {
+    const hasValue =
+      this.value !== null &&
+      this.value !== undefined &&
+      !isNaN(this.value as number);
+    return hasValue
+      ? `${this.title}: ${this.value}`
+      : `${this.title}: ${this.hint}`;
+  }
+
   protected createView(context: any): void {
-    const Button = API.Button;
-    const String = API.JString;
+    this.createBaseView(context);
 
-    this.view = Button.$new(context);
-    this.view.setText(String.$new(`${this.text}: ${this.value}`));
-    applyStyle(this.view, "inputTrigger", this.menu.options.theme!);
     const self = this;
-
-    // 点击按钮弹窗
-    this.view.setOnClickListener(
-      Java.registerClass({
-        name:
-          "com.frida.NumberInputClick" +
-          Date.now() +
-          Math.random().toString(36).substring(6),
-        implements: [API.OnClickListener],
-        methods: {
-          onClick: function (v: any) {
-            if (self.isShowDialog) return;
-            self.isShowDialog = true;
-            self.showDialog(context);
-          },
+    const clickListener = Java.registerClass({
+      name:
+        "com.frida.NumberInputButtonClick" +
+        Date.now() +
+        Math.random().toString(36).substring(6),
+      implements: [API.OnClickListener],
+      methods: {
+        onClick: function () {
+          if (self.isShowDialog) return;
+          self.isShowDialog = true;
+          self.showDialog(context);
         },
-      }).$new(),
-    );
+      },
+    });
+
+    this.buttonView.setClickable(true);
+    this.buttonView.setOnClickListener(clickListener.$new());
+  }
+
+  protected updateView(): void {
+    this.applyConstraints();
+    this.refreshButtonText();
   }
 
   private showDialog(context: any): void {
     Java.scheduleOnMainThread(() => {
-      const AlertDialogBuilder = API.AlertDialogBuilder;
-      const EditText = API.EditText;
-      const String = API.JString;
-      const TextViewBufferType = API.TextViewBufferType;
-      const InputType = API.InputType;
-      const LayoutParams = API.LayoutParams;
-      const LinearLayoutParams = API.LinearLayoutParams;
-      const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
-
-      const builder = AlertDialogBuilder.$new(context);
-      builder.setTitle(String.$new(this.title));
-
-      // ---- Input
-      const input = EditText.$new(context);
-      // applyEditTextStyle(input, this.menu.options.theme!);
-      input.setHint(String.$new(this.hint));
-      input.setText(
-        String.$new(this.value + ""),
-        TextViewBufferType.NORMAL.value,
-      );
-
-      // 数字（可小数/符号）
-      input.setInputType(
-        InputType.TYPE_CLASS_NUMBER.value |
-          InputType.TYPE_NUMBER_FLAG_DECIMAL.value |
-          InputType.TYPE_NUMBER_FLAG_SIGNED.value,
-      );
-
-      const lp = LinearLayoutParams.$new(
-        ViewGroupLayoutParams.MATCH_PARENT.value,
-        ViewGroupLayoutParams.WRAP_CONTENT.value,
-      );
-      input.setLayoutParams(lp);
-      // 给输入框加容器 padding（更像设置面板）
-      const LinearLayout = API.LinearLayout;
-      const container = LinearLayout.$new(context);
-      container.setPadding(
-        dp(context, 16),
-        dp(context, 10),
-        dp(context, 16),
-        dp(context, 6),
-      );
-      container.addView(input);
-      builder.setView(container);
-
-      const self = this;
-
-      // ---- Buttons
-      builder.setPositiveButton(
-        String.$new("确认"),
-        Java.registerClass({
-          name:
-            "com.frida.NumberInputOK" +
-            Date.now() +
-            Math.random().toString(36).substring(6),
-          implements: [API.DialogInterfaceOnClickListener],
-          methods: {
-            onClick: function (_dialog: any, _which: number) {
-              self.isShowDialog = false;
-              const text =
-                Java.cast(
-                  input.getText(),
-                  Java.use("java.lang.CharSequence"),
-                ).toString() + "";
-
-              if (text === "") {
-                self.value = 0;
-              } else {
-                const num = parseFloat(text);
-                if (!isNaN(num)) self.value = num;
-                else return;
-              }
-
-              self.applyConstraints();
-              self.view.setText(String.$new(`${self.text}: ${self.value}`));
-              self.emit("valueChanged", self.value);
-              if (self.handler) self.handler(self.value);
-            },
-          },
-        }).$new(),
-      );
-
-      builder.setNegativeButton(
-        String.$new("取消"),
-        Java.registerClass({
-          name:
-            "com.frida.AlertTextInputCancel" +
-            Date.now() +
-            Math.random().toString(36).substring(6),
-          implements: [API.DialogInterfaceOnClickListener],
-          methods: {
-            onClick: function (dialog: any, which: number) {
-              self.isShowDialog = false;
-            },
-          },
-        }).$new(),
-      );
-
-      const dialog = builder.create();
-
-      // ---- Overlay window type (avoid BadTokenException)
-      const window = dialog.getWindow();
-      const BuildVERSION = API.BuildVERSION;
-      if (window) {
-        if (BuildVERSION.SDK_INT.value >= 26) {
-          window.setType(LayoutParams.TYPE_APPLICATION_OVERLAY.value);
-        } else {
-          window.setType(LayoutParams.TYPE_PHONE.value);
-        }
-      }
-
-      dialog.show();
-
-      // ---- Theme the dialog (background + buttons)
       try {
-        const bg = API.GradientDrawable.$new();
-        bg.setColor(this.menu.options.theme!.colors.cardBg);
-        bg.setCornerRadius(dp(context, 14));
-        bg.setStroke(dp(context, 1), this.menu.options.theme!.colors.divider);
+        const AlertDialogBuilder = API.AlertDialogBuilder;
+        const EditText = API.EditText;
+        const JString = API.JString;
+        const LinearLayout = API.LinearLayout;
+        const LinearLayoutParams = API.LinearLayoutParams;
+        const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+        const InputType = Java.use("android.text.InputType");
+        const TextViewBufferType = API.TextViewBufferType;
+        const builder = AlertDialogBuilder.$new(context);
+        builder.setTitle(JString.$new(this.title));
 
-        const win = dialog.getWindow();
-        if (win) {
-          const decor = win.getDecorView();
-          decor.setBackground(bg);
-          decor.setPadding(
-            dp(context, 12),
-            dp(context, 12),
-            dp(context, 12),
-            dp(context, 12),
+        const input = EditText.$new(context);
+        input.setHint(JString.$new(this.hint));
+        input.setText(
+          JString.$new(String(this.value ?? "")),
+          TextViewBufferType.NORMAL.value,
+        );
+        // applyStyle(input, "inputField", this.menu.options.theme!);
+        try {
+          input.setInputType(
+            InputType.TYPE_CLASS_NUMBER.value |
+              InputType.TYPE_NUMBER_FLAG_SIGNED.value |
+              InputType.TYPE_NUMBER_FLAG_DECIMAL.value,
           );
-        }
+        } catch (_e) {}
 
-        // Buttons color
-        const AlertDialog = API.AlertDialog;
-        const ad = Java.cast(dialog, AlertDialog);
-        const BUTTON_POSITIVE = -1;
-        const BUTTON_NEGATIVE = -2;
+        const lp = LinearLayoutParams.$new(
+          ViewGroupLayoutParams.MATCH_PARENT.value,
+          ViewGroupLayoutParams.WRAP_CONTENT.value,
+        );
+        input.setLayoutParams(lp);
 
-        const pos = ad.getButton(BUTTON_POSITIVE);
-        const neg = ad.getButton(BUTTON_NEGATIVE);
+        const container = LinearLayout.$new(context);
+        container.setPadding(
+          dp(context, 16),
+          dp(context, 12),
+          dp(context, 16),
+          dp(context, 8),
+        );
+        container.addView(input);
+        builder.setView(container);
 
-        if (pos) {
-          pos.setAllCaps(false);
-          pos.setTextColor(this.menu.options.theme!.colors.accent);
-          pos.setPadding(
-            dp(context, 10),
-            dp(context, 8),
-            dp(context, 10),
-            dp(context, 8),
-          );
-        }
-        if (neg) {
-          neg.setAllCaps(false);
-          neg.setTextColor(this.menu.options.theme!.colors.subText);
-          neg.setPadding(
-            dp(context, 10),
-            dp(context, 8),
-            dp(context, 10),
-            dp(context, 8),
-          );
-        }
+        const self = this;
+
+        builder.setPositiveButton(
+          JString.$new("确认"),
+          Java.registerClass({
+            name:
+              "com.frida.NumberInputOK" +
+              Date.now() +
+              Math.random().toString(36).substring(6),
+            implements: [API.DialogInterfaceOnClickListener],
+            methods: {
+              onClick: function (_dialog: any, _which: number) {
+                self.isShowDialog = false;
+                try {
+                  const raw =
+                    Java.cast(
+                      input.getText(),
+                      Java.use("java.lang.CharSequence"),
+                    ).toString() + "";
+                  const parsed = parseFloat(raw.trim());
+                  if (!isNaN(parsed)) {
+                    self.value = parsed;
+                    self.applyConstraints();
+                    self.refreshButtonText();
+                    self.emit("valueChanged", self.value);
+                    if (self.handler) self.handler(self.value as number);
+                  }
+                } catch (e) {
+                  Logger.instance.error(`[NumberInput:${self.id}] ${e}`);
+                }
+              },
+            },
+          }).$new(),
+        );
+
+        builder.setNegativeButton(
+          JString.$new("取消"),
+          Java.registerClass({
+            name:
+              "com.frida.NumberInputCancel" +
+              Date.now() +
+              Math.random().toString(36).substring(6),
+            implements: [API.DialogInterfaceOnClickListener],
+            methods: {
+              onClick: function (_dialog: any, _which: number) {
+                self.isShowDialog = false;
+              },
+            },
+          }).$new(),
+        );
+
+        const dialog = builder.create();
+        setDialogOverlayType(dialog);
+        dialog.show();
       } catch (e) {
-        // ignore styling failures on some ROMs
-      }
-      // ✅ 标题文字主题化（有的系统能拿到 id，有的拿不到，拿不到也不影响）
-      try {
-        const titleId = context
-          .getResources()
-          .getIdentifier(
-            Java.use("java.lang.String").$new("alertTitle"),
-            Java.use("java.lang.String").$new("id"),
-            Java.use("java.lang.String").$new("android"),
-          );
-        if (titleId && titleId !== 0) {
-          const tv = dialog.findViewById(titleId);
-          if (tv) {
-            const TextView = API.TextView;
-            const t = Java.cast(tv, TextView);
-            t.setTextColor(this.menu.options.theme!.colors.text);
-            // t.setTextSize(2, this.menu.options.theme!.textSp.title);
-          }
-        }
-      } catch (e) {
-        Logger.instance.error(e);
+        this.isShowDialog = false;
+        Logger.instance.error(
+          `[NumberInput:${this.id}] Failed to show dialog: ${e}`,
+        );
       }
     });
   }
@@ -276,26 +260,23 @@ export class NumberInput extends UIComponent {
   public onValueChange(handler: (value: number) => void) {
     this.handler = handler;
   }
+
   private applyConstraints(): void {
     let constrained = this.value as number;
     if (this.min !== null) constrained = Math.max(this.min, constrained);
     if (this.max !== null) constrained = Math.min(this.max, constrained);
-
     this.value = constrained;
   }
 
-  // 以下为原有公共方法（稍作调整）
-
   public setHint(hint: string): void {
     this.hint = hint;
-    // 提示文本只在对话框中使用，无需实时更新视图
   }
 
   public setConstraints(min: number | null, max: number | null): void {
     this.min = min;
     this.max = max;
-    // 重新验证当前值
     this.applyConstraints();
+    this.refreshButtonText();
   }
 
   public getNumber(): number {
@@ -305,73 +286,55 @@ export class NumberInput extends UIComponent {
   public setNumber(value: number): void {
     this.value = value;
     this.applyConstraints();
+    this.refreshButtonText();
   }
 }
-export class TextInput extends UIComponent {
-  private text: string;
-  private hint: string;
-  private handler?: (value: string) => void;
-  private title: string;
-  private isShowDialog: boolean = false;
 
-  /**
-   *
-   * @param id 组件id，应该唯一
-   * @param initialValue 初始值
-   * @param text 按钮文本
-   * @param hint
-   */
+export class TextInput extends BaseInputButton {
+  private handler?: (value: string) => void;
+
   constructor(
     id: string,
     initialValue: string = "",
-    text: string = "单击输入文本",
+    title: string = "请输入文本",
     hint: string = "请输入文本",
-    title = "请输入",
   ) {
-    super(id);
-    this.text = text;
-    this.hint = hint;
+    super(id, title, hint);
     this.value = initialValue;
-    this.title = title;
   }
-  protected updateView(): void {
-    if (!this.view) {
-      Logger.instance.warn(
-        `[Switch:${this.id}] Cannot update view - view not initialized`,
-      );
-      return;
-    }
-    Java.scheduleOnMainThread(() => {
-      const String = API.JString;
-      this.view.setText(String.$new(`${this.text}: ${this.value}`));
-    });
+
+  protected buildDisplayText(): string {
+    const text = ((this.value ?? "") + "").trim();
+    return text.length > 0
+      ? `${this.title}: ${text}`
+      : `${this.title}: ${this.hint}`;
   }
+
   protected createView(context: any): void {
-    const Button = API.Button;
-    const String = API.JString;
+    this.createBaseView(context);
 
-    this.view = Button.$new(context);
-    applyStyle(this.view, "inputTrigger", this.menu.options.theme!);
-    this.view.setText(String.$new(`${this.text}: ${this.value}`));
     const self = this;
-
-    // 点击按钮弹窗
-    this.view.setOnClickListener(
-      Java.registerClass({
-        name:
-          "com.frida.AlertTextInputClick" +
-          Date.now() +
-          Math.random().toString(36).substring(6),
-        implements: [API.OnClickListener],
-        methods: {
-          onClick: function (v: any) {
-            if (self.isShowDialog) return;
-            self.isShowDialog = true;
-            self.showDialog(context);
-          },
+    const clickListener = Java.registerClass({
+      name:
+        "com.frida.TextInputButtonClick" +
+        Date.now() +
+        Math.random().toString(36).substring(6),
+      implements: [API.OnClickListener],
+      methods: {
+        onClick: function () {
+          if (self.isShowDialog) return;
+          self.isShowDialog = true;
+          self.showDialog(context);
         },
-      }).$new(),
-    );
+      },
+    });
+
+    this.buttonView.setClickable(true);
+    this.buttonView.setOnClickListener(clickListener.$new());
+  }
+
+  protected updateView(): void {
+    this.refreshButtonText();
   }
 
   protected emitValue(value: any) {
@@ -384,180 +347,98 @@ export class TextInput extends UIComponent {
 
   private showDialog(context: any): void {
     Java.scheduleOnMainThread(() => {
-      const AlertDialogBuilder = API.AlertDialogBuilder;
-      const EditText = API.EditText;
-      const String = API.JString;
-      const TextViewBufferType = API.TextViewBufferType;
-      const builder = AlertDialogBuilder.$new(context);
-      const LinearLayoutParams = API.LinearLayoutParams;
-      const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
-      const input = EditText.$new(context);
-      const LinearLayout = API.LinearLayout;
-      // applyEditTextStyle(input, this.menu.options.theme!);
-      input.setHint(String.$new(this.hint));
-      input.setText(String.$new(this.value), TextViewBufferType.NORMAL.value);
-      builder.setTitle(String.$new(this.title));
-
-      const lp = LinearLayoutParams.$new(
-        ViewGroupLayoutParams.MATCH_PARENT.value,
-        ViewGroupLayoutParams.WRAP_CONTENT.value,
-      );
-      input.setLayoutParams(lp);
-      // 给输入框加容器 padding（更像设置面板）
-      const container = LinearLayout.$new(context);
-      container.setPadding(
-        dp(context, 16),
-        dp(context, 10),
-        dp(context, 16),
-        dp(context, 6),
-      );
-      container.addView(input);
-      builder.setView(container);
-      // builder.setView(input);
-
-      const self = this;
-
-      builder.setPositiveButton(
-        String.$new("确认"),
-        Java.registerClass({
-          name:
-            "com.frida.AlertTextInputOK" +
-            Date.now() +
-            Math.random().toString(36).substring(6),
-          implements: [API.DialogInterfaceOnClickListener],
-          methods: {
-            onClick: function (dialog: any, which: number) {
-              self.isShowDialog = false;
-              const text =
-                Java.cast(
-                  input.getText(),
-                  Java.use("java.lang.CharSequence"),
-                ).toString() + "";
-              // 去除换行和空白字符
-              self.value = text.trim();
-              self.view.setText(String.$new(`${self.text}: ${self.value}`));
-              self.emit("valueChanged", text);
-              if (self.handler) self.handler(text);
-            },
-          },
-        }).$new(),
-      );
-
-      builder.setNegativeButton(
-        String.$new("取消"),
-        Java.registerClass({
-          name:
-            "com.frida.AlertTextInputCancel" +
-            Date.now() +
-            Math.random().toString(36).substring(6),
-          implements: [API.DialogInterfaceOnClickListener],
-          methods: {
-            onClick: function (dialog: any, which: number) {
-              self.isShowDialog = false;
-            },
-          },
-        }).$new(),
-      );
-
-      const LayoutParams = API.LayoutParams;
-      const dialog = builder.create();
-
-      // ✅ dialog 背景圆角 + 暗色（融入 this.menu.options.theme!）
-
-      const bg = API.GradientDrawable.$new();
-      bg.setColor(this.menu.options.theme!.colors.cardBg);
-      bg.setCornerRadius(dp(context, 14));
-      bg.setStroke(dp(context, 1), this.menu.options.theme!.colors.divider);
-      // 关键步骤：修改对话框窗口的类型
-      const window = dialog.getWindow();
-      const BuildVERSION = API.BuildVERSION;
-      if (window) {
-        if (BuildVERSION.SDK_INT.value >= 26) {
-          window.setType(LayoutParams.TYPE_APPLICATION_OVERLAY.value);
-        } else {
-          window.setType(LayoutParams.TYPE_PHONE.value);
-        }
-        // 或者对于低版本：LayoutParams.TYPE_PHONE (2002)
-      }
-      dialog.show();
       try {
-        const decor = dialog.getWindow().getDecorView();
-        decor.setBackground(bg);
-        // 让 dialog 四周留一点边距，像卡片浮在上面
-        decor.setPadding(
-          dp(context, 12),
-          dp(context, 12),
-          dp(context, 12),
-          dp(context, 12),
+        const AlertDialogBuilder = API.AlertDialogBuilder;
+        const EditText = API.EditText;
+        const String = API.JString;
+        const TextViewBufferType = API.TextViewBufferType;
+        const LinearLayoutParams = API.LinearLayoutParams;
+        const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+        const LinearLayout = API.LinearLayout;
+
+        const builder = AlertDialogBuilder.$new(context);
+        builder.setTitle(String.$new(this.title));
+
+        const input = EditText.$new(context);
+        input.setHint(String.$new(this.hint));
+        input.setText(
+          String.$new(this.value ?? ""),
+          TextViewBufferType.NORMAL.value,
         );
+        // applyStyle(input, "inputField", this.menu.options.theme!);
+        const lp = LinearLayoutParams.$new(
+          ViewGroupLayoutParams.MATCH_PARENT.value,
+          ViewGroupLayoutParams.WRAP_CONTENT.value,
+        );
+        input.setLayoutParams(lp);
+
+        const container = LinearLayout.$new(context);
+        container.setPadding(
+          dp(context, 16),
+          dp(context, 12),
+          dp(context, 16),
+          dp(context, 8),
+        );
+        container.addView(input);
+        builder.setView(container);
+
+        const self = this;
+
+        builder.setPositiveButton(
+          String.$new("确认"),
+          Java.registerClass({
+            name:
+              "com.frida.TextInputOK" +
+              Date.now() +
+              Math.random().toString(36).substring(6),
+            implements: [API.DialogInterfaceOnClickListener],
+            methods: {
+              onClick: function (_dialog: any, _which: number) {
+                self.isShowDialog = false;
+                const text =
+                  Java.cast(
+                    input.getText(),
+                    Java.use("java.lang.CharSequence"),
+                  ).toString() + "";
+                self.value = text.trim();
+                self.refreshButtonText();
+                self.emit("valueChanged", self.value);
+                if (self.handler) self.handler(self.value as string);
+              },
+            },
+          }).$new(),
+        );
+
+        builder.setNegativeButton(
+          String.$new("取消"),
+          Java.registerClass({
+            name:
+              "com.frida.TextInputCancel" +
+              Date.now() +
+              Math.random().toString(36).substring(6),
+            implements: [API.DialogInterfaceOnClickListener],
+            methods: {
+              onClick: function (_dialog: any, _which: number) {
+                self.isShowDialog = false;
+              },
+            },
+          }).$new(),
+        );
+
+        const dialog = builder.create();
+        setDialogOverlayType(dialog);
+        dialog.show();
       } catch (e) {
-        Logger.instance.error(e);
-      }
-
-      // ✅ 按钮主题化
-      try {
-        const AlertDialog = API.AlertDialog;
-        const ad = Java.cast(dialog, AlertDialog);
-
-        const BUTTON_POSITIVE = -1; // AlertDialog.BUTTON_POSITIVE
-        const BUTTON_NEGATIVE = -2; // AlertDialog.BUTTON_NEGATIVE
-
-        const pos = ad.getButton(BUTTON_POSITIVE);
-        const neg = ad.getButton(BUTTON_NEGATIVE);
-
-        if (pos) {
-          pos.setAllCaps(false);
-          pos.setTextColor(this.menu.options.theme!.colors.accent);
-          pos.setPadding(
-            dp(context, 10),
-            dp(context, 8),
-            dp(context, 10),
-            dp(context, 8),
-          );
-        }
-        if (neg) {
-          neg.setAllCaps(false);
-          neg.setTextColor(this.menu.options.theme!.colors.subText);
-          neg.setPadding(
-            dp(context, 10),
-            dp(context, 8),
-            dp(context, 10),
-            dp(context, 8),
-          );
-        }
-      } catch (e) {
-        Logger.instance.error(e);
-      }
-      // ✅ 标题文字主题化（有的系统能拿到 id，有的拿不到，拿不到也不影响）
-      try {
-        const titleId = context
-          .getResources()
-          .getIdentifier(
-            Java.use("java.lang.String").$new("alertTitle"),
-            Java.use("java.lang.String").$new("id"),
-            Java.use("java.lang.String").$new("android"),
-          );
-        if (titleId && titleId !== 0) {
-          const tv = dialog.findViewById(titleId);
-          if (tv) {
-            const TextView = API.TextView;
-            const t = Java.cast(tv, TextView);
-            t.setTextColor(this.menu.options.theme!.colors.text);
-            // t.setTextSize(2, this.menu.options.theme!.textSp.title);
-          }
-        }
-      } catch (e) {
-        Logger.instance.error(e);
+        this.isShowDialog = false;
+        Logger.instance.error(
+          `[TextInput:${this.id}] Failed to show dialog: ${e}`,
+        );
       }
     });
   }
 
   public setText(text: string): void {
-    if (this.view) {
-      Java.scheduleOnMainThread(() => {
-        const String = API.JString;
-        this.view.setText(String.$new(text));
-      });
-    }
+    this.value = text ?? "";
+    this.refreshButtonText();
   }
 }

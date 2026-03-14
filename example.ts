@@ -111,7 +111,6 @@ Java.perform(() => {
     "",
     "用户名",
     "请输入用户名",
-    "输入用户名",
   );
   usernameInput.onValueChange((value: string) => {
     menu.logger.info(`用户名输入: ${value}`);
@@ -137,7 +136,6 @@ Java.perform(() => {
     "",
     "密码",
     "请输入密码",
-    "输入密码",
   );
   passwordInput.onValueChange((value: string) => {
     menu.logger.info(`密码输入: ${value.length} 个字符`);
@@ -150,7 +148,6 @@ Java.perform(() => {
     "",
     "备注",
     "请输入备注信息...",
-    "输入备注",
   );
   notesInput.onValueChange((value: string) => {
     const chars = value.length;
@@ -173,11 +170,8 @@ Java.perform(() => {
   const ageInput = new NumberInput(
     "age",
     25,
-    0, // 最小值
-    120, // 最大值
     "年龄",
     "请输入年龄",
-    "输入年龄",
   );
   ageInput.onValueChange((value: number) => {
     menu.logger.info(`年龄设置为: ${value}`);
@@ -198,11 +192,8 @@ Java.perform(() => {
   const quantityInput = new NumberInput(
     "quantity",
     10,
-    0,
-    100,
     "数量",
     "请输入数量",
-    "输入数量",
   );
   quantityInput.onValueChange((value: number) => {
     const price = 99.99;
@@ -417,7 +408,6 @@ Java.perform(() => {
     "admin",
     "用户名",
     "请输入用户名",
-    "修改用户名",
   );
   usernameInput2.onValueChange((value: string) => {
     menu.logger.info(`用户名修改: ${value}`);
@@ -429,7 +419,6 @@ Java.perform(() => {
     "admin@example.com",
     "邮箱",
     "请输入邮箱地址",
-    "修改邮箱",
   );
   emailInput.onValueChange((value: string) => {
     menu.logger.info(`邮箱修改: ${value}`);
@@ -477,11 +466,8 @@ Java.perform(() => {
   const cacheSizeInput = new NumberInput(
     "cache_size",
     100,
-    10,
-    1000,
     "缓存大小",
     "请输入缓存大小(MB)",
-    "设置缓存大小",
   );
 
   const autoUpdateSwitch = new Switch("auto_update", "自动更新");
@@ -530,7 +516,6 @@ Java.perform(() => {
     "",
     "评分人",
     "请输入姓名",
-    "输入姓名",
   );
 
   // 评分滑块
@@ -566,7 +551,6 @@ Java.perform(() => {
     "",
     "评论",
     "请输入您的评论...",
-    "添加评论",
   );
 
   // 提交按钮
@@ -633,11 +617,8 @@ Java.perform(() => {
   const quantitySelector = new NumberInput(
     "cart_quantity",
     1,
-    1,
-    10,
     "数量",
     "请输入数量",
-    "修改数量",
   );
   quantitySelector.onValueChange((value: number) => {
     const product = menu.getComponent<Selector>("product_selector")?.getValue();
