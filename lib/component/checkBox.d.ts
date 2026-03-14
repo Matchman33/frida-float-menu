@@ -6,11 +6,15 @@ export interface CheckBoxOption {
 }
 export declare class CheckBoxGroup extends UIComponent {
     private optionsMap;
+    private title;
     private changeHandler?;
     private valueChangeHandler?;
-    private triggerText;
     private maxDisplayCount;
-    constructor(id: string, options: CheckBoxOption[], initialChecked?: string[]);
+    private titleView;
+    private valueView;
+    private arrowView;
+    private triggerRow;
+    constructor(id: string, title: string, options: CheckBoxOption[], initialChecked?: string[]);
     onChangeHandler(handler: (value: CheckBoxOption[], item?: {
         id: string;
         checked: boolean;
@@ -20,9 +24,10 @@ export declare class CheckBoxGroup extends UIComponent {
     protected createView(context: any): void;
     private openMultiSelectDialog;
     protected updateView(): void;
-    private buildDisplayText;
+    private getDisplayText;
     getCheckedValues(): CheckBoxOption[];
     setChecked(id: string, checked: boolean): void;
     setCheckedValues(checkedIds: string[]): void;
     getOptions(): CheckBoxOption[];
+    setTitle(title: string): void;
 }

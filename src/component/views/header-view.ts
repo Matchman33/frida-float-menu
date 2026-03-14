@@ -7,8 +7,6 @@ import { LogViewWindow } from "./log-view";
 export interface HeaderViewOptions {
   context: any;
   parent: any;
-  logPanelView: any;
-  height: number;
   logMaxLines?: number;
   title: string;
   version: string;
@@ -32,8 +30,6 @@ export class HeaderView {
     const {
       context,
       parent,
-      logPanelView,
-      height,
       logMaxLines,
       title,
       version,
@@ -195,12 +191,7 @@ export class HeaderView {
       );
       rightBox.setLayoutParams(rightLp);
 
-      const logView = new LogViewWindow(
-        context,
-        height - 240,
-        this.theme,
-        logMaxLines,
-      );
+      const logView = new LogViewWindow(context, this.theme, logMaxLines);
       const logButton = createIconCharBtn("L", false);
       logButton.setOnClickListener(
         Java.registerClass({
@@ -208,12 +199,12 @@ export class HeaderView {
           implements: [API.OnClickListener],
           methods: {
             onClick: function () {
-              logView.createViewOnce(logPanelView);
-              if (logView.isLogDrawerOpen) {
-                logView.closeLogDrawer();
+              logView.createWindowOnce();
+              if (logView.isLogWindowVisible) {
+                logView.closeLogWindow();
                 logButton.setText(API.JString.$new("L"));
               } else {
-                logView.openLogDrawer();
+                logView.openLogWindow();
                 logButton.setText(API.JString.$new("←"));
               }
             },

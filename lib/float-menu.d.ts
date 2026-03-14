@@ -39,7 +39,6 @@ export declare class FloatMenu {
     private menuContainerWin;
     private menuPanelView;
     logger: Logger;
-    private logPanelView;
     private tabsView;
     get context(): any;
     private _windowManager;
@@ -51,7 +50,9 @@ export declare class FloatMenu {
     private createIconWindow;
     toggleView(): void;
     show(): void;
+    bindComponentEvents(component: UIComponent): void;
     private processPendingComponents;
+    prepareComponentView(context: any, component: any): any;
     hide(): void;
     toast(msg: string, duration?: 0 | 1): void;
     addComponent(component: UIComponent, tabId?: string): void;

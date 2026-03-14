@@ -55,7 +55,6 @@ export class FloatMenu {
   private menuPanelView: any; // 真正用来添加组件的容器
 
   public logger: Logger;
-  private logPanelView: any; // 用来展示日志的容器
   private tabsView: TabsView;
   public get context(): any {
     if (this._context === null) {
@@ -310,35 +309,8 @@ export class FloatMenu {
     // 保存引用：以后内容都加到 panel
     this.menuPanelView = panel;
 
-    // --------------------
-    // overlayLayer（永远最上层：日志抽屉/弹窗都挂这里）
-    // --------------------
-    const overlay = FrameLayout.$new(this.context);
-    overlay.setLayoutParams(
-      FrameLayoutParams.$new(
-        ViewGroupLayoutParams.MATCH_PARENT.value,
-        ViewGroupLayoutParams.MATCH_PARENT.value,
-      ),
-    );
-    // 避免裁剪 overlay
-    try {
-      overlay.setClipChildren(false);
-    } catch (e) {}
-    try {
-      overlay.setClipToPadding(false);
-    } catch (e) {}
-    // 抬高 Z，确保压过 tab 吸顶/RecyclerView
-    try {
-      overlay.setElevation(100000);
-    } catch (e) {}
-    try {
-      overlay.setTranslationZ(100000);
-    } catch (e) {}
-    this.logPanelView = overlay;
-
-    // root -> panel -> overlay（overlay 必须最后 add）
+    // root -> panel
     this.menuContainerWin.addView(panel);
-    this.menuContainerWin.addView(overlay);
 
     // --------------------
     // Window 参数
@@ -361,8 +333,6 @@ export class FloatMenu {
       {
         context: this.context,
         parent: this.menuPanelView,
-        logPanelView: this.logPanelView,
-        height: this.options.height!,
         logMaxLines: this.options.logMaxLines,
         title: this.options.title!,
         version: "v2.4.0",

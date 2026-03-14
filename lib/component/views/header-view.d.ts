@@ -2,8 +2,6 @@ import { Theme } from "../style/theme";
 export interface HeaderViewOptions {
     context: any;
     parent: any;
-    logPanelView: any;
-    height: number;
     logMaxLines?: number;
     title: string;
     version: string;

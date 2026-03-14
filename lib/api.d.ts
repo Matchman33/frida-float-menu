@@ -2,6 +2,8 @@ export declare const API: {
     readonly ImageView: Java.Wrapper<{}>;
     readonly ImageViewScaleType: Java.Wrapper<{}>;
     readonly FrameLayoutParams: Java.Wrapper<{}>;
+    readonly PopupWindow: Java.Wrapper<{}>;
+    readonly PopupWindowOnDismissListener: Java.Wrapper<{}>;
     readonly Gravity: Java.Wrapper<{}>;
     readonly DialogMultiChoiceListener: Java.Wrapper<{}>;
     readonly DialogClickListener: Java.Wrapper<{}>;

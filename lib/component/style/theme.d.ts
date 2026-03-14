@@ -14,6 +14,10 @@ export type Theme = {
         rowBg?: number;
         inputBg?: number;
         chipBg?: number;
+        infoCardBg?: number;
+        noteCardBg?: number;
+        sectionText?: number;
+        buttonText?: number;
     };
     radiusDp: {
         overlay: number;

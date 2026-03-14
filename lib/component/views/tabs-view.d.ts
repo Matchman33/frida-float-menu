@@ -24,10 +24,14 @@ export declare class TabsView {
     currentContentContainer: any;
     currentScrollView: any;
     private eventEmitter;
+    tabScrollView: any;
+    tabIndicatorView: any;
+    private tabItemMap;
     constructor(context: any, theme: Theme, initTabs: TabDefinition[], activeTabId?: string);
     createTabView(parentView: any): void;
     private switchTab;
     private updateTabStyle;
+    private updateTabIndicator;
     private refreshTabsUI;
     initializeTabs(): void;
     createTabContainer(): void;
