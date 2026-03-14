@@ -19,7 +19,7 @@ export class Logger {
   // ====== 全局单例：外部任何地方都能获取到 ======
   private static _instance: Logger | null = null;
   static get instance(): Logger {
-    if (!Logger._instance) Logger._instance = new Logger("info");
+    if (!Logger._instance) Logger._instance = new Logger("debug");
     return Logger._instance;
   }
 

@@ -27,13 +27,7 @@ export class HeaderView {
       onHide: () => void;
     },
   ): any {
-    const {
-      context,
-      parent,
-      logMaxLines,
-      title,
-      version,
-    } = options;
+    const { context, parent, logMaxLines, title, version } = options;
 
     try {
       const LinearLayout = API.LinearLayout;
@@ -199,7 +193,6 @@ export class HeaderView {
           implements: [API.OnClickListener],
           methods: {
             onClick: function () {
-              logView.createWindowOnce();
               if (logView.isLogWindowVisible) {
                 logView.closeLogWindow();
                 logButton.setText(API.JString.$new("L"));
