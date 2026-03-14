@@ -1,6 +1,6 @@
 import { API } from "../api";
 import { Logger } from "../logger";
-import { applyEditTextStyle, applyStyle, dp } from "./style/style";
+import {  applyStyle, dp } from "./style/style";
 import { UIComponent } from "./ui-components";
 
 export class NumberInput extends UIComponent {
@@ -99,7 +99,7 @@ export class NumberInput extends UIComponent {
 
       // ---- Input
       const input = EditText.$new(context);
-      applyEditTextStyle(input, this.menu.options.theme!);
+      // applyEditTextStyle(input, this.menu.options.theme!);
       input.setHint(String.$new(this.hint));
       input.setText(
         String.$new(this.value + ""),
@@ -393,7 +393,7 @@ export class TextInput extends UIComponent {
       const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
       const input = EditText.$new(context);
       const LinearLayout = API.LinearLayout;
-      applyEditTextStyle(input, this.menu.options.theme!);
+      // applyEditTextStyle(input, this.menu.options.theme!);
       input.setHint(String.$new(this.hint));
       input.setText(String.$new(this.value), TextViewBufferType.NORMAL.value);
       builder.setTitle(String.$new(this.title));

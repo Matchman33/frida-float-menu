@@ -1,9 +1,10 @@
 import { API } from "../api";
-import { applyStyle } from "./style/style";
+import { applyStyle, dp } from "./style/style";
 import { UIComponent } from "./ui-components";
 
 export class Category extends UIComponent {
   private label: string;
+  private labelView: any;
 
   constructor(id: string, label: string) {
     super(id);
@@ -12,29 +13,63 @@ export class Category extends UIComponent {
   }
 
   protected createView(context: any): void {
-    const TextView = API.TextView;
-    const String = API.JString;
+    const LinearLayout = API.LinearLayout;
     const LinearLayoutParams = API.LinearLayoutParams;
     const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+    const TextView = API.TextView;
+    const View = API.View;
+    const Gravity = API.Gravity;
+    const String = API.JString;
 
-    this.view = TextView.$new(context);
-    this.view.setText(String.$new(this.label));
+    const theme = this.menu.options.theme!;
 
-    applyStyle(this.view, "category", this.menu.options.theme!);
+    const root = LinearLayout.$new(context);
+    root.setOrientation(LinearLayout.HORIZONTAL.value);
+    root.setGravity(Gravity.CENTER_VERTICAL.value);
 
-    this.view.setLayoutParams(
+    root.setLayoutParams(
       LinearLayoutParams.$new(
         ViewGroupLayoutParams.MATCH_PARENT.value,
         ViewGroupLayoutParams.WRAP_CONTENT.value,
       ),
     );
+
+    root.setPadding(dp(context, 2), dp(context, 10), dp(context, 2), dp(context, 8));
+
+    const indicator = View.$new(context);
+    const indicatorLp = LinearLayoutParams.$new(dp(context, 3), dp(context, 14));
+    indicatorLp.setMargins(0, 0, dp(context, 10), 0);
+    indicator.setLayoutParams(indicatorLp);
+
+    const GradientDrawable = API.GradientDrawable
+    const indicatorBg = GradientDrawable.$new();
+    indicatorBg.setColor(theme.colors.accent | 0);
+    indicatorBg.setCornerRadius(dp(context, 2));
+    indicator.setBackground(indicatorBg);
+
+    const labelView = TextView.$new(context);
+    labelView.setText(String.$new(this.label));
+    applyStyle(labelView, "category", theme);
+
+    const textLp = LinearLayoutParams.$new(
+      0,
+      ViewGroupLayoutParams.WRAP_CONTENT.value,
+      1.0,
+    );
+    labelView.setLayoutParams(textLp);
+
+    root.addView(indicator);
+    root.addView(labelView);
+
+    this.labelView = labelView;
+    this.view = root;
   }
 
   protected updateView(): void {
-    if (!this.view) return;
+    if (!this.labelView) return;
     Java.scheduleOnMainThread(() => {
       const String = API.JString;
-      this.view.setText(String.$new(this.value));
+      this.labelView.setText(String.$new(this.value));
     });
   }
 

@@ -2,7 +2,7 @@ import { EventEmitter } from "./event-emitter";
 import { UIComponent } from "./component/ui-components";
 import { Logger, LogLevel } from "./logger";
 import { API } from "./api";
-import { applyStyle } from "./component/style/style";
+import { applyStyle, dp } from "./component/style/style";
 import { DarkNeonTheme, Theme } from "./component/style/theme";
 import { logicalToWindow, windowToLogical } from "./utils";
 import { TabsView } from "./component/views/tabs-view";
@@ -537,12 +537,76 @@ export class FloatMenu {
   /**
    * Process components that were added before window was shown
    */
+  // private processPendingComponents(context: any): void {
+  //   if (this.pendingComponents.length === 0) return;
+
+  //   this.logger.debug(
+  //     `Processing ${this.pendingComponents.length} pending components`,
+  //   );
+  //   for (const { id, component, tabId } of this.pendingComponents) {
+  //     try {
+  //       const tabInfo = this.tabsView.tabs.get(tabId);
+  //       if (!tabInfo) {
+  //         this.logger.error(
+  //           `Cannot add pending component ${id} - tab ${tabId} not found`,
+  //         );
+  //         continue;
+  //       }
+  //       component.init(context);
+
+  //       const view = component.getView();
+  //       // // Add to the appropriate tab container
+  //       if (tabInfo.container) {
+  //         tabInfo.container.addView(view);
+  //       } else {
+  //         // Fallback to contentContainer (should not happen if tab container was created)
+
+  //         this.tabsView.currentContentContainer.addView(view);
+  //       }
+
+  //       // Record component ID in tab's component set
+  //       tabInfo.components.add(id);
+
+  //       // Bind events (same as in addComponent)
+  //       component.on("valueChanged", (value: any) => {
+  //         this.eventEmitter.emit("component:" + id + ":valueChanged", value);
+  //       });
+  //       component.on("action", (data: any) => {
+  //         this.eventEmitter.emit("component:" + id + ":action", data);
+  //       });
+  //       component.on("click", (data: any) => {
+  //         this.eventEmitter.emit("component:" + id + ":click", data);
+  //       });
+  //     } catch (error) {
+  //       Logger.instance.error(
+  //         `Failed to add pending component ${id}: ` + error,
+  //       );
+  //     }
+  //   }
+  //   // Clear pending components
+  //   this.pendingComponents = [];
+  // }
+
+  public bindComponentEvents(component: UIComponent) {
+    const id = component.getId();
+    component.on("valueChanged", (value: any) => {
+      this.eventEmitter.emit("component:" + id + ":valueChanged", value);
+    });
+    component.on("action", (data: any) => {
+      this.eventEmitter.emit("component:" + id + ":action", data);
+    });
+    component.on("click", (data: any) => {
+      this.eventEmitter.emit("component:" + id + ":click", data);
+    });
+  }
+
   private processPendingComponents(context: any): void {
     if (this.pendingComponents.length === 0) return;
 
     this.logger.debug(
       `Processing ${this.pendingComponents.length} pending components`,
     );
+
     for (const { id, component, tabId } of this.pendingComponents) {
       try {
         const tabInfo = this.tabsView.tabs.get(tabId);
@@ -552,39 +616,46 @@ export class FloatMenu {
           );
           continue;
         }
-        component.init(context);
 
-        const view = component.getView();
-        // // Add to the appropriate tab container
+        const view = this.prepareComponentView(context, component);
+
         if (tabInfo.container) {
           tabInfo.container.addView(view);
         } else {
-          // Fallback to contentContainer (should not happen if tab container was created)
-
           this.tabsView.currentContentContainer.addView(view);
         }
 
-        // Record component ID in tab's component set
         tabInfo.components.add(id);
-
-        // Bind events (same as in addComponent)
-        component.on("valueChanged", (value: any) => {
-          this.eventEmitter.emit("component:" + id + ":valueChanged", value);
-        });
-        component.on("action", (data: any) => {
-          this.eventEmitter.emit("component:" + id + ":action", data);
-        });
-        component.on("click", (data: any) => {
-          this.eventEmitter.emit("component:" + id + ":click", data);
-        });
+        this.bindComponentEvents(component);
       } catch (error) {
         Logger.instance.error(
           `Failed to add pending component ${id}: ` + error,
         );
       }
     }
-    // Clear pending components
+
     this.pendingComponents = [];
+  }
+
+  public prepareComponentView(context: any, component: any): any {
+    const LinearLayoutParams = API.LinearLayoutParams;
+    const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+
+    const gapNormal = dp(context, 10);
+
+    component.init(context);
+
+    const view = component.getView();
+
+    const lp = LinearLayoutParams.$new(
+      ViewGroupLayoutParams.MATCH_PARENT.value,
+      ViewGroupLayoutParams.WRAP_CONTENT.value,
+    );
+
+    lp.setMargins(0, 0, 0, gapNormal);
+
+    view.setLayoutParams(lp);
+    return view;
   }
 
   /**
@@ -654,8 +725,10 @@ export class FloatMenu {
     Java.scheduleOnMainThread(() => {
       const context = this.menuPanelView.getContext();
 
-      component.init(context);
-      const view = component.getView();
+      // component.init(context);
+      // const view = component.getView();
+
+      const view = this.prepareComponentView(context, component);
 
       // Add to the appropriate tab container
       if (tabInfo.container) {
@@ -668,16 +741,17 @@ export class FloatMenu {
         this.tabsView.currentContentContainer.addView(view);
       }
 
+      this.bindComponentEvents(component);
       // Bind events
-      component.on("valueChanged", (value: any) => {
-        this.eventEmitter.emit("component:" + id + ":valueChanged", value);
-      });
-      component.on("action", (data: any) => {
-        this.eventEmitter.emit("component:" + id + ":action", data);
-      });
-      component.on("click", (data: any) => {
-        this.eventEmitter.emit("component:" + id + ":click", data);
-      });
+      // component.on("valueChanged", (value: any) => {
+      //   this.eventEmitter.emit("component:" + id + ":valueChanged", value);
+      // });
+      // component.on("action", (data: any) => {
+      //   this.eventEmitter.emit("component:" + id + ":action", data);
+      // });
+      // component.on("click", (data: any) => {
+      //   this.eventEmitter.emit("component:" + id + ":click", data);
+      // });
     });
     // Logger.instance.debug(`Component ${id} added to tab ${targetTabId}`);
   }
@@ -787,5 +861,4 @@ export class FloatMenu {
   public off(event: string, callback: (...args: any[]) => void): void {
     this.eventEmitter.off(event, callback);
   }
-
 }

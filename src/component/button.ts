@@ -7,6 +7,7 @@ export class Button extends UIComponent {
   private label: string;
   private handler?: () => void;
   private kind: "primary" | "danger" = "primary";
+
   constructor(
     id: string,
     label: string,
@@ -17,20 +18,26 @@ export class Button extends UIComponent {
     this.label = label;
     this.kind = kind;
     this.handler = handler;
-    this.value = null; // Buttons don't have a value
+    this.value = null;
   }
 
   protected createView(context: any): void {
     const Button = API.Button;
-    this.view = Button.$new(context);
     const String = API.JString;
+    const Gravity = API.Gravity;
 
+    this.view = Button.$new(context);
     this.view.setText(String.$new(this.label));
+
     applyStyle(
       this.view,
       this.kind === "danger" ? "dangerButton" : "primaryButton",
       this.menu.options.theme!,
     );
+
+    try {
+      this.view.setGravity(Gravity.CENTER.value);
+    } catch (_e) {}
 
     const OnClickListener = API.OnClickListener;
     const self = this;
@@ -41,7 +48,7 @@ export class Button extends UIComponent {
         Math.random().toString(36).substring(6),
       implements: [OnClickListener],
       methods: {
-        onClick: function (v) {
+        onClick: function (_v) {
           self.emit("click");
           if (self.handler) {
             setImmediate(self.handler);
@@ -49,6 +56,7 @@ export class Button extends UIComponent {
         },
       },
     });
+
     this.view.setOnClickListener(clickListener.$new());
   }
 
@@ -56,9 +64,6 @@ export class Button extends UIComponent {
     // Button value doesn't affect UI
   }
 
-  /**
-   * Set button label
-   */
   public setLabel(label: string): void {
     this.label = label;
     if (!this.view) {
@@ -73,9 +78,6 @@ export class Button extends UIComponent {
     });
   }
 
-  /**
-   * Set click handler
-   */
   public onClick(handler: () => void): void {
     this.handler = handler;
   }

@@ -87,12 +87,12 @@ export class Collapsible extends UIComponent {
     // ===== Content container =====
     this.contentContainer = LinearLayout.$new(context);
     this.contentContainer.setOrientation(LinearLayout.VERTICAL.value);
-    this.contentContainer.setLayoutParams(
-      LinearLayoutParams.$new(
-        ViewGroupLayoutParams.MATCH_PARENT.value,
-        ViewGroupLayoutParams.WRAP_CONTENT.value,
-      ),
+    const lp = LinearLayoutParams.$new(
+      ViewGroupLayoutParams.MATCH_PARENT.value,
+      ViewGroupLayoutParams.WRAP_CONTENT.value,
     );
+    // lp.setMargins(0, 0, 0, dp(context, 10));
+    this.contentContainer.setLayoutParams(lp);
 
     // ✅ 内容区缩进 + 间距（比你之前更像设置分组）
     this.contentContainer.setPadding(
@@ -121,10 +121,9 @@ export class Collapsible extends UIComponent {
           this.menu.uiComponents.set(c.getId(), c);
           c.setMenu(this.menu);
           c.init(ctx);
-
-          const v = c.getView();
-
+          const v = this.menu.prepareComponentView(ctx, c);
           if (v) this.contentContainer.addView(v);
+          this.menu.bindComponentEvents(c);
         } catch (e) {
           Logger.instance.error(
             `[Collapsible:${this.id}] addChild: ${c.getId()} - ${e}`,
@@ -147,7 +146,7 @@ export class Collapsible extends UIComponent {
       name:
         "com.frida.CollapsibleClickListener" +
         Date.now() +
-        Math.random().toString(36).substring(6),
+        Math.random().toString(36).substring(4),
       implements: [OnClickListener],
       methods: {
         onClick: function () {
@@ -241,9 +240,13 @@ export class Collapsible extends UIComponent {
         component.setMenu(this.menu);
 
         const ctx = this.view.getContext(); // ✅ 跟 float-menu 一样，拿容器 context
-        component.init(ctx);
-        const v = component.getView();
+        // component.init(ctx);
+        // const v = component.getView();
+        const v = this.menu.prepareComponentView(ctx, component);
+
         if (v) this.contentContainer.addView(v);
+
+        this.menu.bindComponentEvents(component);
       } catch (e) {
         Logger.instance.error(`[Collapsible:${this.id}] addChild error: ${e}`);
       }

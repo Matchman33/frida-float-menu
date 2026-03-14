@@ -33,7 +33,10 @@ Java.perform(() => {
     tabs: [
       { id: "basic", label: "基础组件" },
       { id: "form", label: "表单组件" },
-      { id: "selection", label: "选择组件" },
+      {
+        id: "selection",
+        label: "选择组件",
+      },
       { id: "layout", label: "布局组件" },
       { id: "interactive", label: "交互演示" },
     ],
@@ -55,7 +58,7 @@ Java.perform(() => {
   // Text 组件
   const textComponent = new Text(
     "basic_text",
-    "这是一个文本组件，用于显示静态或动态的文本内容。",
+    "这是一个文本组件，用于显示静态或动态的文本内容。这是一个文本组件，用于显示静态或动态的文本内容。这是一个文本组件，用于显示静态或动态的文本内容。这是一个文本组件，用于显示静态或动态的文本内容。这是一个文本组件，用于显示静态或动态的文本内容。这是一个文本组件，用于显示静态或动态的文本内容。这是一个文本组件，用于显示静态或动态的文本内容。这是一个文本组件，用于显示静态或动态的文本内容。这是一个文本组件，用于显示静态或动态的文本内容。",
   );
   menu.addComponent(textComponent, "basic");
 
