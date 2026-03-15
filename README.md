@@ -158,7 +158,6 @@ const ageInput = new NumberInput(
     25,         // 初始值
     '年龄：',    // 按钮文本
     '请输入年龄', // 提示文本
-    '输入年龄'    // 对话框标题
 );
 
 ageInput.onValueChange((value: number) => {
