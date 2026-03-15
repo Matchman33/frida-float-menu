@@ -1,3 +1,5 @@
+import { Logger } from "./logger";
+
 type Listener = (...args: any[]) => void;
 
 export class EventEmitter {
@@ -26,7 +28,7 @@ export class EventEmitter {
       try {
         setImmediate(() => listener(...args));
       } catch (error) {
-        console.error(`Error in event listener for ${event}:`, error);
+        Logger.instance.error(`Error in event listener for ${event}:`, error);
       }
     });
   }

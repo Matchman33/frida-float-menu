@@ -1,3 +1,5 @@
+import { ConstantConfig } from "./constant-config";
+
 /**
  * 真实坐标转换为逻辑坐标，以左上角为原点转换为屏幕中心为原点
  * @param wx
@@ -7,15 +9,12 @@
 export function windowToLogical(
   wx: number,
   wy: number,
-  sw: number,
-  sh: number,
   w: number,
   h: number,
 ) {
-
   return {
-    x: Math.round(wx + (sw - w) / 2),
-    y: Math.round(wy + (sh - h) / 2),
+    x: Math.round(wx + (ConstantConfig.screenWidth - w) / 2),
+    y: Math.round(wy + (ConstantConfig.screenHeight - h) / 2),
   };
 }
 
@@ -28,13 +27,11 @@ export function windowToLogical(
 export function logicalToWindow(
   lx: number,
   ly: number,
-  sw: number,
-  sh: number,
   w: number,
   h: number,
 ) {
   return {
-    x: Math.round(lx - (sw - w) / 2),
-    y: Math.round(ly - (sh - h) / 2),
+    x: Math.round(lx - (ConstantConfig.screenWidth - w) / 2),
+    y: Math.round(ly - (ConstantConfig.screenHeight - h) / 2),
   };
 }

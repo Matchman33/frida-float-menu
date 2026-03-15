@@ -1,8 +1,11 @@
 import { API } from "../../api";
+import { ConstantConfig } from "../../constant-config";
 import { Logger, LogLevel } from "../../logger";
+import { logicalToWindow, windowToLogical } from "../../utils";
 import { dp } from "../style/style";
 
 export class LogViewWindow {
+  private menu: any;
   private context: any;
   private windowManager: any;
   private theme: any;
@@ -28,15 +31,21 @@ export class LogViewWindow {
   private _logFlushScheduled: boolean = false;
 
   private _onCloseButtonClick: (() => void) | null = null;
+  private width?: number;
+  private height?: number;
+  lastTouchX: any;
+  lastTouchY: any;
 
   constructor(
     context: any,
     theme: any,
+    menu: any,
     logMaxLines: number = 100,
     onCloseButtonClick?: () => void,
   ) {
     this.context = context;
     this.theme = theme;
+    this.menu = menu;
     this.logMaxLines = logMaxLines;
     this._onCloseButtonClick = onCloseButtonClick ?? null;
 
@@ -54,15 +63,12 @@ export class LogViewWindow {
   private bindLoggerToLogViewOnce(): void {
     if (this._loggerUnsub) return;
 
-    this._loggerUnsub = Logger.instance.onLog(
-      (items) => {
-        for (let i = 0; i < items.length; i++) {
-          const it = items[i];
-          this.addLogToView(it.level, it.message, it.ts);
-        }
-      },
-      true,
-    );
+    this._loggerUnsub = Logger.instance.onLog((items) => {
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        this.addLogToView(it.level, it.message, it.ts);
+      }
+    }, true);
   }
 
   private addLogToView(level: LogLevel, message: string, ts: number): void {
@@ -182,8 +188,8 @@ export class LogViewWindow {
       // 主体背景：更接近图里的蓝黑科技风，同时增加透明度
       const rootBg = GradientDrawable.$new();
       rootBg.setCornerRadius(dp(this.context, 12));
-      rootBg.setColor(0xB80B1324 | 0 ); // 半透明深蓝黑
-      rootBg.setStroke(dp(this.context, 1.2), 0xFF1F63FF|0); // 蓝色描边
+      rootBg.setColor(0xb80b1324 | 0); // 半透明深蓝黑
+      rootBg.setStroke(dp(this.context, 1.2), 0xff1f63ff | 0); // 蓝色描边
       panel.setBackgroundDrawable(rootBg);
 
       try {
@@ -205,7 +211,7 @@ export class LogViewWindow {
       );
 
       const headerBg = GradientDrawable.$new();
-      headerBg.setColor(0xCC102347|0); // 更深一点的蓝
+      headerBg.setColor(0xcc102347 | 0); // 更深一点的蓝
       headerBg.setCornerRadii([
         dp(this.context, 12),
         dp(this.context, 12),
@@ -220,7 +226,7 @@ export class LogViewWindow {
 
       const title = TextView.$new(this.context);
       title.setText(JString.$new("系统日志"));
-      title.setTextColor(0xFF1F7BFF|0);
+      title.setTextColor(0xff1f7bff | 0);
       try {
         title.setTypeface(null, 1);
       } catch {}
@@ -235,7 +241,7 @@ export class LogViewWindow {
 
       const dots = TextView.$new(this.context);
       dots.setText(JString.$new("●  ●  ●"));
-      dots.setTextColor(0xFF4A5E80|0);
+      dots.setTextColor(0xff4a5e80 | 0);
       dots.setTextSize(2, this.theme?.textSp?.caption ?? 11);
 
       header.addView(title);
@@ -266,7 +272,7 @@ export class LogViewWindow {
           ViewGroupLayoutParams.WRAP_CONTENT.value,
         ),
       );
-      logText.setTextColor(0xFFEAF2FF|0);
+      logText.setTextColor(0xffeaf2ff | 0);
       logText.setTextSize(2, this.theme?.textSp?.body ?? 13);
       logText.setPadding(
         dp(this.context, 14),
@@ -292,7 +298,7 @@ export class LogViewWindow {
       );
 
       const footerBg = GradientDrawable.$new();
-      footerBg.setColor(0xB8101D36|0);
+      footerBg.setColor(0xb8101d36 | 0);
       footer.setBackgroundDrawable(footerBg);
 
       const clearBtn = TextView.$new(this.context);
@@ -300,7 +306,7 @@ export class LogViewWindow {
       try {
         clearBtn.setTypeface(null, 1);
       } catch {}
-      clearBtn.setTextColor(0xFF9AAACA|0);
+      clearBtn.setTextColor(0xff9aaaca | 0);
       clearBtn.setTextSize(2, this.theme?.textSp?.caption ?? 12);
       clearBtn.setGravity(Gravity.CENTER.value);
       clearBtn.setPadding(
@@ -312,7 +318,7 @@ export class LogViewWindow {
 
       const clearBg = GradientDrawable.$new();
       clearBg.setCornerRadius(dp(this.context, 6));
-      clearBg.setColor(0x00112233|0);
+      clearBg.setColor(0x00112233 | 0);
       clearBtn.setBackgroundDrawable(clearBg);
 
       const closeBtn = TextView.$new(this.context);
@@ -320,7 +326,7 @@ export class LogViewWindow {
       try {
         closeBtn.setTypeface(null, 1);
       } catch {}
-      closeBtn.setTextColor(0xFFFFFFFF|0);
+      closeBtn.setTextColor(0xffffffff | 0);
       closeBtn.setTextSize(2, this.theme?.textSp?.caption ?? 12);
       closeBtn.setGravity(Gravity.CENTER.value);
       closeBtn.setPadding(
@@ -332,8 +338,8 @@ export class LogViewWindow {
 
       const closeBg = GradientDrawable.$new();
       closeBg.setCornerRadius(dp(this.context, 6));
-      closeBg.setColor(0xFF1B66FF|0);
-      closeBg.setStroke(dp(this.context, 1), 0xFF2F86FF|0);
+      closeBg.setColor(0xff1b66ff | 0);
+      closeBg.setStroke(dp(this.context, 1), 0xff2f86ff | 0);
       closeBtn.setBackgroundDrawable(closeBg);
 
       const clearLp = LinearLayoutParams.$new(
@@ -355,7 +361,8 @@ export class LogViewWindow {
       // 尺寸比之前大一点
       const width = dp(this.context, 320);
       const height = dp(this.context, 290);
-
+      this.width = width;
+      this.height = height;
       const params = LayoutParams.$new(
         width,
         height,
@@ -366,7 +373,7 @@ export class LogViewWindow {
           LayoutParams.FLAG_NOT_TOUCH_MODAL.value,
         PixelFormat.TRANSLUCENT.value,
       );
-      params.gravity.value = Gravity.TOP.value | Gravity.START.value;
+      // params.gravity.value = Gravity.TOP.value | Gravity.START.value;
 
       this.logView = logText;
       this.windowRoot = root;
@@ -423,10 +430,25 @@ export class LogViewWindow {
         root.setVisibility(View.GONE.value);
       } catch {}
 
-      this.bindDragForHeader();
+      // this.bindDragForHeader();
+      this.addDragListener(
+        this.titleDragHandle,
+        this.windowRoot,
+        this.windowParams,
+        () => this.isLogWindowVisible,
+        // if (
+        //   !this.isLogWindowVisible ||
+        //   !this.isAttached ||
+        //   !this.windowRoot ||
+        //   !this.windowParams
+        // ) {
+        //   return false;
+        // }
+      );
+
       this.bindLoggerToLogViewOnce();
 
-      Logger.instance.info(
+      Logger.instance.debug(
         `log window created: width=${width}, height=${height}, x=${params.x.value}, y=${params.y.value}`,
       );
     } catch (e) {
@@ -452,7 +474,7 @@ export class LogViewWindow {
       try {
         if (!self.windowRoot || !self.windowParams || self.isAttached) return;
 
-        Logger.instance.info(
+        Logger.instance.debug(
           `attach log window: x=${self.windowParams.x.value}, y=${self.windowParams.y.value}, width=${self.windowParams.width.value}, height=${self.windowParams.height.value}, type=${self.windowParams.type.value}`,
         );
 
@@ -550,6 +572,130 @@ export class LogViewWindow {
     );
   }
 
+  private addDragListener(
+    targetView: any,
+    window: any,
+    winParams: any,
+    isShowing: () => boolean,
+  ) {
+    const OnTouchListener = API.OnTouchListener;
+    const MotionEvent = API.MotionEvent;
+    // const isShow = isShowing();
+    targetView.setClickable(true);
+    const getBounds = () => {
+      const w = this.width!;
+      const h = this.height!;
+      return {
+        left: 0,
+        top: -40,
+        right: ConstantConfig.screenWidth - w,
+        bottom: ConstantConfig.screenHeight - h,
+      };
+    };
+    const self = this;
+
+    let isDragging = false;
+    const DRAG_THRESHOLD = 5;
+
+    // 在 addDragListener 里加两个局部变量（闭包变量）
+    let touchOffsetX = 0;
+    let touchOffsetY = 0;
+    const touchListener = Java.registerClass({
+      name:
+        "com.frida.FloatDragListener" +
+        Date.now() +
+        Math.random().toString(36).substring(6),
+      implements: [OnTouchListener],
+      methods: {
+        onTouch: function (v: any, event: any) {
+          const action = event.getAction();
+          switch (action) {
+            case MotionEvent.ACTION_DOWN.value: {
+              isDragging = false;
+
+              const rawX = event.getRawX();
+              const rawY = event.getRawY();
+
+              // 当前窗口位置（注意：这里的 winParams.x/y 是“window坐标”）
+              const startWx = winParams.x.value;
+              const startWy = winParams.y.value;
+
+              // 记录手指按下点相对窗口左上角的偏移（window坐标系内）
+              touchOffsetX = rawX - startWx;
+              touchOffsetY = rawY - startWy;
+
+              // 记录 down 时的位置，用于阈值判断
+              self.lastTouchX = rawX;
+              self.lastTouchY = rawY;
+
+              return true;
+            }
+
+            case MotionEvent.ACTION_MOVE.value: {
+              const rawX = event.getRawX();
+              const rawY = event.getRawY();
+
+              const dx = rawX - self.lastTouchX;
+              const dy = rawY - self.lastTouchY;
+              if (
+                !isDragging &&
+                (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
+              ) {
+                isDragging = true;
+              }
+
+              if (isDragging) {
+                // 直接由手指位置反推窗口左上角（不会积累漂移）
+                let wx = rawX - touchOffsetX;
+                let wy = rawY - touchOffsetY;
+                // window → logical（如果你当前还在用 logical 做边界）
+                const p = windowToLogical(wx, wy, self.width!, self.height!);
+
+                let newX = p.x;
+                let newY = p.y;
+
+                const bounds = getBounds();
+                newX = Math.max(bounds.left, Math.min(bounds.right, newX));
+                newY = Math.max(bounds.top, Math.min(bounds.bottom, newY));
+                if (isShowing()) {
+                  self.updatePosition(window, winParams, { x: newX, y: newY });
+                }
+              }
+
+              return true;
+            }
+
+            case MotionEvent.ACTION_UP.value:
+            case MotionEvent.ACTION_CANCEL.value: {
+              return true;
+            }
+          }
+        },
+      },
+    });
+
+    targetView.setOnTouchListener(touchListener.$new());
+  }
+  private updatePosition(
+    window: any,
+    winParams: any,
+    newPos: { x: number; y: number },
+  ): void {
+    const { x: wx, y: wy } = logicalToWindow(
+      newPos.x,
+      newPos.y,
+      this.width!,
+      this.height!,
+    );
+
+    winParams.x.value = wx | 0;
+    winParams.y.value = wy | 0;
+    Java.scheduleOnMainThread(() => {
+      this.windowManager.updateViewLayout(window, winParams);
+    });
+
+    // 刷新
+  }
   public openLogWindow(): void {
     const self = this;
     const View = API.View;

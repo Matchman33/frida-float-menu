@@ -7,6 +7,7 @@ import { DarkNeonTheme, Theme } from "./component/style/theme";
 import { logicalToWindow, windowToLogical } from "./utils";
 import { TabsView } from "./component/views/tabs-view";
 import { HeaderView } from "./component/views/header-view";
+import { ConstantConfig } from "./constant-config";
 
 export interface TabDefinition {
   id: string;
@@ -97,15 +98,21 @@ export class FloatMenu {
     Java.perform(() => {
       const resources = this.context.getResources();
       const metrics = resources.getDisplayMetrics();
+      ConstantConfig.screenWidth = metrics.widthPixels.value;
+      ConstantConfig.screenHeight = metrics.heightPixels.value;
+      this.screenWidth = ConstantConfig.screenWidth;
+      this.screenHeight = ConstantConfig.screenHeight;
 
-      this.screenWidth = metrics.widthPixels.value;
-      this.screenHeight = metrics.heightPixels.value;
       this.options.height = Math.min(
         this.options.height!,
-        this.screenHeight - 80,
+        ConstantConfig.screenHeight - 80,
       );
     });
-    this.logger.info("屏幕尺寸:", this.screenWidth, this.screenHeight);
+    this.logger.debug(
+      "屏幕尺寸:",
+      ConstantConfig.screenWidth,
+      ConstantConfig.screenHeight,
+    );
 
     this.headerComponent = new HeaderView(this.options.theme!);
 
@@ -204,8 +211,6 @@ export class FloatMenu {
                 const p = windowToLogical(
                   wx,
                   wy,
-                  self.screenWidth,
-                  self.screenHeight,
                   self.isIconMode
                     ? self.options.iconWidth!
                     : self.options.width!,
@@ -388,8 +393,6 @@ export class FloatMenu {
     const { x: wx, y: wy } = logicalToWindow(
       newPos.x,
       newPos.y,
-      this.screenWidth,
-      this.screenHeight,
       this.isIconMode ? this.options.iconWidth! : this.options.width!,
       this.isIconMode ? this.options.iconHeight! : this.options.height!,
     );
@@ -435,8 +438,6 @@ export class FloatMenu {
     const { x, y } = logicalToWindow(
       this.options.x!,
       this.options.y!,
-      this.screenWidth,
-      this.screenHeight,
       this.options.iconWidth!,
       this.options.iconHeight!,
     );

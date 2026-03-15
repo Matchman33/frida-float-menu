@@ -1,3 +1,5 @@
+import { ConstantConfig } from "./constant-config";
+
 export function log(message: string): void {
   console.log(message);
 }
@@ -19,7 +21,8 @@ export class Logger {
   // ====== 全局单例：外部任何地方都能获取到 ======
   private static _instance: Logger | null = null;
   static get instance(): Logger {
-    if (!Logger._instance) Logger._instance = new Logger("debug");
+    if (!Logger._instance)
+      Logger._instance = new Logger(ConstantConfig.isDev ? "debug" : "info");
     return Logger._instance;
   }
 
