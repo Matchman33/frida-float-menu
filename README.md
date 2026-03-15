@@ -16,11 +16,11 @@
 - 📝 完整的 TypeScript 类型定义
 
 ## 使用截图
-![表单组件](./基础组件.jpg)
-![布局组件](./布局组件.jpg)
-![基础组件](./基础组件.jpg)
-![日志窗口](./日志窗口.jpg)
-![选择组件](./选择组件.jpg)
+<img src="./基础组件.jpg" alt="表单组件" width="200">
+<img src="./布局组件.jpg" alt="布局组件" width="200">
+<img src="./基础组件.jpg" alt="基础组件" width="200">
+<img src="./日志窗口.jpg" alt="日志窗口" width="200">
+<img src="./选择组件.jpg" alt="选择组件" width="200">
 
 ## 📋 环境要求
 
