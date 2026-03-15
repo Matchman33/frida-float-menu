@@ -55,6 +55,7 @@ export class FloatMenu {
   private menuContainerWin: any; // 菜单界面窗口。是最底层容器
 
   private menuPanelView: any; // 真正用来添加组件的容器
+  private overlayToastView: any = null; // 悬浮层内的提示视图
 
   public logger: Logger;
   private tabsView: TabsView;
@@ -594,13 +595,55 @@ export class FloatMenu {
 
   public toast(msg: string, duration: 0 | 1 = 0): void {
     Java.scheduleOnMainThread(() => {
-      var toast = Java.use("android.widget.Toast");
+      try {
+        if (this.menuContainerWin && !this.isIconMode) {
+          const TextView = API.TextView;
+          const FrameLayoutParams = API.FrameLayoutParams;
+          const ViewGroupLayoutParams = API.ViewGroupLayoutParams;
+          const Gravity = API.Gravity;
+
+          if (this.overlayToastView) {
+            this.menuContainerWin.removeView(this.overlayToastView);
+            this.overlayToastView = null;
+          }
+
+          const toastView = TextView.$new(this.context);
+          toastView.setText(Java.use("java.lang.String").$new(msg));
+          toastView.setTextColor(0xffffffff | 0);
+          toastView.setTextSize(13);
+          toastView.setPadding(32, 20, 32, 20);
+          toastView.setGravity(Gravity.CENTER.value);
+          applyStyle(toastView, "chip", this.options.theme!);
+
+          const toastLp = FrameLayoutParams.$new(
+            ViewGroupLayoutParams.WRAP_CONTENT.value,
+            ViewGroupLayoutParams.WRAP_CONTENT.value,
+          );
+          toastLp.gravity = Gravity.TOP.value | Gravity.CENTER_HORIZONTAL.value;
+          toastLp.topMargin = dp(this.context, 64);
+
+          this.overlayToastView = toastView;
+          this.menuContainerWin.addView(toastView, toastLp);
+          toastView.bringToFront();
+
+          const delay = duration === 1 ? 3500 : 2000;
+          setTimeout(() => {
+            Java.scheduleOnMainThread(() => {
+              if (this.overlayToastView === toastView && this.menuContainerWin) {
+                this.menuContainerWin.removeView(toastView);
+                this.overlayToastView = null;
+              }
+            });
+          }, delay);
+          return;
+        }
+      } catch (error) {
+        Logger.instance.warn("悬浮提示显示失败，回退系统 Toast: " + error);
+      }
+
+      const toast = Java.use("android.widget.Toast");
       toast
-        .makeText(
-          this.context,
-          Java.use("java.lang.String").$new(msg),
-          duration,
-        )
+        .makeText(this.context, Java.use("java.lang.String").$new(msg), duration)
         .show();
     });
   }

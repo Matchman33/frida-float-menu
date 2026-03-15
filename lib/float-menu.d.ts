@@ -39,6 +39,7 @@ export declare class FloatMenu {
     private iconContainerWin;
     private menuContainerWin;
     private menuPanelView;
+    private overlayToastView;
     logger: Logger;
     private tabsView;
     get context(): any;
