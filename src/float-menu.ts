@@ -120,10 +120,15 @@ export class FloatMenu {
     this.logger.info("悬浮窗初始化完成,等待显示");
   }
 
-  private addDragListener(targetView: any, window: any, winParams: any) {
+  private addDragListener(
+    targetView: any,
+    window: any,
+    winParams: any,
+    isShowing: () => boolean,
+  ) {
     const OnTouchListener = API.OnTouchListener;
     const MotionEvent = API.MotionEvent;
-
+    // const isShow = isShowing();
     targetView.setClickable(true);
     const getBounds = () => {
       const w = this.isIconMode ? this.options.iconWidth! : this.options.width!;
@@ -214,8 +219,9 @@ export class FloatMenu {
                 const bounds = getBounds();
                 newX = Math.max(bounds.left, Math.min(bounds.right, newX));
                 newY = Math.max(bounds.top, Math.min(bounds.bottom, newY));
-
-                self.updatePosition(window, winParams, { x: newX, y: newY });
+                if (isShowing()) {
+                  self.updatePosition(window, winParams, { x: newX, y: newY });
+                }
               }
 
               return true;
@@ -343,8 +349,11 @@ export class FloatMenu {
           this.toggleView();
         },
         onHide: () => {
-          this.isIconMode = true;
-          this.toggleView();
+          // this.isIconMode = true;
+          // this.toggleView();
+          this.menuContainerWin.setVisibility(View.GONE.value);
+          this.iconContainerWin.setVisibility(View.VISIBLE.value);
+
           this.hide();
           this.toast("菜单已隐藏,单击原来位置显示");
         },
@@ -356,6 +365,7 @@ export class FloatMenu {
         this.headerView,
         this.menuContainerWin,
         this.menuWindowParams,
+        () => !this.isIconMode,
       );
     }
 
@@ -461,6 +471,7 @@ export class FloatMenu {
       this.iconContainerWin,
       this.iconContainerWin,
       this.iconWindowParams,
+      () => this.isIconMode,
     );
   }
 
@@ -503,59 +514,6 @@ export class FloatMenu {
       }
     });
   }
-
-  /**
-   * Process components that were added before window was shown
-   */
-  // private processPendingComponents(context: any): void {
-  //   if (this.pendingComponents.length === 0) return;
-
-  //   this.logger.debug(
-  //     `Processing ${this.pendingComponents.length} pending components`,
-  //   );
-  //   for (const { id, component, tabId } of this.pendingComponents) {
-  //     try {
-  //       const tabInfo = this.tabsView.tabs.get(tabId);
-  //       if (!tabInfo) {
-  //         this.logger.error(
-  //           `Cannot add pending component ${id} - tab ${tabId} not found`,
-  //         );
-  //         continue;
-  //       }
-  //       component.init(context);
-
-  //       const view = component.getView();
-  //       // // Add to the appropriate tab container
-  //       if (tabInfo.container) {
-  //         tabInfo.container.addView(view);
-  //       } else {
-  //         // Fallback to contentContainer (should not happen if tab container was created)
-
-  //         this.tabsView.currentContentContainer.addView(view);
-  //       }
-
-  //       // Record component ID in tab's component set
-  //       tabInfo.components.add(id);
-
-  //       // Bind events (same as in addComponent)
-  //       component.on("valueChanged", (value: any) => {
-  //         this.eventEmitter.emit("component:" + id + ":valueChanged", value);
-  //       });
-  //       component.on("action", (data: any) => {
-  //         this.eventEmitter.emit("component:" + id + ":action", data);
-  //       });
-  //       component.on("click", (data: any) => {
-  //         this.eventEmitter.emit("component:" + id + ":click", data);
-  //       });
-  //     } catch (error) {
-  //       Logger.instance.error(
-  //         `Failed to add pending component ${id}: ` + error,
-  //       );
-  //     }
-  //   }
-  //   // Clear pending components
-  //   this.pendingComponents = [];
-  // }
 
   public bindComponentEvents(component: UIComponent) {
     const id = component.getId();

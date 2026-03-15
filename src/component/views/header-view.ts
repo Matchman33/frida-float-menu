@@ -186,6 +186,9 @@ export class HeaderView {
       rightBox.setLayoutParams(rightLp);
 
       const logView = new LogViewWindow(context, this.theme, logMaxLines);
+      logView.setOnCloseButtonClick(() => {
+        logButton.setText(API.JString.$new("L"));
+      });
       const logButton = createIconCharBtn("L", false);
       logButton.setOnClickListener(
         Java.registerClass({
