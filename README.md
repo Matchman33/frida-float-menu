@@ -213,17 +213,17 @@ menu.addComponent(hobbiesGroup);
 const citySelector = new Selector(
     'city',
     [
-        { lable: '北京', code: 'BJ' },
-        { lable: '上海', code: 'SH' },
-        { lable: '广州', code: 'GZ' },
-        { lable: '深圳', code: 'SZ' },
+        { label: '北京', code: 'BJ' },
+        { label: '上海', code: 'SH' },
+        { label: '广州', code: 'GZ' },
+        { label: '深圳', code: 'SZ' },
     ],
     0  // 默认选中第一个
 );
 
 citySelector.on('valueChanged', (value: any) => {
-    console.log('选择的城市:', value.lable, value.code);
-    menu.toast(`当前城市: ${value.lable}`);
+    console.log('选择的城市:', value.label, value.code);
+    menu.toast(`当前城市: ${value.label}`);
 });
 menu.addComponent(citySelector);
 ```
@@ -263,8 +263,8 @@ const settingsCollapsible = new Collapsible(
 // 添加子组件到折叠面板
 const usernameInput = new TextInput('username', 'admin', '用户名', '请输入用户名');
 const roleSelector = new Selector('role', [
-    { lable: '管理员', role: 'admin' },
-    { lable: '普通用户', role: 'user' }
+    { label: '管理员', role: 'admin' },
+    { label: '普通用户', role: 'user' }
 ], 0);
 
 settingsCollapsible.addChildren([

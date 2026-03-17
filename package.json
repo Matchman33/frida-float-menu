@@ -1,6 +1,6 @@
 {
   "name": "frida-overlay-menu",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "借助frida调用Java Api绘制悬浮窗组件",
   "license": "MIT",
   "private": false,

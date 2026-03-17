@@ -8,11 +8,11 @@ export declare class Selector extends UIComponent {
     private titleView;
     private valueView;
     constructor(id: string, title: string, items: {
-        lable: string;
+        label: string;
         [key: string]: any;
     }[], selectedIndex?: number, handler?: (value: any) => void);
     getValue(): {
-        lable: string;
+        label: string;
         [key: string]: any;
     };
     onValueChange(handler: (value: any) => void): void;
@@ -23,7 +23,7 @@ export declare class Selector extends UIComponent {
     private refreshUi;
     protected updateView(): void;
     setItems(items: {
-        lable: string;
+        label: string;
         [key: string]: any;
     }[]): void;
     getSelectedIndex(): number;

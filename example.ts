@@ -241,18 +241,18 @@ Java.perform(() => {
     "city_selector",
     "城市",
     [
-      { lable: "北京", code: "BJ" },
-      { lable: "上海", code: "SH" },
-      { lable: "广州", code: "GZ" },
-      { lable: "深圳", code: "SZ" },
-      { lable: "杭州", code: "HZ" },
-      { lable: "成都", code: "CD" },
+      { label: "北京", code: "BJ" },
+      { label: "上海", code: "SH" },
+      { label: "广州", code: "GZ" },
+      { label: "深圳", code: "SZ" },
+      { label: "杭州", code: "HZ" },
+      { label: "成都", code: "CD" },
     ],
     0, // 默认选中第一个
   );
   citySelector.on("valueChanged", (value: any) => {
-    menu.logger.info(`选择的城市: ${value.lable} (${value.code})`);
-    menu.setComponentValue("city_display", `当前城市：<b>${value.lable}</b>`);
+    menu.logger.info(`选择的城市: ${value.label} (${value.code})`);
+    menu.setComponentValue("city_display", `当前城市：<b>${value.label}</b>`);
   });
   menu.addComponent(citySelector, "selection");
 
@@ -265,17 +265,17 @@ Java.perform(() => {
     "color_selector",
     "颜色",
     [
-      { lable: "红色", color: "#FF0000" },
-      { lable: "绿色", color: "#00FF00" },
-      { lable: "蓝色", color: "#0000FF" },
-      { lable: "黄色", color: "#FFFF00" },
-      { lable: "紫色", color: "#FF00FF" },
+      { label: "红色", color: "#FF0000" },
+      { label: "绿色", color: "#00FF00" },
+      { label: "蓝色", color: "#0000FF" },
+      { label: "黄色", color: "#FFFF00" },
+      { label: "紫色", color: "#FF00FF" },
     ],
     0,
   );
   colorSelector.on("valueChanged", (value: any) => {
-    menu.logger.info(`选择的颜色: ${value.lable} (${value.color})`);
-    menu.toast(`颜色设置为: ${value.lable}`);
+    menu.logger.info(`选择的颜色: ${value.label} (${value.color})`);
+    menu.toast(`颜色设置为: ${value.label}`);
   });
   menu.addComponent(colorSelector, "selection");
 
@@ -284,17 +284,17 @@ Java.perform(() => {
     "language_selector",
     "语言",
     [
-      { lable: "简体中文", lang: "zh-CN" },
-      { lable: "繁體中文", lang: "zh-TW" },
-      { lable: "English", lang: "en-US" },
-      { lable: "日本語", lang: "ja-JP" },
-      { lable: "한국어", lang: "ko-KR" },
+      { label: "简体中文", lang: "zh-CN" },
+      { label: "繁體中文", lang: "zh-TW" },
+      { label: "English", lang: "en-US" },
+      { label: "日本語", lang: "ja-JP" },
+      { label: "한국어", lang: "ko-KR" },
     ],
     0,
   );
   languageSelector.on("valueChanged", (value: any) => {
-    menu.logger.info(`选择的语言: ${value.lable}`);
-    menu.toast(`语言设置为: ${value.lable}`);
+    menu.logger.info(`选择的语言: ${value.label}`);
+    menu.toast(`语言设置为: ${value.label}`);
   });
   menu.addComponent(languageSelector, "selection");
 
@@ -406,9 +406,9 @@ Java.perform(() => {
     "role_selector",
     "角色",
     [
-      { lable: "管理员", role: "admin" },
-      { lable: "普通用户", role: "user" },
-      { lable: "访客", role: "guest" },
+      { label: "管理员", role: "admin" },
+      { label: "普通用户", role: "user" },
+      { label: "访客", role: "guest" },
     ],
     0,
   );
@@ -432,10 +432,10 @@ Java.perform(() => {
     "log_level",
     "等级",
     [
-      { lable: "调试 (DEBUG)", level: 0 },
-      { lable: "信息 (INFO)", level: 1 },
-      { lable: "警告 (WARN)", level: 2 },
-      { lable: "错误 (ERROR)", level: 3 },
+      { label: "调试 (DEBUG)", level: 0 },
+      { label: "信息 (INFO)", level: 1 },
+      { label: "警告 (WARN)", level: 2 },
+      { label: "错误 (ERROR)", level: 3 },
     ],
     1,
   );
@@ -570,11 +570,11 @@ Java.perform(() => {
     "product_selector",
     "商品",
     [
-      { lable: "笔记本电脑", price: 5999 },
-      { lable: "鼠标", price: 99 },
-      { lable: "键盘", price: 299 },
-      { lable: "显示器", price: 1999 },
-      { lable: "耳机", price: 399 },
+      { label: "笔记本电脑", price: 5999 },
+      { label: "鼠标", price: 99 },
+      { label: "键盘", price: 299 },
+      { label: "显示器", price: 1999 },
+      { label: "耳机", price: 399 },
     ],
     0,
   );
@@ -605,9 +605,9 @@ Java.perform(() => {
     "shipping_selector",
     "运费",
     [
-      { lable: "普通快递 (¥10)", fee: 10 },
-      { lable: "加急快递 (¥20)", fee: 20 },
-      { lable: "顺丰速运 (¥25)", fee: 25 },
+      { label: "普通快递 (¥10)", fee: 10 },
+      { label: "加急快递 (¥20)", fee: 20 },
+      { label: "顺丰速运 (¥25)", fee: 25 },
     ],
     0,
   );
@@ -655,7 +655,7 @@ Java.perform(() => {
     const total = subtotal + shipping.fee;
 
     menu.toast(
-      `已添加到购物车！\n商品: ${product.lable}\n数量: ${quantity}\n配送: ${shipping.lable}\n总计: ¥${total.toFixed(2)}`,
+      `已添加到购物车！\n商品: ${product.label}\n数量: ${quantity}\n配送: ${shipping.label}\n总计: ¥${total.toFixed(2)}`,
       1,
     );
   });

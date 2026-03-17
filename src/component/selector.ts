@@ -5,7 +5,7 @@ import { UIComponent } from "./ui-components";
 
 export class Selector extends UIComponent {
   private title: string;
-  private items: { lable: string; [key: string]: any }[];
+  private items: { label: string; [key: string]: any }[];
   private selectedIndex: number;
   private handler?: (value: any) => void;
   private context: any;
@@ -16,7 +16,7 @@ export class Selector extends UIComponent {
   constructor(
     id: string,
     title: string,
-    items: { lable: string; [key: string]: any }[],
+    items: { label: string; [key: string]: any }[],
     selectedIndex: number = 0,
     handler?: (value: any) => void,
   ) {
@@ -31,7 +31,7 @@ export class Selector extends UIComponent {
     this.handler = handler;
   }
 
-  public getValue(): { lable: string; [key: string]: any } {
+  public getValue(): { label: string; [key: string]: any } {
     return this.value;
   }
 
@@ -160,7 +160,7 @@ export class Selector extends UIComponent {
       this.selectedIndex < this.items.length &&
       this.items[this.selectedIndex]
     ) {
-      return this.items[this.selectedIndex].lable ?? "";
+      return this.items[this.selectedIndex].label ?? "";
     }
     return "";
   }
@@ -188,7 +188,7 @@ export class Selector extends UIComponent {
         );
         const BuildVersion = Java.use("android.os.Build$VERSION");
 
-        const labels = this.items.map((item) => String.$new(item.lable));
+        const labels = this.items.map((item) => String.$new(item.label));
         const javaItems = Java.array("java.lang.CharSequence", labels);
 
         const self = this;
@@ -293,7 +293,7 @@ export class Selector extends UIComponent {
     }
 
     const index = this.items.findIndex(
-      (value) => value && this.value && value.lable == this.value.lable,
+      (value) => value && this.value && value.label == this.value.label,
     );
 
     if (index !== -1) {
@@ -303,7 +303,7 @@ export class Selector extends UIComponent {
     this.refreshUi();
   }
 
-  public setItems(items: { lable: string; [key: string]: any }[]): void {
+  public setItems(items: { label: string; [key: string]: any }[]): void {
     this.items = items ?? [];
 
     if (this.items.length === 0) {
