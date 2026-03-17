@@ -110,11 +110,7 @@ export class FloatMenu {
         ConstantConfig.screenHeight - 80,
       );
     });
-    this.logger.debug(
-      "屏幕尺寸:",
-      ConstantConfig.screenWidth,
-      ConstantConfig.screenHeight,
-    );
+
 
     this.headerComponent = new HeaderView(this.options.theme!);
 
@@ -520,10 +516,6 @@ export class FloatMenu {
   private processPendingComponents(context: any): void {
     if (this.pendingComponents.length === 0) return;
 
-    this.logger.debug(
-      `Processing ${this.pendingComponents.length} pending components`,
-    );
-
     for (const { id, component, tabId } of this.pendingComponents) {
       try {
         const tabInfo = this.tabsView.tabs.get(tabId);
@@ -632,9 +624,7 @@ export class FloatMenu {
     if (!this.menuPanelView) {
       // Window not shown yet, queue component with tab info
       this.pendingComponents.push({ id, component, tabId: targetTabId });
-      Logger.instance.debug(
-        `Component ${id} queued for tab ${targetTabId} (window not shown)`,
-      );
+
       return;
     }
 
@@ -730,9 +720,7 @@ export class FloatMenu {
     }
 
     this.uiComponents.delete(id);
-    Logger.instance.debug(
-      `Component ${id} removed${targetTabId ? ` from tab ${targetTabId}` : ""}`,
-    );
+
   }
 
   /**
