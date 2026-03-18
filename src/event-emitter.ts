@@ -1,4 +1,4 @@
-import { Logger } from "./logger";
+import { Logger } from "./logger.js";
 
 type Listener = (...args: any[]) => void;
 

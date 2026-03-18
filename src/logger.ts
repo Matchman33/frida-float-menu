@@ -1,4 +1,4 @@
-import { ConstantConfig } from "./constant-config";
+import { ConstantConfig } from "./constant-config.js";
 
 export function log(message: string): void {
   console.log(message);

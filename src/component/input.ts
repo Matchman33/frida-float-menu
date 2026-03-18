@@ -1,8 +1,8 @@
 import Java from "frida-java-bridge";
-import { API } from "../api";
-import { Logger } from "../logger";
-import { applyStyle, dp } from "./style/style";
-import { UIComponent } from "./ui-components";
+import { API } from "../api.js";
+import { Logger } from "../logger.js";
+import { applyStyle, dp } from "./style/style.js";
+import { UIComponent } from "./ui-components.js";
 
 function setDialogOverlayType(dialog: any) {
   try {

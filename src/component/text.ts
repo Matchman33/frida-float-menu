@@ -1,7 +1,7 @@
 import Java from "frida-java-bridge";
-import { API } from "../api";
-import { applyStyle } from "./style/style";
-import { UIComponent } from "./ui-components";
+import { API } from "../api.js";
+import { applyStyle } from "./style/style.js";
+import { UIComponent } from "./ui-components.js";
 
 export class TextView extends UIComponent {
   private size?: number;

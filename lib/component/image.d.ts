@@ -1,4 +1,4 @@
-import { UIComponent } from "./ui-components";
+import { UIComponent } from "./ui-components.js";
 export declare class ImageView extends UIComponent {
     private source;
     private width;

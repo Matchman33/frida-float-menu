@@ -1,9 +1,9 @@
 import Java from "frida-java-bridge";
-import { API } from "../../api";
-import { ConstantConfig } from "../../constant-config";
-import { Logger, LogLevel } from "../../logger";
-import { logicalToWindow, windowToLogical } from "../../utils";
-import { dp } from "../style/style";
+import { API } from "../../api.js";
+import { ConstantConfig } from "../../constant-config.js";
+import { Logger, LogLevel } from "../../logger.js";
+import { logicalToWindow, windowToLogical } from "../../utils.js";
+import { dp } from "../style/style.js";
 
 export class LogViewWindow {
   private menu: any;

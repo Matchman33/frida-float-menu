@@ -1,4 +1,4 @@
-import { UIComponent } from "./ui-components";
+import { UIComponent } from "./ui-components.js";
 export declare class Selector extends UIComponent {
     private title;
     private items;

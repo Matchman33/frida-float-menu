@@ -1,20 +1,20 @@
 
 // Event system
-export { EventEmitter } from "./event-emitter";
+export { EventEmitter } from "./event-emitter.js";
 
 // Logging system
-export { Logger, LogLevel } from "./logger";
+export { Logger, LogLevel } from "./logger.js";
 
 // index.ts
-export { Button } from "./component/button";
-export { Category } from "./component/category";
-export { Collapsible } from "./component/collapsible";
-export { NumberInput, TextInput } from "./component/input";
-export { Selector } from "./component/selector";
-export { Slider } from "./component/slider";
-export { Switch } from "./component/switch";
-export { TextView as Text } from "./component/text";
-export { ConstantConfig } from "./constant-config"
-export {CheckBoxGroup} from "./component/checkBox"
+export { Button } from "./component/button.js";
+export { Category } from "./component/category.js";
+export { Collapsible } from "./component/collapsible.js";
+export { NumberInput, TextInput } from "./component/input.js";
+export { Selector } from "./component/selector.js";
+export { Slider } from "./component/slider.js";
+export { Switch } from "./component/switch.js";
+export { TextView as Text } from "./component/text.js";
+export { ConstantConfig } from "./constant-config.js"
+export {CheckBoxGroup} from "./component/checkBox.js"
 // FloatMenu main class
-export { FloatMenu, FloatMenuOptions, TabDefinition } from "./float-menu";
+export { FloatMenu, FloatMenuOptions, TabDefinition } from "./float-menu.js";

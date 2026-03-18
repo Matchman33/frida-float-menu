@@ -1,9 +1,9 @@
 import Java from "frida-java-bridge";
-import { API } from "../../api";
-import { EventEmitter } from "../../event-emitter";
-import { Logger } from "../../logger";
-import { dp } from "../style/style";
-import { Theme } from "../style/theme";
+import { API } from "../../api.js";
+import { EventEmitter } from "../../event-emitter.js";
+import { Logger } from "../../logger.js";
+import { dp } from "../style/style.js";
+import { Theme } from "../style/theme.js";
 interface TabDefinition {
   id: string;
   label: string;

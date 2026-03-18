@@ -1,4 +1,4 @@
-import { UIComponent } from "./ui-components";
+import { UIComponent } from "./ui-components.js";
 declare abstract class BaseInputButton extends UIComponent {
     protected title: string;
     protected hint: string;

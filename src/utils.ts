@@ -1,4 +1,4 @@
-import { ConstantConfig } from "./constant-config";
+import { ConstantConfig } from "./constant-config.js";
 
 /**
  * 真实坐标转换为逻辑坐标，以左上角为原点转换为屏幕中心为原点

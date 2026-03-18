@@ -1,7 +1,7 @@
 import Java from "frida-java-bridge";
-import { EventEmitter } from "../event-emitter";
-import { FloatMenu } from "../float-menu";
-import { applyStyle } from "./style/style";
+import { EventEmitter } from "../event-emitter.js";
+import { FloatMenu } from "../float-menu.js";
+import { applyStyle } from "./style/style.js";
 
 export abstract class UIComponent {
   protected emitter: EventEmitter = new EventEmitter();

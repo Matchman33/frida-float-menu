@@ -1,4 +1,4 @@
-import { UIComponent } from "./ui-components";
+import { UIComponent } from "./ui-components.js";
 export declare class Switch extends UIComponent {
     private label;
     private handler?;

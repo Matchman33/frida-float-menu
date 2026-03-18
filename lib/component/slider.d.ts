@@ -1,4 +1,4 @@
-import { UIComponent } from "./ui-components";
+import { UIComponent } from "./ui-components.js";
 export declare class Slider extends UIComponent {
     private min;
     private max;

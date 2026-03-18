@@ -1,13 +1,13 @@
-import { EventEmitter } from "./event-emitter";
-import { UIComponent } from "./component/ui-components";
-import { Logger, LogLevel } from "./logger";
-import { API } from "./api";
-import { applyStyle, dp } from "./component/style/style";
-import { DarkNeonTheme, Theme } from "./component/style/theme";
-import { logicalToWindow, windowToLogical } from "./utils";
-import { TabsView } from "./component/views/tabs-view";
-import { HeaderView } from "./component/views/header-view";
-import { ConstantConfig } from "./constant-config";
+import { EventEmitter } from "./event-emitter.js";
+import { UIComponent } from "./component/ui-components.js";
+import { Logger, LogLevel } from "./logger.js";
+import { API } from "./api.js";
+import { applyStyle, dp } from "./component/style/style.js";
+import { DarkNeonTheme, Theme } from "./component/style/theme.js";
+import { logicalToWindow, windowToLogical } from "./utils.js";
+import { TabsView } from "./component/views/tabs-view.js";
+import { HeaderView } from "./component/views/header-view.js";
+import { ConstantConfig } from "./constant-config.js";
 import Java from "frida-java-bridge";
 
 export interface TabDefinition {

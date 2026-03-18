@@ -1,7 +1,7 @@
 import Java from "frida-java-bridge";
-import { API } from "../api";
-import { Logger } from "../logger";
-import { UIComponent } from "./ui-components";
+import { API } from "../api.js";
+import { Logger } from "../logger.js";
+import { UIComponent } from "./ui-components.js";
 
 export class Slider extends UIComponent {
   private min: number;

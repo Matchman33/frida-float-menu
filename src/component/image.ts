@@ -1,7 +1,7 @@
 import Java from "frida-java-bridge";
-import { API } from "../api";
-import { Logger } from "../logger";
-import { UIComponent } from "./ui-components";
+import { API } from "../api.js";
+import { Logger } from "../logger.js";
+import { UIComponent } from "./ui-components.js";
 
 export class ImageView extends UIComponent {
   private source: string | number; // Base64 字符串或资源 ID

@@ -1,5 +1,5 @@
-import { EventEmitter } from "../event-emitter";
-import { FloatMenu } from "../float-menu";
+import { EventEmitter } from "../event-emitter.js";
+import { FloatMenu } from "../float-menu.js";
 export declare abstract class UIComponent {
     protected emitter: EventEmitter;
     protected view: any;

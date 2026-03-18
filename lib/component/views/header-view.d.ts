@@ -1,4 +1,4 @@
-import { Theme } from "../style/theme";
+import { Theme } from "../style/theme.js";
 export interface HeaderViewOptions {
     context: any;
     parent: any;

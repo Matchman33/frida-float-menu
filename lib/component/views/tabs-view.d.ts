@@ -1,5 +1,5 @@
-import { Logger } from "../../logger";
-import { Theme } from "../style/theme";
+import { Logger } from "../../logger.js";
+import { Theme } from "../style/theme.js";
 interface TabDefinition {
     id: string;
     label: string;

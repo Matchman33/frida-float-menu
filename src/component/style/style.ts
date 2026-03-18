@@ -1,6 +1,6 @@
 import Java from "frida-java-bridge";
-import { API } from "../../api";
-import { Theme } from "./theme";
+import { API } from "../../api.js";
+import { Theme } from "./theme.js";
 
 export type StyleRole =
   | "overlay"

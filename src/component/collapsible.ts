@@ -1,7 +1,7 @@
-import { API } from "../api";
-import { UIComponent } from "./ui-components";
-import { applyStyle, dp } from "./style/style";
-import { Logger } from "../logger";
+import { API } from "../api.js";
+import { UIComponent } from "./ui-components.js";
+import { applyStyle, dp } from "./style/style.js";
+import { Logger } from "../logger.js";
 import Java from "frida-java-bridge";
 
 export class Collapsible extends UIComponent {

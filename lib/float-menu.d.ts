@@ -1,6 +1,6 @@
-import { UIComponent } from "./component/ui-components";
-import { Logger } from "./logger";
-import { Theme } from "./component/style/theme";
+import { UIComponent } from "./component/ui-components.js";
+import { Logger } from "./logger.js";
+import { Theme } from "./component/style/theme.js";
 export interface TabDefinition {
     id: string;
     label: string;
